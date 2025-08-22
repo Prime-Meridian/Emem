@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>圆牌小手机</title>
+    <style>
+        :root { --phone-width: 375px; --phone-height: 812px; --primary-bg: #f0f0f0; --secondary-bg: #ffffff; --accent-color: #07c160; --text-color: #111111; --light-text-color: #888888; --bubble-sent-bg: #95ec69; --bubble-received-bg: #ffffff; --border-color: #e0e0e0; --transfer-bg: #f99534; --like-color: #e74c3c; --danger-color: #e74c3c;}
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--text-color); }
+        #phone-container { width: 100%; height: 100vh; max-width: var(--phone-width); max-height: var(--phone-height); background-color: var(--primary-bg); border-radius: 40px; box-shadow: 0 0 30px rgba(0,0,0,0.5); overflow: hidden; position: relative; display: flex; flex-direction: column; border: 8px solid #111; box-sizing: border-box; }
+        .phone-screen { width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; display: flex; flex-direction: column; overflow: hidden; }
+        .screen { display: none; flex-direction: column; height: 100%; width: 100%; background-color: var(--primary-bg); box-sizing: border-box; }
+        .screen.active { display: flex; }
+        #screen-chat, #screen-worldbook, #screen-wechat, #screen-gomoku, #screen-music { overflow: hidden; }
+        .status-bar { height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-sizing: border-box; background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); color: white; z-index: 10; flex-shrink: 0; }
+        .status-bar-dark-text .time, .status-bar-dark-text .icons { color: #000; }
+        .status-bar .time { font-weight: 600; }
+        .status-bar .icons { font-size: 14px; }
+        #screen-home { background-color: transparent; }
+        #screen-home .content { flex-grow: 1; padding: 20px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 20px; }
+        .app-icon { width: 60px; display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center; }
+        .app-icon .icon { width: 60px; height: 60px; border-radius: 15px; background-color: var(--secondary-bg); margin-bottom: 5px; font-size: 30px; display: flex; justify-content: center; align-items: center; object-fit: cover; }
+        .app-icon span { font-size: 12px; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; height: 44px; background-color: var(--primary-bg); border-bottom: 1px solid var(--border-color); box-sizing: border-box; flex-shrink: 0; }
+        .header .title { font-size: 17px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1; text-align: center; }
+        .header .left-actions, .header .right-actions { display: flex; align-items: center; gap: 15px; min-width: 60px; }
+        .header .back-btn { font-size: 17px; font-weight: normal; cursor: pointer; }
+        .header .action-btn { font-size: 24px; cursor: pointer; }
+        .content-container { flex-grow: 1; overflow-y: auto; background-color: var(--secondary-bg); min-height: 0; }
+        .list-item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+        .list-item .info { flex-grow: 1; }
+        .list-item .name { font-size: 16px; }
+        .list-item .delete-btn { background: none; border: none; font-size: 18px; color: var(--danger-color); cursor: pointer; padding: 5px; }
+        .contact-list, .moments-feed { display: none; }
+        .contact-list.active, .moments-feed.active { display: block; }
+        .contact-item img { width: 48px; height: 48px; border-radius: 6px; margin-right: 12px; object-fit: cover; }
+        .wechat-nav { display: flex; height: 50px; border-top: 1px solid var(--border-color); background-color: var(--primary-bg); flex-shrink: 0; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; color: var(--light-text-color); }
+        .nav-item.active { color: var(--accent-color); }
+        .moments-header { position: relative; height: 250px; background-size: cover; background-position: center; color: white; cursor: pointer; }
+        .moments-user { position: absolute; bottom: -20px; right: 15px; display: flex; align-items: flex-end; }
+        .moments-user .info { text-align: right; margin-right: 10px; text-shadow: 1px 1px 2px #000; }
+        .moments-user .name { font-weight: bold; font-size: 18px; }
+        .moments-user .signature { font-size: 13px; opacity: 0.9; display: block; margin-top: 4px; }
+        .moments-user img { width: 70px; height: 70px; border-radius: 8px; border: 2px solid white; object-fit: cover; }
+        .moments-list { padding: 40px 0 10px 0; background: var(--secondary-bg); }
+        .moment-item { padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; }
+        .moment-item .avatar { width: 42px; height: 42px; border-radius: 5px; margin-right: 10px; object-fit: cover; flex-shrink: 0; }
+        .moment-item .content { flex-grow: 1; }
+        .moment-item .author { font-weight: 600; color: #576b95; }
+        .moment-item .text { margin: 5px 0; font-size: 15px; white-space: pre-wrap; word-break: break-all; }
+        .moment-item .actions { display: flex; justify-content: space-between; align-items: center; color: var(--light-text-color); font-size: 13px; }
+        .action-buttons { display: flex; gap: 15px; align-items: center; }
+        .action-buttons span { cursor: pointer; }
+        .like-btn.liked { color: var(--like-color); }
+        .comment-btn { background-color: #f0f0f0; padding: 2px 5px; border-radius: 3px; font-weight: bold; }
+        .moment-likes { background-color: #f7f7f7; margin-top: 8px; padding: 5px 8px; border-radius: 3px; font-size: 14px; color: #576b95; }
+        .moment-likes .liker-name { font-weight: 600; }
+        .moment-likes::before { content: '❤️ '; color: var(--like-color); }
+        .moment-comments { background-color: #f7f7f7; margin-top: 8px; padding: 5px 8px; border-radius: 3px; font-size: 14px; }
+        .moment-comment { cursor: pointer; }
+        .moment-comment .comment-author { font-weight: 600; color: #576b95; }
+        .comment-input-container { display: none; margin-top: 5px; }
+        .comment-input-container.active { display: flex; }
+        .comment-input-container input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 4px; padding: 5px; font-size: 14px; }
+        .comment-input-container button { margin-left: 5px; padding: 5px 10px; border: none; background-color: var(--accent-color); color: white; border-radius: 4px; cursor: pointer; }
+        #chat-area { flex-grow: 1; padding: 10px; overflow-y: auto; background-size: cover; background-position: center; display: flex; flex-direction: column; min-height: 0; }
+        .message { display: flex; margin-bottom: 10px; max-width: 80%; align-items: flex-end; }
+        #chat-area.deletion-mode .message { cursor: pointer; }
+        #chat-area.deletion-mode .message.selected-for-deletion { opacity: 0.5; box-shadow: 0 0 0 2px var(--danger-color) inset; border-radius: 12px; }
+        .message .avatar { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
+        .message .bubble { padding: 10px 12px; border-radius: 8px; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; }
+        .message.sent { margin-left: auto; flex-direction: row-reverse; }
+        .message.sent .avatar { margin-left: 10px; }
+        .message.sent .bubble { background-color: var(--bubble-sent-bg); }
+        .message.received { margin-right: auto; }
+        .message.received .avatar { margin-right: 10px; }
+        .message.received .bubble { background-color: var(--bubble-received-bg); }
+        .message.thinking .bubble { background-color: var(--bubble-received-bg); padding: 10px 12px; display: flex; align-items: center; }
+        .message.thinking .dot { height: 8px; width: 8px; margin: 0 2px; background-color: #aaa; border-radius: 50%; display: inline-block; animation: bounce 1.4s infinite ease-in-out both; }
+        .message.thinking .dot:nth-child(1) { animation-delay: -0.32s; } .message.thinking .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        .message.transfer .bubble, .message.sticker .bubble { padding: 0; overflow: hidden; }
+        .message.transfer .bubble { background-color: var(--transfer-bg); color: white; display: flex; width: 220px; }
+        .message.sticker .bubble { background: none; }
+        .message.sticker .bubble img { max-width: 150px; max-height: 150px; border-radius: 8px; }
+        .message.received.transfer[data-status="pending"] .bubble { cursor: pointer; }
+        .message.received.transfer[data-status="pending"]:hover .bubble { filter: brightness(1.1); }
+        .message.transfer[data-status="accepted"] .bubble, .message.transfer[data-status="returned"] .bubble { background-color: #fcdab8; }
+        .transfer-content { padding: 8px 10px; flex-grow: 1; }
+        .transfer-icon { background-color: rgba(255,255,255,0.2); width: 35px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .transfer-amount { font-size: 16px; font-weight: bold; }
+        .transfer-memo { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+        .transfer-footer { font-size: 11px; opacity: 0.8; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 4px; }
+        .message.transfer[data-status="accepted"] .transfer-footer::after { content: " · 已收款"; font-weight: bold; }
+        .message.transfer[data-status="returned"] .transfer-footer::after { content: " · 已退还"; }
+        #chat-input-area { background-color: var(--primary-bg); flex-shrink: 0; }
+        #chat-input-controls { display: flex; align-items: center; padding: 8px; border-top: 1px solid var(--border-color); background-color: var(--primary-bg); }
+        #chat-input { flex-grow: 1; height: 36px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--secondary-bg); font-size: 16px; }
+        .input-btn { font-size: 28px; cursor: pointer; margin: 0 5px; color: #555; }
+        #send-btn { background-color: var(--accent-color); color: white; border: none; border-radius: 6px; padding: 6px 15px; font-size: 16px; cursor: pointer; }
+        #send-btn:disabled { background-color: #b4eebc; cursor: default; }
+        #chat-actions-panel { display: none; padding: 15px; grid-template-columns: repeat(4, 1fr); gap: 15px; border-top: 1px solid var(--border-color); }
+        #chat-actions-panel.active { display: grid; }
+        .action-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .action-item .icon { width: 50px; height: 50px; border-radius: 10px; background-color: var(--secondary-bg); display: flex; justify-content: center; align-items: center; font-size: 24px; margin-bottom: 5px; }
+        .action-item span { font-size: 12px; color: var(--light-text-color); }
+        .settings-content { padding: 20px; flex-grow: 1; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        #worldbook-content { min-height: 200px; }
+        .modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal.active { display: flex; }
+        .modal-content { background-color: var(--secondary-bg); padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-sizing: border-box; max-height: 90%; overflow-y: auto; display: flex; flex-direction: column; }
+        .modal-content h3 { margin-top: 0; text-align: center; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .avatar-preview { width: 80px; height: 80px; border-radius: 8px; border: 1px dashed var(--border-color); background-color: #f0f0f0; cursor: pointer; display: flex; justify-content: center; align-items: center; color: var(--light-text-color); font-size: 12px; text-align: center; overflow: hidden; object-fit: cover; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; background-color: var(--accent-color); color: white; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .btn-secondary { background-color: #ccc; } .btn-danger { background-color: var(--danger-color); }
+        .btn:disabled { background-color: #b4eebc; cursor: not-allowed; }
+        #gomoku-opponent-selection, #gomoku-game-board { display: none; width: 100%; height: 100%; flex-direction: column; }
+        #gomoku-opponent-selection.active, #gomoku-game-board.active { display: flex; }
+        .gomoku-container { padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 15px; background: #eee; flex-grow: 1; }
+        .player-info { display: flex; justify-content: space-around; align-items: center; width: 100%; }
+        .player-card { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .player-card img { width: 50px; height: 50px; border-radius: 8px; border: 2px solid transparent; }
+        .player-card.active img { border-color: var(--accent-color); }
+        #gomoku-board { background-color: #f7d086; cursor: pointer; width: 100%; aspect-ratio: 1 / 1; max-width: calc(var(--phone-width) - 40px); }
+        #music-listen-together-ui { padding: 20px; display: flex; flex-direction: column; align-items: center; flex-grow: 1; background-color: #000; color: #fff; position: relative; }
+        .music-avatars { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 300px; margin-bottom: 10px; }
+        .music-avatar-card { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .music-avatar-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+        .music-avatar-card .invite-plus { width: 60px; height: 60px; border-radius: 50%; background-color: #333; color: #ccc; font-size: 30px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .music-distance-info { text-align: center; }
+        .music-distance-info .distance { font-size: 14px; color: #aaa; }
+        .music-distance-info .heart { font-size: 24px; color: var(--danger-color); margin-top: -5px; }
+        #music-headphone-wires { position: absolute; top: 60px; left: 0; width: 100%; height: 150px; z-index: 1; pointer-events: none; }
+        #music-headphone-wires path { stroke: #555; stroke-width: 2; fill: none; }
+        #music-player-image { width: 200px; height: 200px; margin: 20px 0; z-index: 2; object-fit: contain; }
+        #music-playlist-container { width: 100%; flex-grow: 1; overflow-y: auto; background: #000; }
+        #music-playlist-container.deletion-mode .music-song-item .delete-song-item-btn { display: inline-block; }
+        .music-song-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #333; cursor: pointer; background-color: #000; color: #fff; }
+        .music-song-item:hover { background-color: #111; }
+        .music-song-item.playing { color: var(--accent-color); font-weight: bold; }
+        .delete-song-item-btn { display: none; background: none; border: none; color: var(--danger-color); font-size: 20px; cursor: pointer; padding: 0 5px; }
+        .anniversary-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; margin: 10px 15px; border-radius: 12px; background-size: cover; background-position: center; position: relative; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); min-height: 80px; box-sizing: border-box;}
+        .anniversary-info { flex-grow: 1; }
+        .anniversary-info .title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .anniversary-info .details { font-size: 13px; opacity: 0.9; }
+        .anniversary-countdown { text-align: right; }
+        .anniversary-countdown .label { font-size: 12px; }
+        .anniversary-countdown .days { font-size: 28px; font-weight: bold; }
+        .delete-anniversary-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.3); border: none; color: white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; line-height: 24px; text-align: center;}
+        .diary-entry { background: var(--secondary-bg); margin: 10px 15px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
+        .delete-diary-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; }
+        .diary-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .diary-header img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
+        .diary-author-info .name { font-weight: 600; }
+        .diary-author-info .date { font-size: 12px; color: var(--light-text-color); }
+        .diary-content { white-space: pre-wrap; word-break: break-word; line-height: 1.6; }
+        #sticker-grid { flex-grow: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; padding: 10px; overflow-y: auto; }
+        .sticker-grid-item { width: 100%; height: 70px; object-fit: cover; border-radius: 8px; cursor: pointer; background-color: #eee; }
+        .sticker-add-btn { display: flex; justify-content: center; align-items: center; font-size: 30px; color: #aaa; border: 2px dashed #ccc; }
+        #sticker-pagination { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-top: 1px solid var(--border-color); }
+        #sticker-pagination button { padding: 5px 10px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+        #sticker-pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
+    </style>
+</head>
+<body>
+<div id="phone-container">
+    <div id="phone-screen" class="phone-screen">
+        <div id="status-bar" class="status-bar"><span class="time" id="time-display">9:41</span><span class="icons">📶 🔋</span></div>
+        <div id="screen-home" class="screen active"><div class="content"><div class="app-icon" data-target="screen-wechat"><img src="https://files.catbox.moe/7rt2g3.jpg" alt="微信" class="icon"><span>微信</span></div><div class="app-icon" data-target="screen-music"><img src="https://files.catbox.moe/nwt23h.jpg" alt="网易云音乐" class="icon"><span>网易云音乐</span></div><div class="app-icon" data-target="screen-gomoku"><img src="https://files.catbox.moe/hqfaou.jpg" alt="五子棋" class="icon"><span>五子棋</span></div><div class="app-icon" data-target="screen-worldbook"><img src="https://files.catbox.moe/mbnta5.jpg" alt="世界书" class="icon"><span>世界书</span></div><div class="app-icon" data-target="screen-api"><img src="https://files.catbox.moe/ztqg5o.jpg" alt="API" class="icon"><span>API</span></div><div class="app-icon" data-target="screen-wallpaper"><img src="https://files.catbox.moe/83p4mn.jpg" alt="壁纸" class="icon"><span>壁纸</span></div><div class="app-icon" data-target="screen-anniversary"><img src="https://files.catbox.moe/cq3bit.jpg" alt="纪念日" class="icon"><span>纪念日</span></div><div class="app-icon" data-target="screen-diary"><img src="https://files.catbox.moe/anyfm1.jpg" alt="日记" class="icon"><span>日记</span></div></div></div>
+        <div id="screen-wechat" class="screen"></div><div id="screen-music" class="screen"></div><div id="screen-gomoku" class="screen"></div><div id="screen-worldbook" class="screen"></div><div id="screen-chat" class="screen"></div><div id="screen-api" class="screen"></div><div id="screen-wallpaper" class="screen"></div><div id="screen-anniversary" class="screen"></div><div id="screen-diary" class="screen"></div>
+    </div>
+</div>
+<div id="add-contact-modal" class="modal"></div><div id="chat-settings-modal" class="modal"></div><div id="post-moments-modal" class="modal"></div><div id="select-ai-post-modal" class="modal"></div><div id="edit-moments-profile-modal" class="modal"></div><div id="add-anniversary-modal" class="modal"></div><div id="select-diary-author-modal" class="modal"></div><div id="transfer-modal" class="modal"></div><div id="worldbook-modal" class="modal"></div><div id="gomoku-result-modal" class="modal"></div><div id="add-song-modal" class="modal"></div><div id="select-music-partner-modal" class="modal"></div><div id="add-sticker-modal" class="modal"></div><div id="sticker-picker-modal" class="modal"></div>
+<audio id="music-player-element"></audio>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const phoneScreen = document.getElementById('phone-screen'); const timeDisplay = document.getElementById('time-display'); const allScreens = document.querySelectorAll('.screen');
+    let apiSettings = {}, contacts = [], moments = [], anniversaries = [], diaries = [], worldBooks = [], myMomentsProfile = {}, musicAppData = {}, stickers = [];
+    let activeContactId = null, tempImageId = {}, db;
+    let isDeletionMode = false, messagesToDelete = new Set();
+    let isMusicDeleteMode = false;
+    let activeReplyTarget = null;
+    let gomokuGame = {};
+    let stickerPickerState = { currentPage: 1, stickersPerPage: 8 };
+    const defaultAvatarBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAICSURBVHhe7Zq/SgNBFAD3HlAEQRB8EHyAIAj+g4gP4g/Yxi/Y2toKFhYWNoqNlYiIAra2thY2PlCwsRBBEESwsfEP2IuDDxALEfHkna4sLTPz5s25sYV94C6su3v37v1TVE1VVTVd1/VfVd9gqPMRRFG0Xdd1WZZl2Y5vGIZhHcbx8TAMwzAM4zCMwzAMwzCMwzAMwzCMwzAMwzCMwzAMwzAMwzCMwzAMwzCMwzAMwzCMwzAMwzCMwzCMwzAMwzCMwzAMwzCMwzAMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMwzCMw-AAAAElFTSuQmCC';
+    const defaultAvatarId = 'default_avatar'; const emptyBgId = 'empty_bg';
+    function initDB() { return new Promise((resolve, reject) => { const request = indexedDB.open("aiPhoneDB_v26", 1); request.onerror = (event) => { console.error("IndexedDB error:", event.target.error); reject("数据库初始化失败！"); }; request.onupgradeneeded = (event) => { const dbInstance = event.target.result; if (!dbInstance.objectStoreNames.contains('appData')) { dbInstance.createObjectStore("appData", { keyPath: "key" }); } if (!dbInstance.objectStoreNames.contains('images')) { dbInstance.createObjectStore("images", { keyPath: "id" }); } }; request.onsuccess = (event) => { db = event.target.result; const transaction = db.transaction(["images"], "readwrite"); const store = transaction.objectStore("images"); store.put({ id: defaultAvatarId, data: defaultAvatarBase64 }); store.put({ id: emptyBgId, data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' }); resolve(db); }; }); }
+    async function saveData() { if (!db) return; try { const transaction = db.transaction(["appData"], "readwrite"); const store = transaction.objectStore("appData"); const dataToSave = { key: 'main', apiSettings, contacts, moments, anniversaries, diaries, worldBooks, myMomentsProfile, musicAppData, stickers, wallpaperUrl: phoneScreen.style.backgroundImage.slice(5, -2).replace(/"/g, "") }; store.put(dataToSave); } catch (e) { console.error("Error saving data to IndexedDB:", e); alert("保存数据时出错，请重试。"); } }
+    async function loadData() { if (!db) return; const transaction = db.transaction(["appData"], "readonly"); const store = transaction.objectStore("appData"); const request = store.get("main"); return new Promise(resolve => { request.onsuccess = (event) => { const mainData = event.target.result; if (mainData) { apiSettings = mainData.apiSettings || {}; contacts = mainData.contacts || []; moments = mainData.moments || []; anniversaries = mainData.anniversaries || []; diaries = mainData.diaries || []; worldBooks = mainData.worldBooks || []; myMomentsProfile = mainData.myMomentsProfile || {}; musicAppData = mainData.musicAppData || { playlist: [], currentPartnerId: null }; stickers = mainData.stickers || []; if(mainData.wallpaperUrl) phoneScreen.style.backgroundImage = `url(${mainData.wallpaperUrl})`; } if (!myMomentsProfile.name) myMomentsProfile.name = '我'; if (!myMomentsProfile.avatarId) myMomentsProfile.avatarId = defaultAvatarId; if (!musicAppData.playlist) musicAppData = { playlist: [], currentPartnerId: null }; if (!stickers) stickers = []; resolve(); }; request.onerror = () => { if (!myMomentsProfile.name) myMomentsProfile.name = '我'; if (!myMomentsProfile.avatarId) myMomentsProfile.avatarId = defaultAvatarId; if (!musicAppData.playlist) musicAppData = { playlist: [], currentPartnerId: null }; if (!stickers) stickers = []; resolve(); } }); }
+    const fileToBase64 = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error); });
+    async function storeImageAndGetId(file) { if (!db) return defaultAvatarId; const base64 = await fileToBase64(file); const id = `img_${Date.now()}_${Math.random()}`; try { const transaction = db.transaction(["images"], "readwrite"); const store = transaction.objectStore("images"); store.put({ id, data: base64 }); return id; } catch(e) { console.error("Error saving image to IndexedDB:", e); alert("保存图片时出错！可能是图片过大或存储空间不足。"); return null; } }
+    async function getImageById(id) { if (!db || !id) return defaultAvatarBase64; if (id === emptyBgId) return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='; const transaction = db.transaction(["images"], "readonly"); const store = transaction.objectStore("images"); const request = store.get(id); return new Promise(resolve => { request.onsuccess = (event) => { resolve(event.target.result ? event.target.result.data : defaultAvatarBase64); }; request.onerror = () => { resolve(defaultAvatarBase64); }; }); }
+    
+    async function renderHTML() {
+        document.getElementById('screen-wechat').innerHTML = `<div class="header" id="wechat-header"><div class="left-actions"><div class="back-btn" data-target="screen-home">‹ 主页</div></div><div class="title" id="wechat-title">微信 (<span>0</span>)</div><div class="right-actions"><div class="action-btn" id="add-contact-btn">+</div><div class="action-btn" id="moments-ai-post-btn" style="display:none; font-size:22px;">◎</div><div class="action-btn" id="moments-my-post-btn" style="display:none;">+</div></div></div><div class="content-container"><div class="contact-list active" id="contact-list-container"></div><div class="moments-feed" id="moments-feed-container"><div class="moments-header" id="moments-header-bg"><div class="moments-user"><div class="info"><span class="name" id="my-moments-name">我</span><span class="signature" id="my-moments-signature"></span></div><img src="" id="my-moments-avatar" alt="我的头像"></div></div><div class="moments-list" id="moments-list"></div></div></div><nav class="wechat-nav"><div class="nav-item active" data-tab="contact-list"><div class="icon">👥</div><div class="text">联系人</div></div><div class="nav-item" data-tab="moments-feed"><div class="icon">🖼️</div><div class="text">朋友圈</div></div></nav>`;
+        document.getElementById('screen-music').innerHTML = `<div class="header"><div class="back-btn" data-target="screen-home">‹ 主页</div><div class="title">一起听</div><div class="right-actions"><div class="action-btn" id="add-song-btn">+</div><div class="action-btn" id="delete-song-btn">🗑️</div></div></div><div id="music-listen-together-ui"><svg id="music-headphone-wires" xmlns="http://www.w3.org/2000/svg"><path id="wire-left" d=""/><path id="wire-right" d=""/></svg><div class="music-avatars"><div class="music-avatar-card" id="music-avatar-left"><div class="invite-plus">+</div></div><div class="music-distance-info"><div class="distance">距离 520m</div><div class="heart">❤️</div></div><div class="music-avatar-card" id="music-avatar-right"></div></div><img id="music-player-image" src="https://files.catbox.moe/0estcd.jpg" alt="Player"><div id="music-playlist-container" class="content-container"></div></div>`;
+        document.getElementById('screen-gomoku').innerHTML = `<div class="header"><div class="back-btn" data-target="screen-home" id="gomoku-back-btn">‹ 主页</div><div class="title">五子棋</div><div class="right-actions" style="width: 60px;"></div></div><div id="gomoku-opponent-selection" class="content-container"></div><div id="gomoku-game-board" class="gomoku-container"><div class="player-info"><div class="player-card" id="gomoku-player-human"><img><span></span></div><div class="player-card" id="gomoku-player-ai"><img><span></span></div></div><canvas id="gomoku-board"></canvas></div>`;
+        document.getElementById('screen-worldbook').innerHTML = `<div class="header"><div class="back-btn" data-target="screen-home">‹ 主页</div><div class="title">世界书</div><div class="right-actions"><div class="action-btn" id="add-worldbook-btn">+</div></div></div><div class="content-container" id="worldbook-list-container"></div>`;
+        document.getElementById('screen-chat').innerHTML = `<div class="header"><div class="back-btn" data-target="screen-wechat">‹ 返回</div><div class="title" id="chat-contact-name">...</div><div class="right-actions"><div class="action-btn" id="multi-select-btn">☑️</div><div class="action-btn" id="chat-settings-btn">⚙️</div></div></div><div id="chat-area"></div><div id="chat-input-area"><div id="chat-actions-panel"><div class="action-item" id="sticker-action-btn"><div class="icon">🖼️</div><span>表情包</span></div><div class="action-item" id="transfer-action-btn"><div class="icon">💸</div><span>转账</span></div></div><div id="chat-input-controls"><div class="input-btn" id="chat-actions-toggle-btn">+</div><input type="text" id="chat-input" placeholder="输入消息..."><div class="input-btn" id="get-ai-response-btn">☁️</div><button id="send-btn" disabled>发送</button></div></div>`;
+        document.getElementById('screen-api').innerHTML = `<div class="header"><div class="back-btn" data-target="screen-home">‹ 主页</div><div class="title">API 设置</div><div class="right-actions" style="width: 60px;"></div></div><div class="settings-content"><div class="form-group"><label for="api-base-url">反向代理地址 (Base URL)</label><input type="text" id="api-base-url" placeholder="例如: https://api.openai.com"></div><div class="form-group"><label for="api-key">API 密钥 (API Key)</label><input type="password" id="api-key" placeholder="sk-..."></div><button id="fetch-models-btn" class="btn btn-secondary">拉取模型</button><div class="form-group" style="margin-top: 15px;"><label for="api-model-select">选择模型</label><select id="api-model-select" disabled><option>请先拉取模型</option></select></div><button id="save-api-settings-btn" class="btn">保存设置</button></div>`;
+        document.getElementById('screen-wallpaper').innerHTML = `<div class="header"><div class="back-btn" data-target="screen-home">‹ 主页</div><div class="title">主页壁纸设置</div><div class="right-actions" style="width: 60px;"></div></div><div class="settings-content"><div class="form-group"><label for="wallpaper-url">图片 URL</label><input type="text" id="wallpaper-url" placeholder="输入图片的URL地址"></div><button id="apply-wallpaper-btn" class="btn">应用壁纸</button><hr style="margin: 20px 0;"><button id="upload-wallpaper-btn" class="btn btn-secondary">从相册选择</button><input type="file" id="wallpaper-input" accept="image/*" style="display: none;"></div>`;
+        document.getElementById('screen-anniversary').innerHTML = `<div class="header"><div class="back-btn" data-target="screen-home">‹ 主页</div><div class="title">纪念日</div><div class="right-actions"><div class="action-btn" id="add-anniversary-btn">+</div></div></div><div class="content-container" id="anniversary-list-container"></div>`;
+        document.getElementById('screen-diary').innerHTML = `<div class="header"><div class="back-btn" data-target="screen-home">‹ 主页</div><div class="title">日记</div><div class="right-actions"><div class="action-btn" id="add-diary-btn">+</div></div></div><div class="content-container" id="diary-list-container"></div>`;
+        document.getElementById('add-contact-modal').innerHTML = `<div class="modal-content"><h3>添加新角色</h3><div class="form-group"><label>头像</label><img class="avatar-preview" id="add-contact-avatar-preview" src="" alt="头像预览"><input type="file" id="add-contact-avatar-input" accept="image/*" style="display: none;"></div><div class="form-group"><label for="add-contact-name">角色姓名</label><input type="text" id="add-contact-name"></div><div class="form-group"><label for="add-contact-remark">角色备注 (备注会优先显示)</label><input type="text" id="add-contact-remark"></div><div class="form-group"><label for="add-contact-persona">角色人设</label><textarea id="add-contact-persona" placeholder="详细描述角色的性格、背景、说话风格等。"></textarea></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button><button id="confirm-add-contact-btn" class="btn">添加</button></div></div>`;
+        document.getElementById('chat-settings-modal').innerHTML = `<div class="modal-content"><h3>聊天设置</h3><input type="hidden" id="settings-contact-id"><h4>角色设定</h4><div class="form-group"><label>角色头像</label><img class="avatar-preview" id="edit-contact-avatar-preview" src="" alt="头像预览"><input type="file" id="edit-contact-avatar-input" accept="image/*" style="display: none;"></div><div class="form-group"><label for="edit-contact-name">角色姓名</label><input type="text" id="edit-contact-name"></div><div class="form-group"><label for="edit-contact-remark">角色备注 (备注会优先显示)</label><input type="text" id="edit-contact-remark"></div><div class="form-group"><label for="edit-contact-persona">角色人设</label><textarea id="edit-contact-persona"></textarea></div><hr><h4>世界观设定</h4><div class="form-group"><label for="bind-worldbook-select">绑定世界书</label><select id="bind-worldbook-select"></select></div><hr><h4>我方设定 (本次对话)</h4><div class="form-group"><label>我方头像</label><img class="avatar-preview" id="edit-my-avatar-preview" src="" alt="头像预览"><input type="file" id="edit-my-avatar-input" accept="image/*" style="display: none;"></div><div class="form-group"><label for="edit-my-name">我方姓名</label><input type="text" id="edit-my-name"></div><div class="form-group"><label for="edit-my-persona">我方人设</label><textarea id="edit-my-persona" placeholder="在此次对话中，你的身份设定。"></textarea></div><hr><h4>其他设置</h4><div class="form-group"><label for="edit-memory-depth">AI 记忆条数</label><input type="number" id="edit-memory-depth" min="2" max="50" value="10"></div><div class="form-group"><label>当前聊天背景</label><img class="avatar-preview" id="edit-chat-bg-preview" src="" alt="背景预览"><input type="file" id="edit-chat-bg-input" accept="image/*" style="display: none;"></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button><button id="save-chat-settings-btn" class="btn">保存</button></div><button id="delete-chat-history-btn" class="btn btn-danger" style="margin-top: 5px; background-color: #f39c12;">删除聊天记录</button><button id="delete-contact-btn" class="btn btn-danger">删除该联系人</button></div>`;
+        document.getElementById('post-moments-modal').innerHTML = `<div class="modal-content"><h3>发布朋友圈</h3><div class="form-group"><textarea id="my-moments-text" placeholder="这一刻的想法..."></textarea></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button><button id="confirm-my-moments-btn" class="btn">发布</button></div></div>`;
+        document.getElementById('select-ai-post-modal').innerHTML = `<div class="modal-content"><h3>让谁发朋友圈？</h3><div id="ai-post-selection-list"></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button></div></div>`;
+        document.getElementById('edit-moments-profile-modal').innerHTML = `<div class="modal-content"><h3>修改朋友圈信息</h3><div class="form-group"><label>朋友圈背景</label><img class="avatar-preview" id="edit-moments-bg-preview" alt="背景预览" style="width:100%; height:auto;"><input type="file" id="edit-moments-bg-input" accept="image/*" style="display: none;"></div><div class="form-group"><label>我的头像</label><img class="avatar-preview" id="edit-moments-avatar-preview" alt="头像预览"><input type="file" id="edit-moments-avatar-input" accept="image/*" style="display: none;"></div><div class="form-group"><label for="edit-moments-name">我的名字</label><input type="text" id="edit-moments-name"></div><div class="form-group"><label for="edit-moments-signature">个性签名</label><input type="text" id="edit-moments-signature"></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button><button id="save-edit-moments-profile-btn" class="btn">保存</button></div></div>`;
+        document.getElementById('add-anniversary-modal').innerHTML = `<div class="modal-content"><h3>添加新纪念日</h3><div class="form-group"><label for="anniversary-title">标题</label><input type="text" id="anniversary-title" placeholder="如：第一次见面"></div><div class="form-group"><label for="anniversary-date">日期</label><input type="date" id="anniversary-date"></div><div class="form-group"><label for="anniversary-contact-select">关联联系人</label><select id="anniversary-contact-select"></select></div><div class="form-group"><label>封面</label><img class="avatar-preview" id="anniversary-cover-preview" src="" alt="封面预览" style="width: 100%; height: 120px; object-fit: cover;"><input type="file" id="anniversary-cover-input" accept="image/*" style="display: none;"></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button><button id="confirm-add-anniversary-btn" class="btn">添加</button></div></div>`;
+        document.getElementById('select-diary-author-modal').innerHTML = `<div class="modal-content"><h3>让谁写日记？</h3><div id="diary-author-selection-list"></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button></div></div>`;
+        document.getElementById('transfer-modal').innerHTML = `<div class="modal-content"><h3>转账</h3><div class="form-group"><label for="transfer-amount">转账金额</label><input type="number" id="transfer-amount" placeholder="0.00" max="100000" step="0.01"></div><div class="form-group"><label for="transfer-memo">转账备注</label><input type="text" id="transfer-memo" placeholder="（可不填）"></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button><button class="btn" id="confirm-transfer-btn">确认转账</button></div></div>`;
+        document.getElementById('worldbook-modal').innerHTML = `<div class="modal-content"><h3>世界书</h3><input type="hidden" id="worldbook-id"><div class="form-group"><label for="worldbook-name">书名</label><input type="text" id="worldbook-name"></div><div class="form-group"><label for="worldbook-content">内容</label><textarea id="worldbook-content"></textarea></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button><button id="save-worldbook-btn" class="btn">保存</button></div></div>`;
+        document.getElementById('gomoku-result-modal').innerHTML = `<div class="modal-content"><h3 id="gomoku-result-text"></h3><div class="modal-buttons"><button class="btn btn-secondary" id="gomoku-rematch-btn">再来一把</button><button class="btn" id="gomoku-change-opponent-btn">换个对手</button></div></div>`;
+        document.getElementById('add-song-modal').innerHTML = `<div class="modal-content"><h3>添加歌曲</h3><div class="form-group"><label for="add-song-name">歌曲名称</label><input type="text" id="add-song-name"></div><div class="form-group"><label for="add-song-url">歌曲URL</label><input type="text" id="add-song-url" placeholder="请填入有效的音频直链"></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button><button id="confirm-add-song-btn" class="btn">添加</button></div></div>`;
+        document.getElementById('select-music-partner-modal').innerHTML = `<div class="modal-content"><h3>邀请谁一起听？</h3><div id="music-partner-selection-list"></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button></div></div>`;
+        document.getElementById('add-sticker-modal').innerHTML = `<div class="modal-content"><h3>添加表情包</h3><div class="form-group"><label>从相册选择</label><img class="avatar-preview" id="add-sticker-preview" src="" alt="表情预览" style="width: 120px; height: 120px;"><input type="file" id="add-sticker-input" accept="image/*" style="display: none;"></div><div class="form-group"><label for="add-sticker-desc">表情包描述</label><input type="text" id="add-sticker-desc" placeholder="如: 开心猫猫, 疑惑柴犬"></div><div class="modal-buttons"><button class="btn btn-secondary" data-action="close">取消</button><button id="confirm-add-sticker-btn" class="btn">确定</button></div></div>`;
+        document.getElementById('sticker-picker-modal').innerHTML = `<div class="modal-content"><h3 style="flex-shrink: 0;">表情包画廊</h3><div id="sticker-grid"></div><div id="sticker-pagination" style="display:none;"><button id="sticker-prev-btn">‹ 上一页</button><span id="sticker-page-info"></span><button id="sticker-next-btn">下一页 ›</button></div></div>`;
+    }
+    const getDisplayName = (contact) => contact ? (contact.remark || contact.name) : '未知';
+    async function createMessageElement(msg) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${msg.sender}`;
+        messageDiv.dataset.id = msg.id;
+        const avatarSrc = await getImageById(msg.avatarId);
+        
+        let bubbleContent = '';
+        switch(msg.type) {
+            case 'sticker':
+                messageDiv.classList.add('sticker');
+                const stickerSrc = await getImageById(msg.imageId);
+                bubbleContent = `<img src="${stickerSrc}" alt="sticker">`;
+                break;
+            case 'transfer':
+                messageDiv.classList.add('transfer');
+                messageDiv.dataset.status = msg.status;
+                const memoHtml = msg.memo ? `<div class="transfer-memo">${msg.memo.replace(/</g, "&lt;")}</div>` : '';
+                let footerText = '';
+                if(msg.sender === 'sent') {
+                    const contact = contacts.find(c => c.id === activeContactId);
+                    footerText = `转给 ${getDisplayName(contact)}`;
+                } else {
+                    footerText = '转给你';
+                }
+                bubbleContent = `<div class="transfer-icon">💸</div><div class="transfer-content"><div class="transfer-amount">¥ ${parseFloat(msg.amount).toFixed(2)}</div>${memoHtml}<div class="transfer-footer">${footerText}</div></div>`;
+                break;
+            default: // 'text'
+                bubbleContent = msg.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                break;
+        }
+
+        messageDiv.innerHTML = `<img src="${avatarSrc}" class="avatar"><div class="bubble">${bubbleContent}</div>`;
+        return messageDiv;
+    }
+    async function appendMessageToChat(msg) { const chatArea = document.getElementById('chat-area'); const messageEl = await createMessageElement(msg); chatArea.appendChild(messageEl); chatArea.scrollTop = chatArea.scrollHeight; }
+    async function renderChat(contactId) { const contact = contacts.find(c => c.id === contactId); if (!contact) return; activeContactId = contactId; const chatArea = document.getElementById('chat-area'); document.getElementById('chat-contact-name').textContent = getDisplayName(contact); chatArea.style.backgroundImage = contact.chatBgId ? `url(${await getImageById(contact.chatBgId)})` : ''; chatArea.style.backgroundColor = contact.chatBgId ? 'transparent' : 'var(--primary-bg)'; chatArea.innerHTML = ''; if (contact.chatHistory && contact.chatHistory.length > 0) { const messagePromises = contact.chatHistory.map(msg => createMessageElement(msg)); const messageElements = await Promise.all(messagePromises); const fragment = document.createDocumentFragment(); messageElements.forEach(el => fragment.appendChild(el)); chatArea.appendChild(fragment); } setTimeout(() => chatArea.scrollTop = chatArea.scrollHeight, 0); }
+    async function renderMoments() { const bgEl = document.getElementById('moments-header-bg'); bgEl.style.backgroundImage = myMomentsProfile.headerBgId ? `url(${await getImageById(myMomentsProfile.headerBgId)})` : `url(https://files.catbox.moe/p1n9y0.jpg)`; document.getElementById('my-moments-name').textContent = myMomentsProfile.name || "我"; document.getElementById('my-moments-signature').textContent = myMomentsProfile.signature || "设置你的个性签名"; document.getElementById('my-moments-avatar').src = await getImageById(myMomentsProfile.avatarId); const momentsList = document.getElementById('moments-list'); momentsList.innerHTML = ''; if (moments.length === 0) return; const momentsHtmlPromises = moments.slice().reverse().map(async moment => { const momentEl = document.createElement('div'); momentEl.className = 'moment-item'; momentEl.dataset.momentId = moment.id; let authorName, authorAvatarSrc; if (moment.authorId === 'me') { authorName = myMomentsProfile.name; authorAvatarSrc = await getImageById(myMomentsProfile.avatarId); } else { const contact = contacts.find(c => c.id === moment.authorId); authorName = getDisplayName(contact); authorAvatarSrc = contact ? await getImageById(contact.avatarId) : await getImageById(defaultAvatarId); } const safeMomentText = moment.text.replace(/</g, "&lt;"); const isLiked = (moment.likes || []).includes('me'); const likeBtnClass = isLiked ? 'like-btn liked' : 'like-btn'; const likerNamePromises = (moment.likes || []).map(async (likerId) => { if (likerId === 'me') return myMomentsProfile.name; const contact = contacts.find(c => c.id === likerId); return getDisplayName(contact); }); const likerNames = (await Promise.all(likerNamePromises)).filter(Boolean); const likesContainerHtml = likerNames.length > 0 ? `<div class="moment-likes"><span class="liker-name">${likerNames.join(', ')}</span></div>` : ''; const commentHtmlPromises = (moment.comments || []).map(async (comment, index) => { const safeCommentText = comment.text.replace(/</g, "&lt;"); let commentAuthorName; if (comment.authorId === 'me') { commentAuthorName = myMomentsProfile.name; } else { const contact = contacts.find(c => c.id === comment.authorId); commentAuthorName = getDisplayName(contact); } let replyToHtml = ''; if (comment.replyTo) { let replyToName; if (comment.replyTo === 'me') { replyToName = myMomentsProfile.name; } else { const contact = contacts.find(c => c.id === comment.replyTo); replyToName = getDisplayName(contact); } replyToHtml = ` 回复 <span class="comment-author">${replyToName}</span>`; } return `<div class="moment-comment" data-comment-index="${index}"><span class="comment-author">${commentAuthorName}</span>${replyToHtml}: ${safeCommentText}</div>`; }); const commentsHtml = (await Promise.all(commentHtmlPromises)).join(''); const commentsContainerHtml = commentsHtml ? `<div class="moment-comments">${commentsHtml}</div>` : ''; momentEl.innerHTML = `<img src="${authorAvatarSrc}" class="avatar"><div class="content"><div class="author">${authorName}</div><div class="text">${safeMomentText}</div><div class="actions"><span class="timestamp" title="点击删除">📅 ${new Date(moment.id).toLocaleString()}</span><div class="action-buttons"><span class="${likeBtnClass}">❤️</span><span class="comment-btn">💬</span></div></div>${likesContainerHtml}${commentsContainerHtml}<div class="comment-input-container"><input type="text" placeholder="评论..."><button>发送</button></div></div>`; return momentEl; }); const momentElements = await Promise.all(momentsHtmlPromises); const fragment = document.createDocumentFragment(); momentElements.forEach(el => fragment.appendChild(el)); momentsList.appendChild(fragment); }
+    async function renderContacts() { const container = document.getElementById('contact-list-container'); container.innerHTML = ''; if (contacts.length === 0) { container.innerHTML = '<p style="text-align:center; color:#888; margin-top: 20px;">还没有联系人，点击右上角+号添加</p>'; } else { for (const contact of contacts) { const item = document.createElement('div'); item.className = 'list-item contact-item'; item.dataset.id = contact.id; const avatarSrc = await getImageById(contact.avatarId); const displayName = getDisplayName(contact); item.innerHTML = `<img src="${avatarSrc}" alt="${displayName}"><div class="info"><div class="name">${displayName}</div></div>`; container.appendChild(item); } } document.querySelector('#wechat-title span').textContent = contacts.length; }
+    async function renderAnniversaries() { const container = document.getElementById('anniversary-list-container'); container.innerHTML = ''; if (anniversaries.length === 0) { container.innerHTML = '<p style="text-align:center; color:#888; margin-top: 20px;">还没有纪念日</p>'; return; } const now = new Date(); now.setHours(0, 0, 0, 0); anniversaries.sort((a, b) => new Date(a.date) - new Date(b.date)); for (const anniversary of anniversaries) { const item = document.createElement('div'); item.className = 'anniversary-item'; const coverSrc = await getImageById(anniversary.coverImageId || emptyBgId); item.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${coverSrc})`; const contact = contacts.find(c => c.id === anniversary.contactId); const contactName = contact ? getDisplayName(contact) : '与某人'; const eventDate = new Date(anniversary.date); eventDate.setHours(0, 0, 0, 0); const diffTime = eventDate - now; const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); let countdownHtml; if (diffDays >= 0) { countdownHtml = `<div class="label">还有</div><div class="days">${diffDays}</div><div class="label">天</div>`; } else { countdownHtml = `<div class="label">已过去</div><div class="days">${-diffDays}</div><div class="label">天</div>`; } item.innerHTML = `<div class="anniversary-info"><div class="title">${anniversary.title}</div><div class="details">${contactName} | ${anniversary.date}</div></div><div class="anniversary-countdown">${countdownHtml}</div><button class="delete-anniversary-btn" data-id="${anniversary.id}">✕</button>`; container.appendChild(item); } }
+    async function renderDiaries() { const container = document.getElementById('diary-list-container'); container.innerHTML = ''; if (diaries.length === 0) { container.innerHTML = '<p style="text-align:center; color:#888; margin-top: 20px;">还没有日记</p>'; return; } for (const diary of diaries.slice().reverse()) { const item = document.createElement('div'); item.className = 'diary-entry'; item.dataset.id = diary.id; const contact = contacts.find(c => c.id === diary.authorId); const authorName = contact ? getDisplayName(contact) : '匿名'; const avatarSrc = contact ? await getImageById(contact.avatarId) : defaultAvatarBase64; const safeText = diary.text.replace(/</g, "&lt;"); item.innerHTML = `<div class="diary-header"><img src="${avatarSrc}" alt="${authorName}"><div class="diary-author-info"><div class="name">${authorName}</div><div class="date">${new Date(diary.date).toLocaleDateString()}</div></div></div><div class="diary-content">${safeText}</div><button class="delete-diary-btn" data-id="${diary.id}">✕</button>`; container.appendChild(item); } }
+    function renderWorldBooks() { const container = document.getElementById('worldbook-list-container'); container.innerHTML = ''; if (worldBooks.length === 0) { container.innerHTML = '<p style="text-align:center; color:#888; margin-top: 20px;">还没有世界书，点击右上角+号添加</p>'; } else { worldBooks.forEach(book => { const item = document.createElement('div'); item.className = 'list-item'; item.dataset.id = book.id; item.innerHTML = `<div class="info"><div class="name">${book.name}</div></div><button class="delete-btn" data-id="${book.id}">✕</button>`; container.appendChild(item); }); } }
+    const showScreen = (screenId) => { allScreens.forEach(s => s.classList.remove('active')); const targetScreen = document.getElementById(screenId); targetScreen.classList.add('active'); const statusBar = document.getElementById('status-bar'); if (screenId === 'screen-anniversary') renderAnniversaries(); if (screenId === 'screen-diary') renderDiaries(); if (screenId === 'screen-worldbook') renderWorldBooks(); if (screenId === 'screen-gomoku') showGomokuOpponentSelection(); if (screenId === 'screen-music') renderMusicScreen(); if (screenId === 'screen-home' || screenId === 'screen-anniversary' || screenId === 'screen-diary' || (screenId === 'screen-wechat' && document.querySelector('.moments-feed.active')) || screenId === 'screen-music') { statusBar.classList.remove('status-bar-dark-text'); } else { statusBar.classList.add('status-bar-dark-text'); } };
+    const openModal = (modalId) => document.getElementById(modalId).classList.add('active'); const closeModal = (modalId) => document.getElementById(modalId).classList.remove('active'); const updateClock = () => { const now = new Date(); timeDisplay.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; };
+    const getBaseSystemPrompt = (persona, myPersona, worldBookContent, anniversaryInfo) => { let prompt = `CRITICAL INSTRUCTION: You are an actor playing a character. You MUST strictly and completely embody the following persona. Every word you say must come from this character. DO NOT break character under any circumstances. Your detailed persona is: "${persona}". The user you are talking to has this persona: "${myPersona || '一个普通人'}". Your replies must be pure dialogue, like in a chat app. Absolutely no meta-commentary, narration, or action descriptions like *smiles*.`; if (worldBookContent) { prompt += `\n\nULTRA-CRITICAL WORLD SETTING: You must strictly adhere to the following world setting information. This context is the absolute truth of your reality and is more important than your persona. World Setting: "${worldBookContent}"`; } if (anniversaryInfo) { prompt += `\n\nSHARED MEMORIES (ANNIVERSARIES): You share the following important dates with the user. This is core to your relationship. Remember and refer to them naturally: ${anniversaryInfo}`; } prompt += `\n\n- You have access to a collection of saved stickers. Each sticker has a description. To send a sticker that matches the context, reply ONLY with the special format: [STICKER: keywords]. For example, to send a happy cat sticker, reply with [STICKER: happy cat]. The system will find the best matching sticker.`; prompt += `\n\n- You can also send a transfer to the user by replying ONLY with the special format: [TRANSFER: amount=NUMBER, memo=TEXT]. Do not add any other text around this command if you choose to use it.`; return prompt; };
+    async function init() { try { await initDB(); await renderHTML(); await loadData(); if (!phoneScreen.style.backgroundImage.includes('url')) { phoneScreen.style.backgroundImage = `url(https://files.catbox.moe/2yifoc.jpg)`; } document.getElementById('wallpaper-url').value = phoneScreen.style.backgroundImage.slice(5, -2).replace(/"/g, ""); document.getElementById('api-base-url').value = apiSettings.baseUrl || ''; document.getElementById('api-key').value = apiSettings.apiKey || ''; if (apiSettings.model) { const modelSelect = document.getElementById('api-model-select'); modelSelect.innerHTML = `<option value="${apiSettings.model}">${apiSettings.model}</option>`; modelSelect.disabled = false; } await renderContacts(); await renderMoments(); updateClock(); setInterval(updateClock, 30000); bindEventListeners(); } catch (error) { console.error("Initialization failed:", error); alert("应用初始化失败。"); } }
+    
+    function bindEventListeners() {
+        document.body.addEventListener('click', async e => {
+            const target = e.target;
+            if (target.classList.contains('modal')) { target.classList.remove('active'); return; }
+            if (isDeletionMode) { const messageEl = e.target.closest('.message'); if (messageEl) { const msgId = Number(messageEl.dataset.id); messageEl.classList.toggle('selected-for-deletion'); if (messagesToDelete.has(msgId)) { messagesToDelete.delete(msgId); } else { messagesToDelete.add(msgId); } } return; }
+            const backBtn = target.closest('.back-btn'); if (backBtn) { if (backBtn.id === "gomoku-back-btn" && gomokuGame.inProgress) { if (!confirm("确定要退出当前对局吗？")) return; } showScreen(backBtn.dataset.target); return; }
+            const appIcon = target.closest('.app-icon'); if (appIcon) { showScreen(appIcon.dataset.target); return; }
+            const contactItem = target.closest('.contact-item'); if (contactItem) { const contactId = Number(contactItem.dataset.id); await renderChat(contactId); showScreen('screen-chat'); return; }
+            if (target.closest('[data-action="close"]')) { target.closest('.modal').classList.remove('active'); return; }
+            const navItem = target.closest('.nav-item');
+            if (navItem) {
+                document.querySelectorAll('.wechat-nav .nav-item').forEach(i => i.classList.remove('active'));
+                const targetTab = navItem.dataset.tab;
+                document.querySelectorAll('#screen-wechat .content-container > div').forEach(p => p.classList.remove('active'));
+                const isMoments = targetTab === 'moments-feed';
+                if (isMoments) { await renderMoments(); document.getElementById('status-bar').classList.remove('status-bar-dark-text'); } 
+                else { renderContacts(); document.getElementById('status-bar').classList.add('status-bar-dark-text'); }
+                navItem.classList.add('active');
+                document.querySelector(`.${targetTab}`).classList.add('active');
+                document.querySelector('#wechat-header .title').innerHTML = isMoments ? '朋友圈' : `微信 (<span>${contacts.length}</span>)`;
+                document.getElementById('add-contact-btn').style.display = isMoments ? 'none' : 'inline-block';
+                document.getElementById('moments-my-post-btn').style.display = isMoments ? 'inline-block' : 'none';
+                document.getElementById('moments-ai-post-btn').style.display = isMoments ? 'inline-block' : 'none';
+                return;
+            }
+            const transferBubble = target.closest('.message.received.transfer[data-status="pending"]');
+            if (transferBubble) {
+                const msgId = Number(transferBubble.dataset.id);
+                const contact = contacts.find(c => c.id === activeContactId);
+                const msg = contact.chatHistory.find(m => m.id === msgId);
+                if (!msg) return;
+                if (confirm("要收下这笔转账吗？")) {
+                    msg.status = 'accepted';
+                    await saveData();
+                    await renderChat(activeContactId);
+                } else if (confirm("要退回这笔转账吗？")) {
+                    msg.status = 'returned';
+                    const myProfile = contact.myProfile || { name: '我', avatarId: myMomentsProfile.avatarId };
+                    const returnMsg = { id: Date.now(), sender: 'sent', type: 'transfer', amount: msg.amount, memo: '退回转账', avatarId: myProfile.avatarId, status: 'returned' };
+                    contact.chatHistory.push(returnMsg);
+                    await appendMessageToChat(returnMsg);
+                    await saveData();
+                }
+            }
+            if (target.id === 'add-anniversary-btn') { if (contacts.length === 0) { alert('请先创建联系人'); return; } document.getElementById('anniversary-title').value = ''; document.getElementById('anniversary-date').value = ''; document.getElementById('anniversary-cover-preview').src = await getImageById(emptyBgId); tempImageId.anniversaryCover = null; const select = document.getElementById('anniversary-contact-select'); select.innerHTML = ''; contacts.forEach(contact => { const option = document.createElement('option'); option.value = contact.id; option.textContent = getDisplayName(contact); select.appendChild(option); }); openModal('add-anniversary-modal'); return; }
+            if (target.id === 'confirm-add-anniversary-btn') { const title = document.getElementById('anniversary-title').value.trim(); const date = document.getElementById('anniversary-date').value; const contactId = Number(document.getElementById('anniversary-contact-select').value); if (!title || !date || !contactId) { alert('请填写所有必填项！'); return; } const newAnniversary = { id: Date.now(), title, date, contactId, coverImageId: tempImageId.anniversaryCover || null }; anniversaries.push(newAnniversary); await renderAnniversaries(); await saveData(); closeModal('add-anniversary-modal'); return; }
+            if (target.id === 'add-diary-btn') { if (contacts.length === 0) { alert("你还没有联系人"); return; } const list = document.getElementById('diary-author-selection-list'); list.innerHTML = ''; contacts.forEach(contact => { const contactBtn = document.createElement('button'); contactBtn.className = 'btn'; contactBtn.textContent = getDisplayName(contact); contactBtn.onclick = () => { triggerAiDiary(contact.id); closeModal('select-diary-author-modal'); }; list.appendChild(contactBtn); }); openModal('select-diary-author-modal'); return; }
+            if (target.closest('.delete-anniversary-btn')) { if (confirm('确定要删除这个纪念日吗？')) { const idToDelete = Number(target.closest('.delete-anniversary-btn').dataset.id); anniversaries = anniversaries.filter(a => a.id !== idToDelete); await renderAnniversaries(); await saveData(); } return; }
+            if (target.closest('.delete-diary-btn')) { if (confirm('确定要删除这篇日记吗？')) { const idToDelete = Number(target.closest('.delete-diary-btn').dataset.id); diaries = diaries.filter(d => d.id !== idToDelete); await renderDiaries(); await saveData(); } return; }
+        });
+        const setupAvatarUpload = (previewElId, inputElId, tempKey) => { const previewEl = document.getElementById(previewElId); const inputEl = document.getElementById(inputElId); previewEl.addEventListener('click', () => inputEl.click()); inputEl.addEventListener('change', async e => { if (e.target.files[0]) { const newId = await storeImageAndGetId(e.target.files[0]); if (newId) { tempImageId[tempKey] = newId; previewEl.src = await getImageById(newId); } } }); };
+        setupAvatarUpload('add-contact-avatar-preview', 'add-contact-avatar-input', 'addContact'); setupAvatarUpload('edit-contact-avatar-preview', 'edit-contact-avatar-input', 'contactAvatar'); setupAvatarUpload('edit-my-avatar-preview', 'edit-my-avatar-input', 'myAvatar'); setupAvatarUpload('edit-chat-bg-preview', 'edit-chat-bg-input', 'chatBg'); setupAvatarUpload('edit-moments-avatar-preview', 'edit-moments-avatar-input', 'momentsAvatar'); setupAvatarUpload('anniversary-cover-preview', 'anniversary-cover-input', 'anniversaryCover'); setupAvatarUpload('edit-moments-bg-preview', 'edit-moments-bg-input', 'momentsBg');
+        setupAvatarUpload('add-sticker-preview', 'add-sticker-input', 'addSticker');
+        
+        document.getElementById('fetch-models-btn').addEventListener('click', async () => { const baseUrl = document.getElementById('api-base-url').value.trim(); const apiKey = document.getElementById('api-key').value.trim(); const btn = document.getElementById('fetch-models-btn'); const select = document.getElementById('api-model-select'); if (!baseUrl || !apiKey) { alert('请填写完整的反向代理地址和API密钥'); return; } btn.textContent = '拉取中...'; btn.disabled = true; try { const response = await fetch(`${baseUrl}/v1/models`, { headers: { 'Authorization': `Bearer ${apiKey}` } }); if (!response.ok) throw new Error(`HTTP error! status: ${response.status} ${await response.text()}`); const data = await response.json(); select.innerHTML = ''; (data.data || []).forEach(model => { const option = document.createElement('option'); option.value = model.id; option.textContent = model.id; select.appendChild(option); }); select.disabled = false; } catch (error) { alert('拉取模型失败: ' + error.message); select.innerHTML = '<option>拉取失败</option>'; } finally { btn.textContent = '拉取模型'; btn.disabled = false; } });
+        document.getElementById('save-api-settings-btn').addEventListener('click', async () => { apiSettings = { baseUrl: document.getElementById('api-base-url').value.trim(), apiKey: document.getElementById('api-key').value.trim(), model: document.getElementById('api-model-select').value }; if (!apiSettings.baseUrl || !apiSettings.apiKey || !apiSettings.model || apiSettings.model === '请先拉取模型') { alert('请确保所有信息都已填写并选择了模型'); return; } await saveData(); alert('API设置已保存!'); });
+        document.getElementById('apply-wallpaper-btn').addEventListener('click', async () => { const url = document.getElementById('wallpaper-url').value.trim(); if (url) { phoneScreen.style.backgroundImage = `url(${url})`; await saveData(); alert('壁纸已应用'); } });
+        document.getElementById('upload-wallpaper-btn').addEventListener('click', () => document.getElementById('wallpaper-input').click());
+        document.getElementById('wallpaper-input').addEventListener('change', async (e) => { if (e.target.files && e.target.files[0]) { const base64 = await fileToBase64(e.target.files[0]); phoneScreen.style.backgroundImage = `url(${base64})`; document.getElementById('wallpaper-url').value = '已从本地文件中选择'; await saveData(); alert('壁纸已应用'); } });
+        document.getElementById('add-contact-btn').addEventListener('click', async () => { document.getElementById('add-contact-name').value = ''; document.getElementById('add-contact-remark').value = ''; document.getElementById('add-contact-persona').value = ''; document.getElementById('add-contact-avatar-preview').src = await getImageById(defaultAvatarId); tempImageId.addContact = null; openModal('add-contact-modal'); });
+        document.getElementById('confirm-add-contact-btn').addEventListener('click', async () => { const name = document.getElementById('add-contact-name').value.trim(); if (!name) { alert('角色姓名不能为空'); return; } const newContact = { id: Date.now(), name, remark: document.getElementById('add-contact-remark').value.trim(), persona: document.getElementById('add-contact-persona').value.trim(), avatarId: tempImageId.addContact || defaultAvatarId, chatHistory: [], myProfile: { name: '我', avatarId: myMomentsProfile.avatarId || defaultAvatarId, persona: '' }, chatBgId: null, memoryDepth: 10, worldBookId: null }; contacts.push(newContact); await renderContacts(); await saveData(); closeModal('add-contact-modal'); });
+        document.getElementById('chat-input').addEventListener('input', () => { document.getElementById('send-btn').disabled = document.getElementById('chat-input').value.trim() === ''; });
+        document.getElementById('chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('send-btn').click(); } });
+        document.getElementById('send-btn').addEventListener('click', async () => { const chatInput = document.getElementById('chat-input'); const text = chatInput.value.trim(); if (!text) return; const contact = contacts.find(c => c.id === activeContactId); if (!contact) return; const myProfile = contact.myProfile || { name: '我', avatarId: defaultAvatarId }; const message = { id: Date.now(), sender: 'sent', text, avatarId: myProfile.avatarId, type: 'text' }; if (!contact.chatHistory) contact.chatHistory = []; contact.chatHistory.push(message); await appendMessageToChat(message); chatInput.value = ''; document.getElementById('send-btn').disabled = true; await saveData(); });
+        document.getElementById('get-ai-response-btn').addEventListener('click', async () => { const btn = document.getElementById('get-ai-response-btn'); if (btn.disabled) return; if (!apiSettings.baseUrl || !apiSettings.apiKey || !apiSettings.model) { alert('请先在API应用中完成设置！'); return; } const contact = contacts.find(c => c.id === activeContactId); if (!contact || !contact.chatHistory || contact.chatHistory.length === 0) return; btn.disabled = true; const chatArea = document.getElementById('chat-area'); const thinkingEl = document.createElement('div'); thinkingEl.className = 'message received thinking'; const thinkingAvatarSrc = await getImageById(contact.avatarId); thinkingEl.innerHTML = `<img src="${thinkingAvatarSrc}" class="avatar"><div class="bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`; chatArea.appendChild(thinkingEl); chatArea.scrollTop = chatArea.scrollHeight; const memoryDepth = contact.memoryDepth || 10; const historySlice = (contact.chatHistory || []).slice(-memoryDepth); const boundBook = contact.worldBookId ? worldBooks.find(wb => wb.id === contact.worldBookId) : null; const relevantAnniversaries = anniversaries.filter(a => a.contactId === activeContactId); let anniversaryInfo = ''; if (relevantAnniversaries.length > 0) { const now = new Date(); now.setHours(0, 0, 0, 0); anniversaryInfo = relevantAnniversaries.map(a => { const eventDate = new Date(a.date); eventDate.setHours(0, 0, 0, 0); const diffTime = eventDate - now; const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); const dayInfo = diffDays >= 0 ? `${diffDays} days remaining` : `${-diffDays} days have passed`; return `- "${a.title}" on ${a.date} (${dayInfo}).`; }).join(' '); } let systemPrompt = getBaseSystemPrompt(contact.persona, contact.myProfile.persona, boundBook ? boundBook.content : null, anniversaryInfo); let transferPrompt = ''; let pendingTransferMsg = null; for (let i = historySlice.length - 1; i >= 0; i--) { const msg = historySlice[i]; if (msg.type === 'transfer' && msg.sender === 'sent' && msg.status === 'pending') { pendingTransferMsg = msg; break; } } if (pendingTransferMsg) { transferPrompt = `\n\nIMPORTANT: The user just sent you a transfer of ${pendingTransferMsg.amount} with the memo "${pendingTransferMsg.memo || 'none'}". You MUST decide to accept or return it based on your persona. Start your reply with the single command [ACCEPT] or [RETURN] on its own line, followed by your dialogue on the next line. This is a strict rule.`; } const messages = [{ role: 'system', content: systemPrompt }]; historySlice.forEach(msg => { let content = msg.text; if (msg.type === 'transfer') { content = `[A transfer of ${msg.amount} was sent from ${msg.sender === 'sent' ? 'user' : 'you'} to ${msg.sender === 'sent' ? 'you' : 'user'}. Status: ${msg.status}]`; } else if (msg.type === 'sticker') { content = `[${msg.sender === 'sent' ? 'User' : 'You'} sent a sticker.]` } messages.push({ role: msg.sender === 'sent' ? 'user' : 'assistant', content }); }); if (transferPrompt) { messages.push({ role: 'user', content: transferPrompt }); } try { const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 60000); const response = await fetch(`${apiSettings.baseUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiSettings.apiKey}` }, body: JSON.stringify({ model: apiSettings.model, messages, stream: false }), signal: controller.signal }); clearTimeout(timeoutId); if (chatArea.contains(thinkingEl)) chatArea.removeChild(thinkingEl); if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error.message); } const data = await response.json(); let replyText = data.choices[0].message.content; if (pendingTransferMsg) { if (replyText.startsWith('[RETURN]')) { pendingTransferMsg.status = 'returned'; replyText = replyText.substring('[RETURN]'.length).trim(); const returnMsg = { id: Date.now(), sender: 'received', type: 'transfer', amount: pendingTransferMsg.amount, memo: '退回转账', avatarId: contact.avatarId, status: 'returned' }; contact.chatHistory.push(returnMsg); await appendMessageToChat(returnMsg); } else { if (replyText.startsWith('[ACCEPT]')) { replyText = replyText.substring('[ACCEPT]'.length).trim(); } pendingTransferMsg.status = 'accepted'; await renderChat(activeContactId); } const aiMessage = { id: Date.now(), sender: 'received', text: replyText || "...", avatarId: contact.avatarId, type: 'text' }; contact.chatHistory.push(aiMessage); await appendMessageToChat(aiMessage); } else { const transferMatch = replyText.match(/\[TRANSFER: amount=([\d.]+), memo=(.*?)\]/); const stickerMatch = replyText.match(/\[STICKER: (.*?)\]/); if (transferMatch) { const transferMsg = { id: Date.now(), sender: 'received', type: 'transfer', amount: parseFloat(transferMatch[1]), memo: transferMatch[2], avatarId: contact.avatarId, status: 'pending' }; contact.chatHistory.push(transferMsg); await appendMessageToChat(transferMsg); } else if (stickerMatch) { const keywords = stickerMatch[1]; const bestSticker = findBestSticker(keywords); if(bestSticker) { const stickerMsg = { id: Date.now(), sender: 'received', type: 'sticker', imageId: bestSticker.imageId, avatarId: contact.avatarId }; contact.chatHistory.push(stickerMsg); await appendMessageToChat(stickerMsg); } else { const fallbackMsg = { id: Date.now(), sender: 'received', text: "(想发个表情包但是没找到合适的)", avatarId: contact.avatarId, type: 'text' }; contact.chatHistory.push(fallbackMsg); await appendMessageToChat(fallbackMsg); } } else { const replies = replyText.split('\n').map(r => r.trim()).filter(Boolean); if(replies.length === 0) replies.push("..."); for (const reply of replies) { const aiMessage = { id: Date.now(), sender: 'received', text: reply, avatarId: contact.avatarId, type: 'text' }; contact.chatHistory.push(aiMessage); await appendMessageToChat(aiMessage); } } } } catch (error) { if (chatArea.contains(thinkingEl)) chatArea.removeChild(thinkingEl); const errorText = `AI回复出错了: ${error.name === 'AbortError' ? '请求超时(60s)' : error.message}`; const errorMessage = {id: Date.now(), sender: 'received', text: errorText, avatarId: contact.avatarId, type: 'text'}; contact.chatHistory.push(errorMessage); await appendMessageToChat(errorMessage); } finally { btn.disabled = false; await saveData(); } });
+        document.getElementById('chat-settings-btn').addEventListener('click', async () => { const contact = contacts.find(c => c.id === activeContactId); if (!contact) return; document.getElementById('settings-contact-id').value = contact.id; document.getElementById('edit-contact-name').value = contact.name; document.getElementById('edit-contact-remark').value = contact.remark; document.getElementById('edit-contact-persona').value = contact.persona; document.getElementById('edit-contact-avatar-preview').src = await getImageById(contact.avatarId); document.getElementById('edit-memory-depth').value = contact.memoryDepth || 10; const myProfile = contact.myProfile || { name: '我', avatarId: defaultAvatarId, persona: '' }; document.getElementById('edit-my-name').value = myProfile.name; document.getElementById('edit-my-persona').value = myProfile.persona; document.getElementById('edit-my-avatar-preview').src = await getImageById(myProfile.avatarId); document.getElementById('edit-chat-bg-preview').src = await getImageById(contact.chatBgId || emptyBgId); const worldBookSelect = document.getElementById('bind-worldbook-select'); worldBookSelect.innerHTML = '<option value="">无</option>'; worldBooks.forEach(book => { const option = document.createElement('option'); option.value = book.id; option.textContent = book.name; worldBookSelect.appendChild(option); }); worldBookSelect.value = contact.worldBookId || ""; tempImageId = {}; openModal('chat-settings-modal'); });
+        document.getElementById('save-chat-settings-btn').addEventListener('click', async () => { const contactId = Number(document.getElementById('settings-contact-id').value); const contact = contacts.find(c => c.id === contactId); if (!contact) return; contact.name = document.getElementById('edit-contact-name').value.trim(); contact.remark = document.getElementById('edit-contact-remark').value.trim(); contact.persona = document.getElementById('edit-contact-persona').value.trim(); contact.memoryDepth = parseInt(document.getElementById('edit-memory-depth').value, 10) || 10; contact.worldBookId = Number(document.getElementById('bind-worldbook-select').value) || null; if (tempImageId.contactAvatar) contact.avatarId = tempImageId.contactAvatar; if (!contact.myProfile) contact.myProfile = {}; contact.myProfile.name = document.getElementById('edit-my-name').value.trim(); contact.myProfile.persona = document.getElementById('edit-my-persona').value.trim(); if (tempImageId.myAvatar) contact.myProfile.avatarId = tempImageId.myAvatar; if (tempImageId.chatBg) contact.chatBgId = tempImageId.chatBg; closeModal('chat-settings-modal'); await renderContacts(); await renderChat(contact.id); await saveData(); });
+        document.getElementById('delete-chat-history-btn').addEventListener('click', async () => { if (confirm('确定要清空与该角色的所有聊天记录吗？此操作不可恢复。')) { const contact = contacts.find(c => c.id === activeContactId); if (contact) { contact.chatHistory = []; await saveData(); await renderChat(activeContactId); } closeModal('chat-settings-modal'); } });
+        document.getElementById('delete-contact-btn').addEventListener('click', async () => { if (confirm('确定要删除这个联系人吗？所有聊天记录和设置将无法恢复。')) { const contactId = Number(document.getElementById('settings-contact-id').value); contacts = contacts.filter(c => c.id !== contactId); closeModal('chat-settings-modal'); await renderContacts(); await saveData(); showScreen('screen-wechat'); } });
+        document.getElementById('chat-actions-toggle-btn').addEventListener('click', () => document.getElementById('chat-actions-panel').classList.toggle('active'));
+        document.getElementById('transfer-action-btn').addEventListener('click', () => { document.getElementById('transfer-amount').value = ''; document.getElementById('transfer-memo').value = ''; openModal('transfer-modal'); });
+        document.getElementById('confirm-transfer-btn').addEventListener('click', async () => { const amountInput = document.getElementById('transfer-amount'); let amount = parseFloat(amountInput.value); if (isNaN(amount) || amount <= 0) { alert('请输入有效的转账金额'); return; } if (amount > 100000) { alert('单次转账金额不能超过100,000'); return; } const memo = document.getElementById('transfer-memo').value.trim(); const contact = contacts.find(c => c.id === activeContactId); if (!contact) return; const myProfile = contact.myProfile || { name: '我', avatarId: myMomentsProfile.avatarId }; const transferMsg = { id: Date.now(), sender: 'sent', type: 'transfer', amount, memo, avatarId: myProfile.avatarId, status: 'pending' }; if (!contact.chatHistory) contact.chatHistory = []; contact.chatHistory.push(transferMsg); await appendMessageToChat(transferMsg); await saveData(); closeModal('transfer-modal'); });
+        document.getElementById('multi-select-btn').addEventListener('click', async () => { isDeletionMode = !isDeletionMode; const chatArea = document.getElementById('chat-area'); const multiSelectBtn = document.getElementById('multi-select-btn'); if (isDeletionMode) { chatArea.classList.add('deletion-mode'); multiSelectBtn.innerHTML = '🗑️'; multiSelectBtn.style.color = 'var(--danger-color)'; } else { if (messagesToDelete.size > 0) { if (confirm(`确定要删除选中的 ${messagesToDelete.size} 条消息吗？`)) { const contact = contacts.find(c => c.id === activeContactId); if(contact) { contact.chatHistory = contact.chatHistory.filter(m => !messagesToDelete.has(m.id)); await saveData(); await renderChat(activeContactId); } } } chatArea.classList.remove('deletion-mode'); chatArea.querySelectorAll('.selected-for-deletion').forEach(el => el.classList.remove('selected-for-deletion')); multiSelectBtn.innerHTML = '☑️'; multiSelectBtn.style.color = 'inherit'; messagesToDelete.clear(); } });
+        document.getElementById('moments-header-bg').addEventListener('click', async () => { tempImageId = {}; document.getElementById('edit-moments-name').value = myMomentsProfile.name || '我'; document.getElementById('edit-moments-signature').value = myMomentsProfile.signature || ''; document.getElementById('edit-moments-avatar-preview').src = await getImageById(myMomentsProfile.avatarId); document.getElementById('edit-moments-bg-preview').src = myMomentsProfile.headerBgId ? await getImageById(myMomentsProfile.headerBgId) : 'https://files.catbox.moe/p1n9y0.jpg'; openModal('edit-moments-profile-modal'); });
+        document.getElementById('save-edit-moments-profile-btn').addEventListener('click', async () => { myMomentsProfile.name = document.getElementById('edit-moments-name').value.trim() || '我'; myMomentsProfile.signature = document.getElementById('edit-moments-signature').value.trim(); if (tempImageId.momentsAvatar) myMomentsProfile.avatarId = tempImageId.momentsAvatar; if (tempImageId.momentsBg) myMomentsProfile.headerBgId = tempImageId.momentsBg; closeModal('edit-moments-profile-modal'); await renderMoments(); await saveData(); });
+        document.getElementById('moments-my-post-btn').addEventListener('click', () => { document.getElementById('my-moments-text').value = ''; openModal('post-moments-modal'); });
+        document.getElementById('confirm-my-moments-btn').addEventListener('click', async () => { const text = document.getElementById('my-moments-text').value.trim(); if (!text) return; const newMoment = { id: Date.now(), authorId: 'me', text: text, comments: [], likes: [] }; moments.push(newMoment); await renderMoments(); await saveData(); closeModal('post-moments-modal'); contacts.forEach(contact => { if (apiSettings.baseUrl) { if (Math.random() < 0.5) newMoment.likes.push(contact.id); if (Math.random() < 0.7) { const prompt = `${getBaseSystemPrompt(contact.persona, myMomentsProfile.name)}\n\nYour friend "${myMomentsProfile.name}" just posted a moment: "${text}". Please write a short, conversational comment on this post based on your persona. Return only the comment content.`; triggerAIComment(prompt, contact.id, newMoment); } } }); });
+        document.getElementById('moments-ai-post-btn').addEventListener('click', () => { if (contacts.length === 0) { alert("你还没有联系人"); return; } const list = document.getElementById('ai-post-selection-list'); list.innerHTML = ''; contacts.forEach(contact => { const contactBtn = document.createElement('button'); contactBtn.className = 'btn'; contactBtn.textContent = getDisplayName(contact); contactBtn.onclick = () => { triggerSingleAiPost(contact.id); closeModal('select-ai-post-modal'); }; list.appendChild(contactBtn); }); openModal('select-ai-post-modal'); });
+        async function triggerSingleAiPost(contactId) { if (!apiSettings.baseUrl) { alert('请先在API应用中完成设置！'); return; } const contact = contacts.find(c => c.id === contactId); if (!contact) return; const prompt = `${getBaseSystemPrompt(contact.persona)}\n\nPlease simulate posting a moment on social media based on your persona. It can be about your daily life, thoughts, feelings, etc. Return only the content of the moment, with no extra explanation.`; try { const response = await fetch(`${apiSettings.baseUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiSettings.apiKey}` }, body: JSON.stringify({ model: apiSettings.model, messages: [{ role: 'user', content: prompt }] }) }); if (response.ok) { const data = await response.json(); const momentText = data.choices[0].message.content; moments.push({ id: Date.now(), authorId: contact.id, text: momentText, comments: [], likes: [] }); await renderMoments(); await saveData(); } } catch (err) { console.error('AI post failed:', err); } }
+        async function triggerAiDiary(contactId) { if (!apiSettings.baseUrl) { alert('请先在API应用中完成设置！'); return; } const contact = contacts.find(c => c.id === contactId); if (!contact) return; const prompt = `${getBaseSystemPrompt(contact.persona)}\n\nWrite today's diary entry from your first-person perspective. Focus on a specific event, a unique thought, or a hope for tomorrow. Make it sound different from a generic daily report or any previous diary entries. Return only the diary content, with no extra explanation or title.`; try { const response = await fetch(`${apiSettings.baseUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiSettings.apiKey}` }, body: JSON.stringify({ model: apiSettings.model, messages: [{ role: 'user', content: prompt }] }) }); if (response.ok) { const data = await response.json(); const diaryText = data.choices[0].message.content; diaries.push({ id: Date.now(), authorId: contact.id, text: diaryText, date: new Date().toISOString() }); await renderDiaries(); await saveData(); } } catch (err) { console.error('AI diary failed:', err); } }
+        async function triggerAIComment(prompt, contactId, moment, replyTo = null) { try { const response = await fetch(`${apiSettings.baseUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiSettings.apiKey}` }, body: JSON.stringify({ model: apiSettings.model, messages: [{ role: 'user', content: prompt }] }) }); if (response.ok) { const data = await response.json(); const commentText = data.choices[0].message.content; moment.comments.push({ authorId: contactId, text: commentText, replyTo }); await renderMoments(); await saveData(); } } catch (err) { console.error('AI comment failed:', err); } }
+        document.querySelector('#moments-feed-container').addEventListener('click', async (e) => {
+            const likeBtn = e.target.closest('.like-btn');
+            if (likeBtn) { const momentItem = likeBtn.closest('.moment-item'); const momentId = Number(momentItem.dataset.momentId); const moment = moments.find(m => m.id === momentId); if (!moment.likes) moment.likes = []; const myLikeIndex = moment.likes.indexOf('me'); if (myLikeIndex > -1) { moment.likes.splice(myLikeIndex, 1); } else { moment.likes.push('me'); } await renderMoments(); await saveData(); return; }
+            const commentBtn = e.target.closest('.comment-btn');
+            if (commentBtn) { const contentDiv = commentBtn.closest('.content'); const inputContainer = contentDiv.querySelector('.comment-input-container'); activeReplyTarget = null; inputContainer.querySelector('input').placeholder = '评论...'; inputContainer.classList.toggle('active'); if (inputContainer.classList.contains('active')) { inputContainer.querySelector('input').focus(); } return; }
+            const momentComment = e.target.closest('.moment-comment');
+            if(momentComment) { const momentItem = momentComment.closest('.moment-item'); const momentId = Number(momentItem.dataset.momentId); const moment = moments.find(m => m.id === momentId); const commentIndex = Number(momentComment.dataset.commentIndex); const comment = moment.comments[commentIndex]; if (comment.authorId === 'me') return; const contact = contacts.find(c => c.id === comment.authorId); const authorName = getDisplayName(contact); const inputContainer = momentItem.querySelector('.comment-input-container'); activeReplyTarget = { momentId, replyTo: comment.authorId }; inputContainer.querySelector('input').placeholder = `回复 ${authorName}:`; inputContainer.classList.add('active'); inputContainer.querySelector('input').focus(); return; }
+            const timestamp = e.target.closest('.timestamp');
+            if (timestamp) { if (confirm('确定要删除这条朋友圈吗？')) { const momentItem = timestamp.closest('.moment-item'); const momentId = Number(momentItem.dataset.momentId); moments = moments.filter(m => m.id !== momentId); await renderMoments(); await saveData(); } return; }
+            const sendCommentBtn = e.target.closest('.comment-input-container button');
+            if (sendCommentBtn) { const inputContainer = sendCommentBtn.closest('.comment-input-container'); const input = inputContainer.querySelector('input'); const myCommentText = input.value.trim(); if (!myCommentText) return; const momentItem = sendCommentBtn.closest('.moment-item'); const momentId = Number(momentItem.dataset.momentId); const moment = moments.find(m => m.id === momentId); const newComment = { authorId: 'me', text: myCommentText }; let replyToContactId = null; if (activeReplyTarget && activeReplyTarget.momentId === momentId) { newComment.replyTo = activeReplyTarget.replyTo; replyToContactId = activeReplyTarget.replyTo; } moment.comments.push(newComment); input.value = ''; inputContainer.classList.remove('active'); await renderMoments(); await saveData(); activeReplyTarget = null; if (replyToContactId && replyToContactId !== 'me') { const contact = contacts.find(c => c.id === replyToContactId); if (contact && apiSettings.baseUrl) { const prompt = `${getBaseSystemPrompt(contact.persona, myMomentsProfile.name)}\n\nContext: You are on a social media platform. You posted a comment, and now your friend "${myMomentsProfile.name}" has replied directly to your comment with: "${myCommentText}". Please write a short reply back to them based on your persona.`; triggerAIComment(prompt, contact.id, moment, 'me'); } } return; }
+        });
+        document.getElementById('add-worldbook-btn').addEventListener('click', () => { document.getElementById('worldbook-id').value = ''; document.getElementById('worldbook-name').value = ''; document.getElementById('worldbook-content').value = ''; openModal('worldbook-modal'); });
+        document.getElementById('worldbook-list-container').addEventListener('click', (e) => { const item = e.target.closest('.list-item'); if (e.target.classList.contains('delete-btn')) { const bookId = Number(e.target.dataset.id); if (confirm('确定要删除这本世界书吗？所有绑定关系将解除。')) { worldBooks = worldBooks.filter(wb => wb.id !== bookId); contacts.forEach(c => { if (c.worldBookId === bookId) c.worldBookId = null; }); saveData(); renderWorldBooks(); } } else if (item) { const bookId = Number(item.dataset.id); const book = worldBooks.find(wb => wb.id === bookId); if (book) { document.getElementById('worldbook-id').value = book.id; document.getElementById('worldbook-name').value = book.name; document.getElementById('worldbook-content').value = book.content; openModal('worldbook-modal'); } } });
+        document.getElementById('save-worldbook-btn').addEventListener('click', async () => { const id = Number(document.getElementById('worldbook-id').value); const name = document.getElementById('worldbook-name').value.trim(); const content = document.getElementById('worldbook-content').value.trim(); if (!name) { alert('书名不能为空'); return; } if (id) { const book = worldBooks.find(wb => wb.id === id); if (book) { book.name = name; book.content = content; } } else { worldBooks.push({ id: Date.now(), name, content }); } await saveData(); renderWorldBooks(); closeModal('worldbook-modal'); });
+        document.getElementById('gomoku-opponent-selection').addEventListener('click', async (e) => { const opponentItem = e.target.closest('.list-item'); if(opponentItem) { const contactId = Number(opponentItem.dataset.id); startGomokuGame(contactId); } });
+        document.getElementById('gomoku-board').addEventListener('click', handleGomokuBoardClick);
+        document.getElementById('gomoku-rematch-btn').addEventListener('click', () => { closeModal('gomoku-result-modal'); startGomokuGame(gomokuGame.opponentContactId); });
+        document.getElementById('gomoku-change-opponent-btn').addEventListener('click', () => { closeModal('gomoku-result-modal'); showGomokuOpponentSelection(); });
+        document.getElementById('add-song-btn').addEventListener('click', () => { document.getElementById('add-song-name').value = ''; document.getElementById('add-song-url').value = ''; openModal('add-song-modal'); });
+        document.getElementById('confirm-add-song-btn').addEventListener('click', async () => { const name = document.getElementById('add-song-name').value.trim(); const url = document.getElementById('add-song-url').value.trim(); if (!name || !url) { alert('歌曲名称和URL均不能为空'); return; } musicAppData.playlist.push({ name, url }); await saveData(); renderMusicPlaylist(); closeModal('add-song-modal'); });
+        document.getElementById('music-avatar-left').addEventListener('click', () => { if (contacts.length === 0) { alert('请先创建联系人'); return; } const list = document.getElementById('music-partner-selection-list'); list.innerHTML = ''; contacts.forEach(contact => { const contactBtn = document.createElement('button'); contactBtn.className = 'btn'; contactBtn.textContent = getDisplayName(contact); contactBtn.onclick = async () => { musicAppData.currentPartnerId = contact.id; await saveData(); renderMusicScreen(); closeModal('select-music-partner-modal'); }; list.appendChild(contactBtn); }); openModal('select-music-partner-modal'); });
+        document.getElementById('music-playlist-container').addEventListener('click', (e) => {
+            const songItem = e.target.closest('.music-song-item');
+            if (isMusicDeleteMode) {
+                if (e.target.classList.contains('delete-song-item-btn')) {
+                    const songNameToDelete = e.target.dataset.name;
+                    musicAppData.playlist = musicAppData.playlist.filter(song => song.name !== songNameToDelete);
+                    saveData();
+                    renderMusicPlaylist();
+                }
+                return;
+            }
+            if (songItem) {
+                const url = songItem.dataset.url;
+                const player = document.getElementById('music-player-element');
+                const isCurrentlyPlaying = player.src === url && !player.paused;
+                if (isCurrentlyPlaying) {
+                    player.pause();
+                } else {
+                    if (player.src !== url) player.src = url;
+                    player.play().catch(err => alert("音频播放失败，请检查URL是否为有效的音频直链。"));
+                }
+            }
+        });
+        document.getElementById('delete-song-btn').addEventListener('click', () => { isMusicDeleteMode = !isMusicDeleteMode; const playlistContainer = document.getElementById('music-playlist-container'); const deleteBtn = document.getElementById('delete-song-btn'); playlistContainer.classList.toggle('deletion-mode', isMusicDeleteMode); deleteBtn.style.color = isMusicDeleteMode ? 'var(--danger-color)' : ''; });
+        document.getElementById('sticker-action-btn').addEventListener('click', () => { stickerPickerState.currentPage = 1; renderStickerPicker(); openModal('sticker-picker-modal'); });
+        document.getElementById('confirm-add-sticker-btn').addEventListener('click', async () => { const desc = document.getElementById('add-sticker-desc').value.trim(); const imageId = tempImageId.addSticker; if (!desc || !imageId) { alert('请上传表情包并填写描述！'); return; } stickers.push({ id: Date.now(), imageId, description: desc }); await saveData(); alert('表情包已保存！'); closeModal('add-sticker-modal'); });
+        document.getElementById('sticker-picker-modal').addEventListener('click', async (e) => {
+            const target = e.target;
+            if (target.id === 'add-new-sticker-btn') {
+                closeModal('sticker-picker-modal');
+                document.getElementById('add-sticker-desc').value = '';
+                document.getElementById('add-sticker-preview').src = await getImageById(emptyBgId);
+                tempImageId.addSticker = null;
+                openModal('add-sticker-modal');
+            } else if (target.classList.contains('sticker-grid-item') && target.dataset.imageId) {
+                const imageId = target.dataset.imageId;
+                const contact = contacts.find(c => c.id === activeContactId);
+                if (contact) {
+                    const myProfile = contact.myProfile || { avatarId: myMomentsProfile.avatarId };
+                    const stickerMsg = { id: Date.now(), sender: 'sent', type: 'sticker', imageId: imageId, avatarId: myProfile.avatarId };
+                    if (!contact.chatHistory) contact.chatHistory = [];
+                    contact.chatHistory.push(stickerMsg);
+                    await appendMessageToChat(stickerMsg);
+                    await saveData();
+                    closeModal('sticker-picker-modal');
+                }
+            } else if (target.id === 'sticker-prev-btn') {
+                if (stickerPickerState.currentPage > 1) {
+                    stickerPickerState.currentPage--;
+                    renderStickerPicker();
+                }
+            } else if (target.id === 'sticker-next-btn') {
+                const totalStickers = stickers.length;
+                const totalPages = totalStickers > 0 ? Math.ceil(totalStickers / stickerPickerState.stickersPerPage) : 1;
+                if (stickerPickerState.currentPage < totalPages) {
+                    stickerPickerState.currentPage++;
+                    renderStickerPicker();
+                }
+            }
+        });
+    }
+    
+    function findBestSticker(keywords) {
+        if (!stickers || stickers.length === 0) return null;
+        let bestMatch = null;
+        let maxScore = 0;
+        stickers.forEach(sticker => {
+            let currentScore = 0;
+            const description = sticker.description.toLowerCase();
+            keywords.toLowerCase().split(' ').forEach(kw => {
+                if(description.includes(kw)) {
+                    currentScore++;
+                }
+            });
+            if (currentScore > maxScore) {
+                maxScore = currentScore;
+                bestMatch = sticker;
+            }
+        });
+        return bestMatch || stickers[Math.floor(Math.random() * stickers.length)];
+    }
+
+    async function renderStickerPicker() {
+        const { currentPage, stickersPerPage } = stickerPickerState;
+        const grid = document.getElementById('sticker-grid');
+        const pagination = document.getElementById('sticker-pagination');
+        const pageInfo = document.getElementById('sticker-page-info');
+        const prevBtn = document.getElementById('sticker-prev-btn');
+        const nextBtn = document.getElementById('sticker-next-btn');
+        grid.innerHTML = '';
+
+        const addBtn = document.createElement('div');
+        addBtn.className = 'sticker-grid-item sticker-add-btn';
+        addBtn.id = 'add-new-sticker-btn';
+        addBtn.textContent = '+';
+        grid.appendChild(addBtn);
+
+        const totalStickers = stickers.length;
+        const totalPages = totalStickers > 0 ? Math.ceil(totalStickers / stickersPerPage) : 1;
+        
+        if (totalStickers > 0) {
+            pagination.style.display = 'flex';
+            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+
+            const startIndex = (currentPage - 1) * stickersPerPage;
+            const endIndex = startIndex + stickersPerPage;
+            const pageStickers = stickers.slice(startIndex, endIndex);
+            
+            for (const sticker of pageStickers) {
+                const img = document.createElement('img');
+                img.className = 'sticker-grid-item';
+                img.src = await getImageById(sticker.imageId);
+                img.dataset.imageId = sticker.imageId;
+                grid.appendChild(img);
+            }
+        } else {
+            pagination.style.display = 'none';
+        }
+    }
+
+    async function renderMusicScreen() {
+        const partnerId = musicAppData.currentPartnerId;
+        const leftAvatarContainer = document.getElementById('music-avatar-left');
+        const rightAvatarContainer = document.getElementById('music-avatar-right');
+        const wireLeft = document.getElementById('wire-left');
+        const wireRight = document.getElementById('wire-right');
+        const wires = document.getElementById('music-headphone-wires');
+
+        rightAvatarContainer.innerHTML = `<img src="${await getImageById(myMomentsProfile.avatarId)}"><span>${myMomentsProfile.name}</span>`;
+
+        if (partnerId) {
+            const partner = contacts.find(c => c.id === partnerId);
+            if(partner) {
+                leftAvatarContainer.innerHTML = `<img src="${await getImageById(partner.avatarId)}"><span>${getDisplayName(partner)}</span>`;
+                wires.style.display = 'block';
+                setTimeout(() => {
+                    const playerEl = document.getElementById('music-player-image');
+                    const playerRect = playerEl.getBoundingClientRect();
+                    const svgRect = wires.getBoundingClientRect();
+                    const playerX = playerRect.left - svgRect.left + playerRect.width / 2;
+                    const playerY = playerRect.top - svgRect.top + 20;
+                    const leftAvatarEl = leftAvatarContainer.querySelector('img');
+                    const rightAvatarEl = rightAvatarContainer.querySelector('img');
+                    if(leftAvatarEl && rightAvatarEl) {
+                        const leftRect = leftAvatarEl.getBoundingClientRect();
+                        const rightRect = rightAvatarEl.getBoundingClientRect();
+                        const leftX = leftRect.left - svgRect.left + leftRect.width / 2;
+                        const leftY = leftRect.top - svgRect.top + leftRect.height;
+                        const rightX = rightRect.left - svgRect.left + rightRect.width / 2;
+                        const rightY = rightRect.top - svgRect.top + rightRect.height;
+                        wireLeft.setAttribute('d', `M ${leftX} ${leftY} C ${leftX} ${playerY}, ${playerX - 50} ${playerY}, ${playerX - 20} ${playerY}`);
+                        wireRight.setAttribute('d', `M ${rightX} ${rightY} C ${rightX} ${playerY}, ${playerX + 50} ${playerY}, ${playerX + 20} ${playerY}`);
+                    }
+                }, 100);
+            } else { musicAppData.currentPartnerId = null; await saveData(); renderMusicScreen(); }
+        } else {
+            leftAvatarContainer.innerHTML = `<div class="invite-plus">+</div>`;
+            wires.style.display = 'none';
+        }
+        renderMusicPlaylist();
+    }
+
+    function renderMusicPlaylist() {
+        const container = document.getElementById('music-playlist-container');
+        container.innerHTML = '';
+        if(!musicAppData.playlist) musicAppData.playlist = [];
+        musicAppData.playlist.forEach(song => {
+            const item = document.createElement('div');
+            item.className = 'music-song-item';
+            item.dataset.url = song.url;
+            item.innerHTML = `<span>${song.name}</span><button class="delete-song-item-btn" data-name="${song.name}">✕</button>`;
+            container.appendChild(item);
+        });
+        const player = document.getElementById('music-player-element');
+        player.onpause = () => {
+            const playingItem = container.querySelector('.playing');
+            if(playingItem) playingItem.classList.remove('playing');
+        };
+        player.onplay = () => {
+             document.querySelectorAll('.music-song-item').forEach(item => item.classList.remove('playing'));
+             const currentSongItem = container.querySelector(`[data-url="${player.src}"]`);
+             if(currentSongItem) currentSongItem.classList.add('playing');
+        };
+        if (player.src && !player.paused) {
+            const playingItem = container.querySelector(`[data-url="${player.src}"]`);
+            if (playingItem) playingItem.classList.add('playing');
+        }
+    }
+
+    async function showGomokuOpponentSelection() {
+        const opponentSelection = document.getElementById('gomoku-opponent-selection');
+        const gameBoard = document.getElementById('gomoku-game-board');
+        opponentSelection.innerHTML = '';
+        if (contacts.length === 0) { opponentSelection.innerHTML = '<p style="text-align:center; color:#888; margin-top: 20px;">请先在微信中添加联系人</p>'; } 
+        else { 
+            for (const contact of contacts) {
+                const item = document.createElement('div'); item.className = 'list-item'; item.dataset.id = contact.id;
+                const avatarSrc = await getImageById(contact.avatarId); const displayName = getDisplayName(contact);
+                item.innerHTML = `<img src="${avatarSrc}" alt="${displayName}" style="width: 40px; height: 40px; border-radius: 6px; margin-right: 12px;"><div class="info"><div class="name">${displayName}</div></div>`;
+                opponentSelection.appendChild(item);
+            }
+        }
+        opponentSelection.classList.add('active'); gameBoard.classList.remove('active');
+        gomokuGame.inProgress = false;
+    }
+
+    async function startGomokuGame(contactId) {
+        const opponent = contacts.find(c => c.id === contactId);
+        if (!opponent) return;
+        document.getElementById('gomoku-opponent-selection').classList.remove('active');
+        document.getElementById('gomoku-game-board').classList.add('active');
+        const humanPlayerCard = document.getElementById('gomoku-player-human');
+        const aiPlayerCard = document.getElementById('gomoku-player-ai');
+        humanPlayerCard.querySelector('img').src = await getImageById(myMomentsProfile.avatarId);
+        humanPlayerCard.querySelector('span').textContent = myMomentsProfile.name;
+        aiPlayerCard.querySelector('img').src = await getImageById(opponent.avatarId);
+        aiPlayerCard.querySelector('span').textContent = getDisplayName(opponent);
+        const BOARD_SIZE = 15;
+        gomokuGame = {
+            board: Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0)),
+            currentPlayer: 1, gameOver: false, inProgress: true,
+            opponentContactId: contactId, humanPlayer: 1, aiPlayer: 2, size: BOARD_SIZE
+        };
+        drawGomokuBoard(); updatePlayerTurnIndicator();
+    }
+
+    function drawGomokuBoard() {
+        const canvas = document.getElementById('gomoku-board'); const ctx = canvas.getContext('2d');
+        const boardSize = canvas.clientWidth; canvas.width = canvas.height = boardSize;
+        const cellSize = boardSize / gomokuGame.size; const padding = cellSize / 2;
+        ctx.clearRect(0, 0, boardSize, boardSize); ctx.strokeStyle = '#603813'; ctx.lineWidth = 1;
+        for (let i = 0; i < gomokuGame.size; i++) {
+            ctx.beginPath(); ctx.moveTo(padding + i * cellSize, padding); ctx.lineTo(padding + i * cellSize, boardSize - padding); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(padding, padding + i * cellSize); ctx.lineTo(boardSize - padding, padding + i * cellSize); ctx.stroke();
+        }
+        for (let y = 0; y < gomokuGame.size; y++) {
+            for (let x = 0; x < gomokuGame.size; x++) {
+                if (gomokuGame.board[y][x] !== 0) {
+                    ctx.beginPath(); const pieceX = padding + x * cellSize; const pieceY = padding + y * cellSize;
+                    ctx.arc(pieceX, pieceY, cellSize / 2 * 0.9, 0, 2 * Math.PI);
+                    ctx.fillStyle = gomokuGame.board[y][x] === gomokuGame.humanPlayer ? 'black' : 'white'; ctx.fill();
+                }
+            }
+        }
+    }
+    
+    function updatePlayerTurnIndicator() {
+        const humanCard = document.getElementById('gomoku-player-human'); const aiCard = document.getElementById('gomoku-player-ai');
+        humanCard.classList.toggle('active', gomokuGame.currentPlayer === gomokuGame.humanPlayer);
+        aiCard.classList.toggle('active', gomokuGame.currentPlayer === gomokuGame.aiPlayer);
+    }
+    
+    function handleGomokuBoardClick(e) {
+        if (gomokuGame.gameOver || gomokuGame.currentPlayer !== gomokuGame.humanPlayer) return;
+        const canvas = document.getElementById('gomoku-board'); const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX; const y = (e.clientY - rect.top) * scaleY;
+        const cellSize = canvas.width / gomokuGame.size;
+        const col = Math.floor(x / cellSize); const row = Math.floor(y / cellSize);
+        if (row < 0 || row >= gomokuGame.size || col < 0 || col >= gomokuGame.size || gomokuGame.board[row][col] !== 0) return;
+        gomokuGame.board[row][col] = gomokuGame.humanPlayer; drawGomokuBoard();
+        if (checkWin(row, col, gomokuGame.humanPlayer)) { endGomokuGame('你赢了！'); } else if (isBoardFull()) { endGomokuGame('平局！'); } else {
+            gomokuGame.currentPlayer = gomokuGame.aiPlayer; updatePlayerTurnIndicator(); setTimeout(aiMove, 500);
+        }
+    }
+
+    function checkWin(r, c, player) {
+        const directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
+        for (const [dr, dc] of directions) {
+            let count = 1;
+            for (let i = 1; i < 5; i++) { const nr = r + dr * i; const nc = c + dc * i; if (nr >= 0 && nr < gomokuGame.size && nc >= 0 && nc < gomokuGame.size && gomokuGame.board[nr][nc] === player) count++; else break; }
+            for (let i = 1; i < 5; i++) { const nr = r - dr * i; const nc = c - dc * i; if (nr >= 0 && nr < gomokuGame.size && nc >= 0 && nc < gomokuGame.size && gomokuGame.board[nr][nc] === player) count++; else break; }
+            if (count >= 5) return true;
+        }
+        return false;
+    }
+    
+    function isBoardFull() { return gomokuGame.board.every(row => row.every(cell => cell !== 0)); }
+    function endGomokuGame(message) { gomokuGame.gameOver = true; gomokuGame.inProgress = false; document.getElementById('gomoku-result-text').textContent = message; openModal('gomoku-result-modal'); }
+
+    function aiMove() {
+        if (gomokuGame.gameOver) return;
+        const bestMove = findBestMove();
+        if (bestMove) {
+            gomokuGame.board[bestMove.row][bestMove.col] = gomokuGame.aiPlayer; drawGomokuBoard();
+            if (checkWin(bestMove.row, bestMove.col, gomokuGame.aiPlayer)) { endGomokuGame('你输了！'); } else if (isBoardFull()) { endGomokuGame('平局！'); } else {
+                gomokuGame.currentPlayer = gomokuGame.humanPlayer; updatePlayerTurnIndicator();
+            }
+        }
+    }
+
+    function findBestMove() {
+        let bestScore = -Infinity; let move = null;
+        for (let r = 0; r < gomokuGame.size; r++) { for (let c = 0; c < gomokuGame.size; c++) {
+            if (gomokuGame.board[r][c] === 0) {
+                let score = calculateScoreForPos(r, c, gomokuGame.aiPlayer) + calculateScoreForPos(r, c, gomokuGame.humanPlayer);
+                if (score > bestScore) { bestScore = score; move = { row: r, col: c }; }
+            }
+        }}
+        return move;
+    }
+    
+    function calculateScoreForPos(r, c, player) {
+        let totalScore = 0;
+        const opponent = player === gomokuGame.humanPlayer ? gomokuGame.aiPlayer : gomokuGame.humanPlayer;
+        const directions = [[1,0], [0,1], [1,1], [1,-1]];
+        for(const [dr, dc] of directions) {
+            let line = [];
+            for(let i = -4; i <= 4; i++) {
+                const nr = r + i * dr; const nc = c + i * dc;
+                if(nr >= 0 && nr < gomokuGame.size && nc >= 0 && nc < gomokuGame.size) line.push(gomokuGame.board[nr][nc]); else line.push(-1);
+            }
+            const center = 4;
+            if (line.slice(center - 4, center + 1).join('') === `${player}${player}${player}${player}${player}`) totalScore += 1000000;
+            if (line.slice(center - 3, center + 2).join('') === `0${player}${player}${player}0`) totalScore += 5000; 
+            if (line.slice(center - 4, center + 2).join('') === `0${player}${player}${player}${player}0`) totalScore += 100000; 
+            const opp = opponent;
+            if (line.slice(center - 4, center + 1).join('') === `${opp}${opp}${opp}${opp}${opp}`) totalScore += 500000;
+            if (line.slice(center - 3, center + 2).join('') === `0${opp}${opp}${opp}0`) totalScore += 4000;
+            if (line.slice(center - 4, center + 2).join('') === `0${opp}${opp}${opp}${opp}0`) totalScore += 80000;
+        }
+        return totalScore;
+    }
+
+    init();
+});
+</script>
+</body>
+</html>
