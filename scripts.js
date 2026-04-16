@@ -12954,9 +12954,6 @@ document.getElementById('home-time-size-slider').addEventListener('input', async
 document.getElementById('auto-summary-interval-slider').oninput = function() {
     document.getElementById('auto-summary-interval-value').textContent = this.value + ' 条';
 };
-document.getElementById('refine-threshold-slider').oninput = function() {
-    document.getElementById('refine-threshold-value').textContent = this.value + ' 字';
-};
 
 // 提示词 Tab 切换
 document.getElementById('prompt-tab-dialog').onclick = () => switchPromptTab('dialog');
