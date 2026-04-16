@@ -32210,6 +32210,19 @@ async function callSummaryApi(messages) {
         throw new Error('副 API 未配置，请先在设置中配置副 API');
     }
 
+    // 在 system 消息末尾添加破限词
+    if (appState.ethicalBypass && appState.ethicalBypass.enabled && appState.ethicalBypass.prompt) {
+        messages = messages.map(msg => {
+            if (msg.role === 'system') {
+                return {
+                    ...msg,
+                    content: msg.content + '\n\n' + appState.ethicalBypass.prompt
+                };
+            }
+            return msg;
+        });
+    }
+
     const response = await fetch(config.apiUrl, {
         method: 'POST',
         headers: {
@@ -32224,7 +32237,8 @@ async function callSummaryApi(messages) {
     });
 
     if (!response.ok) {
-        throw new Error(`API 调用失败: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`API 调用失败 (${response.status}): ${errorText}`);
     }
 
     const data = await response.json();
