@@ -32677,11 +32677,12 @@ function loadSummarySettings() {
     const chat = appState.chats[chatId];
 
     // 初始化设置对象
-    if (!chat.settings) chat.settings = {};
+    if (!chat.autoSummary) chat.autoSummary = {};
+    if (!chat.refineSettings) chat.refineSettings = {};
 
     // 加载开关状态
     const autoToggle = document.getElementById('enable-auto-summary-toggle');
-    if (chat.settings.enableAutoMemory) {
+    if (chat.autoSummary.enabled) {
         autoToggle.classList.add('active');
     } else {
         autoToggle.classList.remove('active');
@@ -32697,21 +32698,16 @@ function loadSummarySettings() {
     // 加载滑块值
     const intervalSlider = document.getElementById('auto-summary-interval-slider');
     const intervalValue = document.getElementById('auto-summary-interval-value');
-    intervalSlider.value = chat.settings.autoMemoryInterval || 25;
+    intervalSlider.value = chat.autoSummary.threshold || 50;
     intervalValue.textContent = intervalSlider.value + ' 条';
 
     const refineSlider = document.getElementById('refine-threshold-slider');
     const refineValue = document.getElementById('refine-threshold-value');
-    refineSlider.value = chat.settings.summaryRefineThreshold || 2000;
+    refineSlider.value = chat.refineSettings.threshold || 2000;
     refineValue.textContent = refineSlider.value + ' 字';
 
     // 加载提示词
-    document.getElementById('dialog-summary-prompt-new').value =
-        localStorage.getItem('customDialogSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.dialog;
-    document.getElementById('call-summary-prompt-new').value =
-        localStorage.getItem('customCallSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.call;
-    document.getElementById('refine-summary-prompt-new').value =
-        localStorage.getItem('customRefineSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.refine;
+    loadPromptSettings();
 
     // 绑定滑块事件
     intervalSlider.oninput = () => {
@@ -32724,68 +32720,116 @@ function loadSummarySettings() {
 }
 
 // 切换提示词 Tab
+// ==================== 提示词设置 UI ====================
+
+/**
+ * 切换提示词 Tab
+ * @param {string} tabName - Tab 名称：'dialog', 'call', 'refine'
+ */
 function switchPromptTab(tabName) {
-    // 切换 Tab 样式
-    document.querySelectorAll('.neuro-tab').forEach(tab => {
-        if (tab.dataset.tab === tabName) {
-            tab.classList.add('active');
+    // 切换按钮样式
+    const tabs = {
+        'dialog': document.getElementById('prompt-tab-dialog'),
+        'call': document.getElementById('prompt-tab-call'),
+        'refine': document.getElementById('prompt-tab-refine')
+    };
+
+    Object.entries(tabs).forEach(([name, btn]) => {
+        if (name === tabName) {
+            btn.style.background = '#007AFF';
+            btn.style.color = 'white';
         } else {
-            tab.classList.remove('active');
+            btn.style.background = '';
+            btn.style.color = '';
         }
     });
 
     // 切换 Textarea 显示
-    document.getElementById('dialog-summary-prompt-new').style.display =
+    document.getElementById('dialog-summary-prompt').style.display =
         tabName === 'dialog' ? 'block' : 'none';
-    document.getElementById('call-summary-prompt-new').style.display =
+    document.getElementById('call-summary-prompt').style.display =
         tabName === 'call' ? 'block' : 'none';
-    document.getElementById('refine-summary-prompt-new').style.display =
+    document.getElementById('refine-summary-prompt').style.display =
         tabName === 'refine' ? 'block' : 'none';
 }
 
-// 保存总结设置
+/**
+ * 加载提示词设置到 UI
+ */
+function loadPromptSettings() {
+    // 加载提示词
+    document.getElementById('dialog-summary-prompt').value =
+        localStorage.getItem('customDialogSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.dialog;
+    document.getElementById('call-summary-prompt').value =
+        localStorage.getItem('customCallSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.call;
+    document.getElementById('refine-summary-prompt').value =
+        localStorage.getItem('customRefineSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.refine;
+
+    // 默认显示对话总结 Tab
+    switchPromptTab('dialog');
+}
+
+/**
+ * 保存总结设置
+ */
 async function saveSummarySettings() {
     const chatId = appState.activeChatId;
     const chat = appState.chats[chatId];
 
-    // 保存开关状态
-    if (!chat.settings) chat.settings = {};
-    chat.settings.enableAutoMemory =
+    // 保存自动总结设置
+    if (!chat.autoSummary) {
+        chat.autoSummary = {};
+    }
+    chat.autoSummary.enabled =
         document.getElementById('enable-auto-summary-toggle').classList.contains('active');
+    chat.autoSummary.threshold =
+        parseInt(document.getElementById('auto-summary-interval-slider').value);
+
+    // 保存全局记忆设置
     chat.globalMemoryEnabled =
         document.getElementById('global-memory-toggle').classList.contains('active');
 
-    // 保存滑块值
-    chat.settings.autoMemoryInterval =
-        parseInt(document.getElementById('auto-summary-interval-slider').value);
-    chat.settings.summaryRefineThreshold =
+    // 保存精炼阈值
+    if (!chat.refineSettings) {
+        chat.refineSettings = {};
+    }
+    chat.refineSettings.threshold =
         parseInt(document.getElementById('refine-threshold-slider').value);
 
-    // 保存提示词
+    // 保存提示词到 localStorage
     localStorage.setItem('customDialogSummaryPrompt',
-        document.getElementById('dialog-summary-prompt-new').value);
+        document.getElementById('dialog-summary-prompt').value);
     localStorage.setItem('customCallSummaryPrompt',
-        document.getElementById('call-summary-prompt-new').value);
+        document.getElementById('call-summary-prompt').value);
     localStorage.setItem('customRefineSummaryPrompt',
-        document.getElementById('refine-summary-prompt-new').value);
+        document.getElementById('refine-summary-prompt').value);
 
-    await saveChatsToStorage();
+    // 保存到数据库
+    await dbStorage.set(KEYS.CHATS, appState.chats);
 
     showCustomAlert('成功', '设置已保存');
     switchToViewPage();
 }
 
-// 重置提示词为默认值
-function resetSummaryPrompts() {
-    if (!confirm('确定要重置所有提示词为默认值吗？')) return;
+/**
+ * 重置提示词为默认值
+ */
+async function resetSummaryPrompts() {
+    const confirmed = await showCustomConfirm('确认重置', '确定要将所有提示词重置为默认值吗？');
+    if (!confirmed) return;
 
-    document.getElementById('dialog-summary-prompt-new').value = DEFAULT_SUMMARY_PROMPTS.dialog;
-    document.getElementById('call-summary-prompt-new').value = DEFAULT_SUMMARY_PROMPTS.call;
-    document.getElementById('refine-summary-prompt-new').value = DEFAULT_SUMMARY_PROMPTS.refine;
+    // 清除 localStorage 中的自定义提示词
+    localStorage.removeItem('customDialogSummaryPrompt');
+    localStorage.removeItem('customCallSummaryPrompt');
+    localStorage.removeItem('customRefineSummaryPrompt');
 
-    showCustomAlert('成功', '提示词已重置');
+    // 重新加载提示词
+    loadPromptSettings();
+
+    showCustomAlert('成功', '提示词已重置为默认值');
 }
 
+// 重置提示词为默认值
 // ===== 手动总结功能 =====
 
 async function handleManualSummary() {
