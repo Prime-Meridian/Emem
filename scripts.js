@@ -2030,7 +2030,8 @@ const appState = {
     defaultBackgroundTexture: '',
     topBarTexture: '',
     bottomBarTexture: '',
-    customGlobalCss: ''
+    customGlobalCss: '',
+    imageStorageOptimization: false // 图片存储优化开关
 };
 
 window.appState = appState;
@@ -11288,6 +11289,256 @@ const toggleDarkMode = async () => {
     await dbStorage.set(KEYS.DARK_MODE, newModeState); // 保存用户选择
 };
 
+// 图片存储优化开关
+const toggleImageStorageOptimization = async () => {
+    const toggle = document.getElementById('image-storage-optimization-toggle');
+    appState.imageStorageOptimization = !appState.imageStorageOptimization;
+    
+    if (appState.imageStorageOptimization) {
+        toggle.classList.add('active');
+    } else {
+        toggle.classList.remove('active');
+    }
+    
+    await dbStorage.set('imageStorageOptimization', appState.imageStorageOptimization);
+    console.log('图片存储优化:', appState.imageStorageOptimization ? '已开启' : '已关闭');
+};
+
+// 清空日记数据
+const clearDiaryData = async () => {
+    showCustomConfirm('清空日记', '确定要清空所有日记吗？此操作不可恢复！', async () => {
+        await dbStorage.set(KEYS.DIARY_ENTRIES, []);
+        setDiaryEntries([]);
+        alert('日记已清空');
+    });
+};
+
+// 清空论坛数据
+const clearForumData = async () => {
+    showCustomConfirm('清空论坛', '确定要清空所有论坛数据吗？此操作不可恢复！', async () => {
+        await dbStorage.set(KEYS.FORUM_DATA, {});
+        alert('论坛数据已清空');
+    });
+};
+
+// 压缩表情包数据
+const clearStickersData = async () => {
+    if (!confirm('确定要压缩所有表情包吗？这可能需要一些时间。\n\n注意：只会压缩本地存储的base64图片，外部链接不会处理。')) {
+        return;
+    }
+    
+    const btn = document.getElementById('clear-stickers-btn');
+    const originalText = btn.textContent;
+    
+    try {
+        let totalOriginalSize = 0;
+        let totalCompressedSize = 0;
+        let processedCount = 0;
+        let skippedCount = 0;
+        
+        // 压缩用户表情包
+        const userStickers = appState.stickers || [];
+        const compressedUserStickers = [];
+        
+        for (let i = 0; i < userStickers.length; i++) {
+            const totalCount = userStickers.length + (appState.aiStickers?.length || 0);
+            btn.textContent = `压缩中... ${processedCount + skippedCount + 1}/${totalCount}`;
+            
+            const sticker = userStickers[i];
+            if (sticker && typeof sticker === 'object' && sticker.url && sticker.url.startsWith('data:image/')) {
+                const originalSize = sticker.url.length;
+                totalOriginalSize += originalSize;
+                
+                const compressed = await compressImage(sticker.url, {
+                    maxWidth: 512,
+                    maxHeight: 512,
+                    quality: 0.85
+                });
+                const compressedSize = compressed.length;
+                totalCompressedSize += compressedSize;
+                
+                compressedUserStickers.push({
+                    url: compressed,
+                    name: sticker.name
+                });
+                console.log(`用户表情包 ${i + 1} [${sticker.name}]: ${(originalSize / 1024).toFixed(2)}KB -> ${(compressedSize / 1024).toFixed(2)}KB`);
+                processedCount++;
+            } else {
+                compressedUserStickers.push(sticker);
+                skippedCount++;
+            }
+        }
+        
+        // 压缩 AI 表情包
+        const aiStickers = appState.aiStickers || [];
+        const compressedAiStickers = [];
+        
+        for (let i = 0; i < aiStickers.length; i++) {
+            const totalCount = userStickers.length + aiStickers.length;
+            btn.textContent = `压缩中... ${processedCount + skippedCount + 1}/${totalCount}`;
+            
+            const sticker = aiStickers[i];
+            if (sticker && typeof sticker === 'object' && sticker.url && sticker.url.startsWith('data:image/')) {
+                const originalSize = sticker.url.length;
+                totalOriginalSize += originalSize;
+                
+                const compressed = await compressImage(sticker.url, {
+                    maxWidth: 512,
+                    maxHeight: 512,
+                    quality: 0.85
+                });
+                const compressedSize = compressed.length;
+                totalCompressedSize += compressedSize;
+                
+                compressedAiStickers.push({
+                    url: compressed,
+                    name: sticker.name
+                });
+                console.log(`AI表情包 ${i + 1} [${sticker.name}]: ${(originalSize / 1024).toFixed(2)}KB -> ${(compressedSize / 1024).toFixed(2)}KB`);
+                processedCount++;
+            } else {
+                compressedAiStickers.push(sticker);
+                skippedCount++;
+            }
+        }
+        
+        // 保存压缩后的数据
+        appState.stickers = compressedUserStickers;
+        appState.aiStickers = compressedAiStickers;
+        await dbStorage.set(KEYS.STICKERS, compressedUserStickers);
+        await dbStorage.set(KEYS.AI_STICKERS, compressedAiStickers);
+        
+        const savedKB = ((totalOriginalSize - totalCompressedSize) / 1024).toFixed(2);
+        const savedMB = (savedKB / 1024).toFixed(2);
+        
+        btn.textContent = originalText;
+        alert(`压缩完成！\n已压缩: ${processedCount} 个\n跳过: ${skippedCount} 个（外部链接）\n节省空间: ${savedMB} MB (${savedKB} KB)`);
+        
+    } catch (error) {
+        console.error('压缩表情包失败:', error);
+        btn.textContent = originalText;
+        alert('压缩失败，请查看控制台');
+    }
+};
+
+// 清空朋友圈数据
+const clearMomentsData = async () => {
+    showCustomConfirm('清空朋友圈', '确定要清空所有朋友圈数据吗？此操作不可恢复！', async () => {
+        await dbStorage.set(KEYS.MOMENTS_DATA, { cover: null, avatar: null, posts: [] });
+        appState.momentsData = { cover: null, avatar: null, posts: [] };
+        alert('朋友圈已清空');
+    });
+};
+
+// 压缩历史图片（改为数据分析）
+const compressHistoryImages = async () => {
+    const btn = document.getElementById('compress-history-images-btn');
+    const originalText = btn.textContent;
+    
+    try {
+        btn.disabled = true;
+        btn.textContent = '正在分析数据...';
+        
+        // 分析所有数据的大小
+        const dataSizes = {};
+        
+        for (const key in KEYS) {
+            const keyName = KEYS[key];
+            try {
+                const data = await dbStorage.get(keyName);
+                if (data) {
+                    const jsonStr = JSON.stringify(data);
+                    const sizeKB = (jsonStr.length / 1024).toFixed(2);
+                    const sizeMB = (jsonStr.length / 1024 / 1024).toFixed(2);
+                    dataSizes[keyName] = {
+                        size: jsonStr.length,
+                        sizeKB,
+                        sizeMB,
+                        type: Array.isArray(data) ? 'array' : typeof data
+                    };
+                }
+            } catch (e) {
+                console.error(`读取 ${keyName} 失败:`, e);
+            }
+        }
+        
+        // 按大小排序
+        const sorted = Object.entries(dataSizes).sort((a, b) => b[1].size - a[1].size);
+        
+        console.log('=== 数据库存储分析 ===');
+        let totalSize = 0;
+        for (const [key, info] of sorted) {
+            console.log(`${key}: ${info.sizeMB} MB (${info.sizeKB} KB) - ${info.type}`);
+            totalSize += info.size;
+        }
+        console.log(`总计: ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
+        
+        // 找出最大的几个
+        const top3 = sorted.slice(0, 3);
+        let message = '数据库存储分析：\n\n';
+        for (const [key, info] of top3) {
+            message += `${key}: ${info.sizeMB} MB\n`;
+        }
+        message += `\n总计: ${(totalSize / 1024 / 1024).toFixed(2)} MB\n\n`;
+        
+        // 检查聊天记录里的图片
+        btn.textContent = '正在扫描聊天图片...';
+        
+        let imageCount = 0;
+        let imageSize = 0;
+        
+        for (const chatId in appState.chats) {
+            const chat = appState.chats[chatId];
+            if (!chat.history) continue;
+            
+            for (const msg of chat.history) {
+                if (msg.content && typeof msg.content === 'string' && msg.content.startsWith('data:image/')) {
+                    imageCount++;
+                    imageSize += msg.content.length;
+                }
+            }
+        }
+        
+        message += `聊天图片: ${imageCount} 张, ${(imageSize / 1024 / 1024).toFixed(2)} MB\n\n`;
+        
+        // 检查表情包
+        btn.textContent = '正在扫描表情包...';
+        
+        let stickerCount = 0;
+        let stickerSize = 0;
+        
+        if (appState.stickers) {
+            for (const sticker of appState.stickers) {
+                if (sticker.image && sticker.image.startsWith('data:image/')) {
+                    stickerCount++;
+                    stickerSize += sticker.image.length;
+                }
+            }
+        }
+        
+        if (appState.aiStickers) {
+            for (const sticker of appState.aiStickers) {
+                if (sticker.image && sticker.image.startsWith('data:image/')) {
+                    stickerCount++;
+                    stickerSize += sticker.image.length;
+                }
+            }
+        }
+        
+        message += `表情包: ${stickerCount} 个, ${(stickerSize / 1024 / 1024).toFixed(2)} MB\n\n`;
+        message += '详细信息请查看控制台';
+        
+        alert(message);
+        
+    } catch (error) {
+        console.error('分析失败:', error);
+        alert('分析失败：' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+};
+
 // 时间显示相关函数
 let timeUpdateInterval = null;
 
@@ -12994,6 +13245,12 @@ document.getElementById('settings-hub-dark-mode-toggle').onclick = toggleDarkMod
 document.getElementById('display-mode-toggle').onclick = toggleDisplayMode;
 document.getElementById('platform-mode-select').addEventListener('change', handlePlatformModeChange);
 document.getElementById('home-time-display-toggle').onclick = toggleHomeTimeDisplay;
+document.getElementById('image-storage-optimization-toggle').onclick = toggleImageStorageOptimization;
+document.getElementById('compress-history-images-btn').onclick = compressHistoryImages;
+document.getElementById('clear-diary-btn').onclick = clearDiaryData;
+document.getElementById('clear-forum-btn').onclick = clearForumData;
+document.getElementById('clear-stickers-btn').onclick = clearStickersData;
+document.getElementById('clear-moments-btn').onclick = clearMomentsData;
 
 // 时间显示大小滑块事件
 document.getElementById('home-time-size-slider').addEventListener('input', async (e) => {
@@ -16729,6 +16986,17 @@ const init = async () => {
     }
     // 使用新的设置函数确保数据同步
     setDiaryEntries(diaryEntries);
+
+    // 加载图片存储优化设置
+    appState.imageStorageOptimization = await dbStorage.get('imageStorageOptimization', false);
+    const imageOptToggle = document.getElementById('image-storage-optimization-toggle');
+    if (imageOptToggle) {
+        if (appState.imageStorageOptimization) {
+            imageOptToggle.classList.add('active');
+        } else {
+            imageOptToggle.classList.remove('active');
+        }
+    }
 
     if (appState.personas.ai.length === 0) {
         appState.personas.ai.push({ name: '测试AI', content: '你是一个用于测试的ai。', avatar: DEFAULT_AVATAR })
