@@ -34,7 +34,6 @@
         
         // 开始加载
         loadDexie(dexieCDNs);
-        
         // 添加数据库连接检查函数
         window.checkDatabaseConnection = function() {
             if (typeof Dexie !== 'undefined') {
@@ -46,6 +45,67 @@
                 return false;
             }
         };
+
+        // ==================== 图片压缩工具函数 ====================
+        /**
+         * 压缩图片并返回 base64 格式
+         * @param {string} base64Image - 原始 base64 图片
+         * @param {object} options - 压缩选项
+         * @param {number} options.maxWidth - 最大宽度，默认 1024
+         * @param {number} options.maxHeight - 最大高度，默认 1024
+         * @param {number} options.quality - 压缩质量 0-1，默认 0.85
+         * @returns {Promise<string>} 压缩后的 base64 图片
+         */
+        async function compressImage(base64Image, options = {}) {
+            const {
+                maxWidth = 1024,
+                maxHeight = 1024,
+                quality = 0.85
+            } = options;
+
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    // 计算缩放比例
+                    if (width > maxWidth || height > maxHeight) {
+                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                        width = Math.floor(width * ratio);
+                        height = Math.floor(height * ratio);
+                    }
+
+                    // 创建 Canvas 进行压缩
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 绘制图片
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // 转换为 base64
+                    try {
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                        console.log(`✅ 图片压缩完成: ${Math.round(base64Image.length / 1024)}KB -> ${Math.round(compressedBase64.length / 1024)}KB`);
+                        resolve(compressedBase64);
+                    } catch (error) {
+                        console.error('❌ 图片压缩失败:', error);
+                        resolve(base64Image); // 压缩失败则返回原图
+                    }
+                };
+
+                img.onerror = () => {
+                    console.error('❌ 图片加载失败');
+                    resolve(base64Image); // 加载失败则返回原图
+                };
+
+                img.src = base64Image;
+            });
+        }
+    
     
 
 // ====================
@@ -2079,35 +2139,6 @@ window.closeDiaryReading = closeDiaryReading;
     window.showScreen = showScreen;
 
     const showCustomConfirm = (title, text, onOkCallback) => {
-        // 支持 Promise 方式调用
-        if (!onOkCallback) {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('custom-confirm-modal');
-                const customConfirmTitle = document.getElementById('custom-confirm-title');
-                const customConfirmText = document.getElementById('custom-confirm-text');
-                const customConfirmOkBtn = document.getElementById('custom-confirm-ok-btn');
-                const customConfirmCancelBtn = document.getElementById('custom-confirm-cancel-btn');
-
-                customConfirmTitle.textContent = title;
-                customConfirmText.innerHTML = text;
-
-                customConfirmOkBtn.onclick = () => {
-                    hideCustomConfirm();
-                    resolve(true);
-                };
-
-                customConfirmCancelBtn.onclick = () => {
-                    hideCustomConfirm();
-                    resolve(false);
-                };
-
-                modal.style.display = 'flex';
-                modal.style.visibility = 'visible';
-                setTimeout(() => { modal.style.opacity = '1'; }, 10);
-            });
-        }
-
-        // 兼容旧的回调方式
         const modal = document.getElementById('custom-confirm-modal');
         const customConfirmTitle = document.getElementById('custom-confirm-title');
         const customConfirmText = document.getElementById('custom-confirm-text');
@@ -13055,7 +13086,29 @@ document.getElementById('api-settings-back-btn').onclick = () => showScreen('set
     };
     console.log('🔍 chat-settings-btn 绑定完成');
     document.getElementById('action-send-image').onclick = () => { document.getElementById('image-upload-input').click(); };
-    document.getElementById('image-upload-input').addEventListener('change', async (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = async (e) => { const base64Image = e.target.result; const chat = appState.chats[appState.activeChatId]; if (!chat) return; await checkAndInsertTimestamp(); const imageTimestamp = Date.now(); const imageData = { type: 'just_image', url: base64Image }; appendMessage({ role: 'user', content: imageData, timestamp: imageTimestamp }); chat.history.push({ role: 'user', content: imageData, timestamp: imageTimestamp }); await dbStorage.set(KEYS.CHATS, appState.chats); }; reader.readAsDataURL(file); event.target.value = ''; });
+    document.getElementById('image-upload-input').addEventListener('change', async (event) => { 
+        const file = event.target.files[0]; 
+        if (!file) return; 
+        const reader = new FileReader(); 
+        reader.onload = async (e) => { 
+            // 压缩聊天图片（1024px 最大尺寸）
+            const compressedImage = await compressImage(e.target.result, {
+                maxWidth: 1024,
+                maxHeight: 1024,
+                quality: 0.85
+            });
+            const chat = appState.chats[appState.activeChatId]; 
+            if (!chat) return; 
+            await checkAndInsertTimestamp(); 
+            const imageTimestamp = Date.now(); 
+            const imageData = { type: 'just_image', url: compressedImage }; 
+            appendMessage({ role: 'user', content: imageData, timestamp: imageTimestamp }); 
+            chat.history.push({ role: 'user', content: imageData, timestamp: imageTimestamp }); 
+            await dbStorage.set(KEYS.CHATS, appState.chats); 
+        }; 
+        reader.readAsDataURL(file); 
+        event.target.value = ''; 
+    });
     document.getElementById('action-send-image-text').onclick = openImageModal; document.getElementById('cancel-image-btn').onclick = closeImageModal; document.getElementById('send-image-btn').onclick = sendImageMessage; document.getElementById('action-send-location').onclick = openLocationModal; document.getElementById('action-send-voice').onclick = openVoiceModal;
 
 document.getElementById('action-start-videocall').onclick = requestCallDecision;
@@ -13172,14 +13225,20 @@ if (chatImportStickersBtn) {
 
 const stickerUploadInput = document.getElementById('sticker-upload-input');
 if (stickerUploadInput) {
-    stickerUploadInput.addEventListener('change', (event) => {
+    stickerUploadInput.addEventListener('change', async (event) => {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
-        // 1. 将选择的图片暂存起来
-        appState.pendingSticker = e.target.result;
-        // 2. 清空命名输入框并打开弹窗
+    reader.onload = async (e) => {
+        // 1. 压缩图片（表情包使用 512px 最大尺寸）
+        const compressedImage = await compressImage(e.target.result, {
+            maxWidth: 512,
+            maxHeight: 512,
+            quality: 0.85
+        });
+        // 2. 将压缩后的图片暂存起来
+        appState.pendingSticker = compressedImage;
+        // 3. 清空命名输入框并打开弹窗
         document.getElementById('sticker-name-input').value = '';
         document.getElementById('sticker-name-modal').classList.add('active');
     };
@@ -32905,13 +32964,8 @@ async function handleManualSummary() {
     ];
 
     try {
-        // 显示加载提示
-        const loadingAlert = showCustomAlert('提示', '正在生成总结，请稍候...');
-
+        showCustomAlert('提示', '正在生成总结...');
         const response = await callSummaryApi(apiMessages);
-
-        // 关闭加载提示
-        if (loadingAlert && loadingAlert.close) loadingAlert.close();
 
         // 解析 JSON
         const summary = parseSummaryResponse(response);
@@ -32942,9 +32996,7 @@ async function handleManualSummary() {
 
     } catch (error) {
         console.error('总结生成失败:', error);
-        const errorMsg = error.message || '总结生成失败';
-        console.error('详细错误信息:', error);
-        showCustomAlert('错误', `总结生成失败：${errorMsg}`);
+        showCustomAlert('错误', error.message || '总结生成失败');
     }
 }
 
@@ -33050,13 +33102,8 @@ async function refineSummaryContent() {
     ];
 
     try {
-        // 显示加载提示
-        const loadingAlert = showCustomAlert('提示', '正在精炼总结，请稍候...');
-
+        showCustomAlert('提示', '正在精炼总结...');
         const response = await callSummaryApi(apiMessages);
-
-        // 关闭加载提示
-        if (loadingAlert && loadingAlert.close) loadingAlert.close();
 
         // 解析 JSON
         const refinedSummary = parseSummaryResponse(response);
@@ -33086,9 +33133,7 @@ async function refineSummaryContent() {
 
     } catch (error) {
         console.error('精炼失败:', error);
-        const errorMsg = error.message || '精炼失败';
-        console.error('详细错误信息:', error);
-        showCustomAlert('错误', `精炼失败：${errorMsg}`);
+        showCustomAlert('错误', error.message || '精炼失败');
     }
 }
 
