@@ -32885,11 +32885,11 @@ async function handleManualSummary() {
             chat.lastMemorySummaryTimestamp = Date.now();
 
             // 保存
-            await saveChatsToStorage();
+            await dbStorage.set(KEYS.CHATS, appState.chats);
 
             // 刷新卡片显示
             renderSummaryCards(chatId);
-            updateSummaryCount(chatId);
+            updateMemoryCount(chatId);
 
             showCustomAlert('成功', '总结已添加');
         }
@@ -33020,11 +33020,11 @@ async function refineSummaryContent() {
             });
 
             // 保存
-            await saveChatsToStorage();
+            await dbStorage.set(KEYS.CHATS, appState.chats);
 
             // 刷新卡片显示
             renderSummaryCards(chatId);
-            updateSummaryCount(chatId);
+            updateMemoryCount(chatId);
 
             showCustomAlert('成功', `精炼完成！从 ${currentWordCount} 字压缩到 ${refinedSummary.length} 字`);
         }
