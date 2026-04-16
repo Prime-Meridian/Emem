@@ -1342,110 +1342,95 @@
         </div>
     </div>
 
+
     <!-- 总结主模态窗口 -->
-    <div id="summary-modal" class="modal-overlay neuro-modal" style="display: none;">
-        <div class="modal-container neuro-modal-container" onclick="event.stopPropagation();">
+    <div id="summary-modal" class="screen" style="background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 100;">
+        <div class="modal-box" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
 
             <!-- 查看页面 -->
-            <div id="summary-view-page" class="summary-page">
-                <!-- Header -->
-                <div class="neuro-modal-header">
-                    <h3>对话总结</h3>
-                    <button class="neuro-close-btn" onclick="closeSummaryModal()">×</button>
-                </div>
+            <div id="summary-view-page">
+                <header class="app-header" style="border-bottom: 1px solid #eee; padding-left:0; padding-right: 0;">
+                    <h2 style="position: static; transform: none;">对话总结</h2>
+                </header>
 
-                <!-- Body - 记忆卡片列表 -->
-                <div class="neuro-modal-body">
-                    <div id="summary-cards-container" class="summary-cards-container">
-                        <!-- 卡片由 JS 动态生成 -->
-                    </div>
+                <div class="list-container" style="max-height: 400px; overflow-y: auto;">
+                    <div id="summary-cards-container"></div>
 
                     <!-- 空状态 -->
-                    <div id="summary-empty-state" class="summary-empty-state" style="display: none;">
-                        <div class="empty-icon">🤔</div>
-                        <p class="empty-title">还没有对话总结</p>
-                        <p class="empty-hint">点击下方"手动总结"生成总结<br>或等待自动总结触发</p>
+                    <div id="summary-empty-state" style="display: none; text-align: center; padding: 40px 20px; color: var(--system-message-color);">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🤔</div>
+                        <p style="font-size: 16px; margin-bottom: 8px;">还没有对话总结</p>
+                        <p style="font-size: 14px; opacity: 0.7;">点击下方"手动总结"生成总结<br>或等待自动总结触发</p>
                     </div>
                 </div>
 
-                <!-- Footer - 操作按钮 -->
-                <div class="neuro-modal-footer">
-                    <button class="neuro-btn-secondary" onclick="handleManualSummary()">手动总结</button>
-                    <button class="neuro-btn-secondary" onclick="refineSummaryContent()">精炼记忆</button>
-                    <button class="neuro-btn-primary" onclick="switchToSettingsPage()">⚙️ 总结设置</button>
+                <div class="settings-actions" style="border-top: 1px solid #eee; padding: 15px 0 0 0;">
+                    <button id="manual-summary-btn" class="action-btn-secondary">手动总结</button>
+                    <button id="refine-summary-btn" class="action-btn-secondary">精炼记忆</button>
+                    <button id="open-summary-settings-btn" class="save-btn">⚙️ 总结设置</button>
                 </div>
             </div>
 
             <!-- 设置页面 -->
-            <div id="summary-settings-page" class="summary-page" style="display: none;">
-                <!-- Header -->
-                <div class="neuro-modal-header">
-                    <button class="neuro-back-btn" onclick="switchToViewPage()">‹</button>
-                    <h3>总结设置</h3>
-                    <button class="neuro-close-btn" onclick="closeSummaryModal()">×</button>
-                </div>
+            <div id="summary-settings-page" style="display: none;">
+                <header class="app-header" style="border-bottom: 1px solid #eee; padding-left:0; padding-right: 0;">
+                    <button id="summary-settings-back-btn" class="back-btn">‹</button>
+                    <h2 style="position: static; transform: none;">总结设置</h2>
+                </header>
 
-                <!-- Body -->
-                <div class="neuro-modal-body">
+                <div class="list-container" style="max-height: 500px; overflow-y: auto;">
                     <!-- 基础设置 -->
-                    <div class="neuro-settings-group">
-                        <!-- 启用自动总结 -->
-                        <div class="neuro-setting-row">
-                            <span class="neuro-setting-label">启用自动总结</span>
+                    <div class="settings-section">
+                        <div class="settings-item">
+                            <span class="item-label">启用自动总结</span>
                             <div id="enable-auto-summary-toggle" class="toggle-switch">
                                 <div class="toggle-knob"></div>
                             </div>
                         </div>
 
-                        <!-- 自动总结间隔 -->
-                        <div class="neuro-setting-row">
-                            <span class="neuro-setting-label">自动总结间隔</span>
-                            <div class="neuro-slider-container">
-                                <input type="range" id="auto-summary-interval-slider"
-                                       min="10" max="100" step="5" value="25"
-                                       class="neuro-slider">
-                                <span id="auto-summary-interval-value" class="neuro-slider-value">25 条</span>
+                        <div class="settings-item">
+                            <span class="item-label">自动总结间隔</span>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="range" id="auto-summary-interval-slider" min="10" max="100" step="5" value="25" style="flex: 1;">
+                                <span id="auto-summary-interval-value" style="min-width: 50px; text-align: right;">25 条</span>
                             </div>
                         </div>
 
-                        <!-- 精炼阈值 -->
-                        <div class="neuro-setting-row">
-                            <span class="neuro-setting-label">精炼阈值</span>
-                            <div class="neuro-slider-container">
-                                <input type="range" id="refine-threshold-slider"
-                                       min="500" max="5000" step="100" value="2000"
-                                       class="neuro-slider">
-                                <span id="refine-threshold-value" class="neuro-slider-value">2000 字</span>
+                        <div class="settings-item">
+                            <span class="item-label">精炼阈值</span>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="range" id="refine-threshold-slider" min="500" max="5000" step="100" value="2000" style="flex: 1;">
+                                <span id="refine-threshold-value" style="min-width: 60px; text-align: right;">2000 字</span>
                             </div>
                         </div>
 
-                        <!-- 全局长期记忆 -->
-                        <div class="neuro-setting-row">
-                            <span class="neuro-setting-label">全局长期记忆</span>
+                        <div class="settings-item">
+                            <span class="item-label">全局长期记忆</span>
                             <div id="global-memory-toggle" class="toggle-switch">
                                 <div class="toggle-knob"></div>
                             </div>
                         </div>
-                        <div class="neuro-hint">
+
+                        <div style="padding: 10px 15px; background: #fff3cd; border-radius: 8px; margin: 10px 15px; font-size: 13px; color: #856404;">
                             ⚠️ 启用后，所有角色在对话时都会参考此角色的长期记忆内容，可能增加API成本。
                         </div>
                     </div>
 
                     <!-- 提示词设置 -->
-                    <div class="neuro-prompt-section">
-                        <h4 class="neuro-section-title">提示词设置</h4>
+                    <div class="settings-section">
+                        <h3 style="padding: 15px; margin: 0; font-size: 16px;">提示词设置</h3>
 
                         <!-- Tab 切换 -->
-                        <div class="neuro-tabs">
-                            <button class="neuro-tab active" data-tab="dialog" onclick="switchPromptTab('dialog')">对话总结</button>
-                            <button class="neuro-tab" data-tab="call" onclick="switchPromptTab('call')">通话总结</button>
-                            <button class="neuro-tab" data-tab="refine" onclick="switchPromptTab('refine')">记忆精炼</button>
+                        <div style="display: flex; gap: 5px; padding: 0 15px; margin-bottom: 10px;">
+                            <button id="prompt-tab-dialog" class="action-btn-secondary" style="flex: 1; font-size: 13px;">对话总结</button>
+                            <button id="prompt-tab-call" class="action-btn-secondary" style="flex: 1; font-size: 13px;">通话总结</button>
+                            <button id="prompt-tab-refine" class="action-btn-secondary" style="flex: 1; font-size: 13px;">记忆精炼</button>
                         </div>
 
                         <!-- 变量提示 -->
-                        <div class="neuro-prompt-hint">
-                            <p class="hint-title">💡 可用变量：</p>
-                            <ul class="hint-list">
+                        <div style="padding: 10px 15px; background: #e7f3ff; border-radius: 8px; margin: 10px 15px; font-size: 12px;">
+                            <p style="margin: 0 0 5px 0; font-weight: bold;">💡 可用变量：</p>
+                            <ul style="margin: 0; padding-left: 20px;">
                                 <li><code>${userNickname}</code> - 用户昵称</li>
                                 <li><code>${chat.originalName}</code> - 角色本名</li>
                                 <li><code>${formattedHistory}</code> - 对话历史</li>
@@ -1453,19 +1438,17 @@
                         </div>
 
                         <!-- 提示词编辑器 -->
-                        <textarea id="dialog-summary-prompt-new" class="neuro-textarea"
-                                  placeholder="输入对话总结提示词..." rows="8"></textarea>
-                        <textarea id="call-summary-prompt-new" class="neuro-textarea"
-                                  style="display:none;" placeholder="输入通话总结提示词..." rows="8"></textarea>
-                        <textarea id="refine-summary-prompt-new" class="neuro-textarea"
-                                  style="display:none;" placeholder="输入记忆精炼提示词..." rows="8"></textarea>
+                        <div style="padding: 0 15px;">
+                            <textarea id="dialog-summary-prompt" class="form-control" rows="8" placeholder="输入对话总结提示词..." style="width: 100%; font-size: 13px; font-family: monospace;"></textarea>
+                            <textarea id="call-summary-prompt" class="form-control" rows="8" placeholder="输入通话总结提示词..." style="display: none; width: 100%; font-size: 13px; font-family: monospace;"></textarea>
+                            <textarea id="refine-summary-prompt" class="form-control" rows="8" placeholder="输入记忆精炼提示词..." style="display: none; width: 100%; font-size: 13px; font-family: monospace;"></textarea>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Footer -->
-                <div class="neuro-modal-footer">
-                    <button class="neuro-btn-secondary" onclick="resetSummaryPrompts()">重置</button>
-                    <button class="neuro-btn-primary" onclick="saveSummarySettings()">保存设置</button>
+                <div class="settings-actions" style="border-top: 1px solid #eee; padding: 15px 0 0 0;">
+                    <button id="reset-prompts-btn" class="action-btn-secondary">重置提示词</button>
+                    <button id="save-summary-settings-btn" class="save-btn">保存设置</button>
                 </div>
             </div>
 
@@ -1473,123 +1456,71 @@
     </div>
 
     <!-- 编辑总结模态窗口 -->
-    <div id="edit-summary-modal" class="modal-overlay neuro-modal" style="display: none;">
-        <div class="modal-container neuro-modal-container-sm" onclick="event.stopPropagation();">
-            <div class="neuro-modal-header">
-                <h3>编辑总结</h3>
-                <button class="neuro-close-btn" onclick="closeEditSummaryModal()">×</button>
+    <div id="edit-summary-modal" class="screen" style="background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 110;">
+        <div class="modal-box" style="max-width: 600px;">
+            <header class="app-header" style="border-bottom: 1px solid #eee; padding-left:0; padding-right: 0;">
+                <h2 style="position: static; transform: none;">编辑总结</h2>
+            </header>
+            <div style="padding: 15px;">
+                <textarea id="edit-summary-textarea" class="form-control" rows="10" placeholder="编辑总结内容..." style="width: 100%;"></textarea>
             </div>
-            <div class="neuro-modal-body">
-                <textarea id="edit-summary-textarea" class="neuro-textarea"
-                          rows="10" placeholder="编辑总结内容..."></textarea>
-            </div>
-            <div class="neuro-modal-footer">
-                <button class="neuro-btn-secondary" onclick="closeEditSummaryModal()">取消</button>
-                <button class="neuro-btn-primary" onclick="saveEditedSummary()">保存</button>
+            <div class="settings-actions" style="border-top: 1px solid #eee; padding: 15px 0 0 0;">
+                <button id="cancel-edit-summary-btn" class="action-btn-secondary">取消</button>
+                <button id="save-edited-summary-btn" class="save-btn">保存</button>
             </div>
         </div>
     </div>
 
-    <!-- 总结预览模态窗口（手动总结后显示） -->
-    <div id="summary-preview-modal" class="modal-overlay neuro-modal" style="display: none;">
-        <div class="modal-container neuro-modal-container-sm" onclick="event.stopPropagation();">
-            <div class="neuro-modal-header">
-                <h3>总结预览</h3>
-                <button class="neuro-close-btn" onclick="document.getElementById('summary-preview-modal').style.display='none'">×</button>
+    <!-- 总结预览模态窗口 -->
+    <div id="summary-preview-modal" class="screen" style="background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 110;">
+        <div class="modal-box" style="max-width: 600px;">
+            <header class="app-header" style="border-bottom: 1px solid #eee; padding-left:0; padding-right: 0;">
+                <h2 style="position: static; transform: none;">总结预览</h2>
+            </header>
+            <div style="padding: 15px;">
+                <div id="summary-preview-content" style="background: #f8f9fa; padding: 15px; border-radius: 8px; line-height: 1.6; white-space: pre-wrap;"></div>
             </div>
-            <div class="neuro-modal-body">
-                <div id="summary-preview-content" class="neuro-card summary-preview-content"></div>
-            </div>
-            <div class="neuro-modal-footer">
-                <button class="neuro-btn-secondary" id="regenerate-summary-btn">重新生成</button>
-                <button class="neuro-btn-secondary" id="cancel-summary-btn">取消</button>
-                <button class="neuro-btn-primary" id="confirm-summary-btn">确认添加</button>
+            <div class="settings-actions" style="border-top: 1px solid #eee; padding: 15px 0 0 0;">
+                <button id="regenerate-summary-btn" class="action-btn-secondary">重新生成</button>
+                <button id="cancel-summary-preview-btn" class="action-btn-secondary">取消</button>
+                <button id="confirm-summary-btn" class="save-btn">确认添加</button>
             </div>
         </div>
     </div>
 
     <!-- 精炼对比模态窗口 -->
-    <div id="refine-comparison-modal" class="modal-overlay neuro-modal" style="display: none;">
-        <div class="modal-container neuro-modal-container-lg" onclick="event.stopPropagation();">
-            <div class="neuro-modal-header">
-                <h3>精炼前后对比</h3>
-                <button class="neuro-close-btn" onclick="document.getElementById('refine-comparison-modal').style.display='none'">×</button>
-            </div>
-            <div class="neuro-modal-body">
-                <div class="refine-comparison-container">
+    <div id="refine-comparison-modal" class="screen" style="background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 110;">
+        <div class="modal-box" style="max-width: 900px; width: 90%;">
+            <header class="app-header" style="border-bottom: 1px solid #eee; padding-left:0; padding-right: 0;">
+                <h2 style="position: static; transform: none;">精炼前后对比</h2>
+            </header>
+            <div style="padding: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px;">
                     <!-- 精炼前 -->
-                    <div class="refine-column">
-                        <div class="refine-column-header">
-                            <h4>精炼前</h4>
-                            <span id="refine-old-word-count" class="word-count-badge">0 字</span>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="margin: 0;">精炼前</h4>
+                            <span id="refine-old-word-count" style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 12px;">0 字</span>
                         </div>
-                        <div id="refine-old-content" class="neuro-card refine-content"></div>
+                        <div id="refine-old-content" style="background: #f8f9fa; padding: 15px; border-radius: 8px; line-height: 1.6; max-height: 400px; overflow-y: auto; white-space: pre-wrap;"></div>
                     </div>
 
                     <!-- 箭头 -->
-                    <div class="refine-arrow">→</div>
+                    <div style="display: flex; align-items: center; font-size: 24px; color: #007aff;">→</div>
 
                     <!-- 精炼后 -->
-                    <div class="refine-column">
-                        <div class="refine-column-header">
-                            <h4>精炼后</h4>
-                            <span id="refine-new-word-count" class="word-count-badge">0 字</span>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="margin: 0;">精炼后</h4>
+                            <span id="refine-new-word-count" style="background: #d1ecf1; padding: 4px 8px; border-radius: 4px; font-size: 12px;">0 字</span>
                         </div>
-                        <div id="refine-new-content" class="neuro-card refine-content"></div>
+                        <div id="refine-new-content" style="background: #d1ecf1; padding: 15px; border-radius: 8px; line-height: 1.6; max-height: 400px; overflow-y: auto; white-space: pre-wrap;"></div>
                     </div>
                 </div>
             </div>
-            <div class="neuro-modal-footer">
-                <button class="neuro-btn-secondary" id="cancel-refine-btn">取消</button>
-                <button class="neuro-btn-primary" id="confirm-refine-btn">确认替换</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 总结设置 Modal -->
-    <div id="summary-settings-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-container" style="max-width: 700px; max-height: 85vh; overflow-y: auto;" onclick="event.stopPropagation();">
-            <div class="modal-header">
-                <h3>⚙️ 总结设置</h3>
-                <button class="modal-close-btn" onclick="closeSummarySettingsModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <!-- 基础设置 -->
-                <div style="margin-bottom: 20px;">
-                    <h4 style="margin-bottom: 12px; font-size: 16px;">基础设置</h4>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--input-bg); border-radius: 8px; margin-bottom: 10px;">
-                        <span>启用自动总结</span>
-                        <div id="auto-summary-toggle" class="toggle-switch"><div class="toggle-knob"></div></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--input-bg); border-radius: 8px; margin-bottom: 10px;">
-                        <span>自动总结间隔（消息数）</span>
-                        <input type="number" id="auto-summary-interval" min="5" max="100" value="20" style="width: 80px; padding: 6px; border: 1px solid var(--input-border); border-radius: 6px; text-align: center;">
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--input-bg); border-radius: 8px;">
-                        <span>精炼阈值（字数）</span>
-                        <input type="number" id="refine-threshold" min="500" max="10000" value="2000" step="100" style="width: 100px; padding: 6px; border: 1px solid var(--input-border); border-radius: 6px; text-align: center;">
-                    </div>
-                </div>
-
-                <!-- 提示词设置 Tab -->
-                <div style="margin-bottom: 20px;">
-                    <h4 style="margin-bottom: 12px; font-size: 16px;">提示词设置</h4>
-                    <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--divider-color);">
-                        <button class="summary-tab-btn active" data-tab="dialog" onclick="switchSummaryTab('dialog')" style="padding: 10px 16px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-size: 14px;">对话总结</button>
-                        <button class="summary-tab-btn" data-tab="call" onclick="switchSummaryTab('call')" style="padding: 10px 16px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-size: 14px;">通话总结</button>
-                        <button class="summary-tab-btn" data-tab="refine" onclick="switchSummaryTab('refine')" style="padding: 10px 16px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-size: 14px;">记忆精炼</button>
-                    </div>
-                    <textarea id="dialog-summary-prompt" class="summary-prompt-textarea" style="width: 100%; min-height: 200px; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 13px; font-family: monospace; resize: vertical;"></textarea>
-                    <textarea id="call-summary-prompt" class="summary-prompt-textarea" style="display: none; width: 100%; min-height: 200px; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 13px; font-family: monospace; resize: vertical;"></textarea>
-                    <textarea id="refine-summary-prompt" class="summary-prompt-textarea" style="display: none; width: 100%; min-height: 200px; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 13px; font-family: monospace; resize: vertical;"></textarea>
-                </div>
-
-                <!-- 操作按钮 -->
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="resetSummarySettings()" style="flex: 1; padding: 10px; background: #ff9500; color: white; border: none; border-radius: 8px; cursor: pointer;">🔄 重置</button>
-                    <button onclick="saveSummarySettings()" style="flex: 2; padding: 10px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer;">💾 保存设置</button>
-                    <button onclick="closeSummarySettingsModal()" style="flex: 1; padding: 10px; background: #f5f5f5; color: #333; border: 1px solid #ccc; border-radius: 8px; cursor: pointer;">取消</button>
-                </div>
+            <div class="settings-actions" style="border-top: 1px solid #eee; padding: 15px 0 0 0;">
+                <button id="cancel-refine-btn" class="action-btn-secondary">取消</button>
+                <button id="confirm-refine-btn" class="save-btn">确认替换</button>
             </div>
         </div>
     </div>

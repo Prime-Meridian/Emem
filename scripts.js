@@ -12927,6 +12927,43 @@ document.getElementById('home-time-size-slider').addEventListener('input', async
     document.getElementById('home-btn-my-persona').onclick = () => showPersonaList('my');
        document.getElementById('home-btn-settings').onclick = () => showScreen('settings-hub-screen');
 
+// ===== 对话总结功能事件绑定 =====
+document.getElementById('open-summary-modal-btn').onclick = openSummaryModal;
+document.getElementById('manual-summary-btn').onclick = handleManualSummary;
+document.getElementById('refine-summary-btn').onclick = refineSummaryContent;
+document.getElementById('open-summary-settings-btn').onclick = switchToSettingsPage;
+document.getElementById('summary-settings-back-btn').onclick = switchToViewPage;
+document.getElementById('save-summary-settings-btn').onclick = saveSummarySettings;
+document.getElementById('reset-prompts-btn').onclick = resetSummaryPrompts;
+document.getElementById('cancel-edit-summary-btn').onclick = () => document.getElementById('edit-summary-modal').classList.remove('active');
+document.getElementById('save-edited-summary-btn').onclick = saveEditedSummary;
+document.getElementById('regenerate-summary-btn').onclick = regenerateSummary;
+document.getElementById('cancel-summary-preview-btn').onclick = () => document.getElementById('summary-preview-modal').classList.remove('active');
+document.getElementById('confirm-summary-btn').onclick = confirmSummary;
+document.getElementById('cancel-refine-btn').onclick = () => document.getElementById('refine-comparison-modal').classList.remove('active');
+document.getElementById('confirm-refine-btn').onclick = confirmRefine;
+
+// 开关切换
+document.getElementById('enable-auto-summary-toggle').onclick = function() {
+    this.classList.toggle('active');
+};
+document.getElementById('global-memory-toggle').onclick = function() {
+    this.classList.toggle('active');
+};
+
+// 滑块事件
+document.getElementById('auto-summary-interval-slider').oninput = function() {
+    document.getElementById('auto-summary-interval-value').textContent = this.value + ' 条';
+};
+document.getElementById('refine-threshold-slider').oninput = function() {
+    document.getElementById('refine-threshold-value').textContent = this.value + ' 字';
+};
+
+// 提示词 Tab 切换
+document.getElementById('prompt-tab-dialog').onclick = () => switchPromptTab('dialog');
+document.getElementById('prompt-tab-call').onclick = () => switchPromptTab('call');
+document.getElementById('prompt-tab-refine').onclick = () => switchPromptTab('refine');
+
 // ▼▼▼ 在 setupEventListeners 函数内，加入这段最终代码 ▼▼▼
 
 // “设定”页面 -> “汇出”按钮
@@ -32243,13 +32280,13 @@ function openSummaryModal() {
     // 更新记忆数量显示
     updateSummaryCount(chatId);
 
-    // 显示模态窗口
-    document.getElementById('summary-modal').style.display = 'flex';
+    // 显示模态窗口 - 使用 classList.add('active')
+    document.getElementById('summary-modal').classList.add('active');
 }
 
 // 关闭总结模态窗口
 function closeSummaryModal() {
-    document.getElementById('summary-modal').style.display = 'none';
+    document.getElementById('summary-modal').classList.remove('active');
 }
 
 // 切换到设置页面
@@ -32726,31 +32763,5 @@ async function showRefineComparisonDialog(oldContent, newContent) {
         };
     });
 }
-
-// ===== 事件绑定 =====
-
-// 在 DOMContentLoaded 或初始化时绑定事件
-document.addEventListener('DOMContentLoaded', function() {
-    // 入口按钮点击事件
-    const openBtn = document.getElementById('open-summary-modal-btn');
-    if (openBtn) {
-        openBtn.addEventListener('click', openSummaryModal);
-    }
-
-    // 开关切换事件
-    const autoToggle = document.getElementById('enable-auto-summary-toggle');
-    if (autoToggle) {
-        autoToggle.addEventListener('click', function() {
-            this.classList.toggle('active');
-        });
-    }
-
-    const globalToggle = document.getElementById('global-memory-toggle');
-    if (globalToggle) {
-        globalToggle.addEventListener('click', function() {
-            this.classList.toggle('active');
-        });
-    }
-});
 
 console.log('✅ 总结功能已加载');
