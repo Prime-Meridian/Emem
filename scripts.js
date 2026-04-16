@@ -316,17 +316,54 @@ async function callApi(messages, isMainChat = true, options = {}) {
             ...options
         };
         
+        // 调试：打印请求信息
+        console.log('🔧 [callApi] 准备发送请求');
+        console.log('🔧 [callApi] 消息数量:', messages.length);
+        console.log('🔧 [callApi] Model:', apiConfig.model);
+        
+        let bodyString;
+        try {
+            bodyString = JSON.stringify(requestBody);
+            console.log('🔧 [callApi] 请求体大小:', bodyString.length, '字符');
+            
+            // 检查 JSON 是否有效
+            try {
+                JSON.parse(bodyString);
+                console.log('✅ [callApi] JSON 格式验证通过');
+            } catch (parseError) {
+                console.error('❌ [callApi] JSON 格式无效:', parseError);
+                // 打印前 500 字符和后 500 字符
+                console.log('请求体开头:', bodyString.substring(0, 500));
+                console.log('请求体结尾:', bodyString.substring(bodyString.length - 500));
+                throw new Error('生成的 JSON 格式无效: ' + parseError.message);
+            }
+            
+            // 打印完整消息内容（用于调试）
+        if (messages.length > 0 && messages[0].content) {
+            console.log('🔧 [callApi] 完整消息内容:');
+            console.log(messages[0].content);
+            console.log('🔧 [callApi] 消息内容结束');
+        }
+            
+        } catch (e) {
+            console.error('❌ [callApi] JSON.stringify 失败:', e);
+            throw new Error('无法序列化请求体: ' + e.message);
+        }
+        
         response = await fetch(`${apiConfig.url.replace(/\/$/, '')}/chat/completions`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json', 
                 'Authorization': `Bearer ${apiConfig.key}` 
             },
-            body: JSON.stringify(requestBody)
+            body: bodyString
         });
+        
+        console.log('🔧 [callApi] 收到响应，状态码:', response.status);
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            console.error('❌ [callApi] API 返回错误:', errorData);
             throw new Error(errorData.error?.message || `HTTP 错误: ${response.status}`);
         }
         
@@ -2167,8 +2204,136 @@ window.closeDiaryReading = closeDiaryReading;
     };
     
     // 将确认对话框函数暴露到全局作用域
-    window.showCustomConfirm = showCustomConfirm;
-    window.hideCustomConfirm = hideCustomConfirm;
+window.showCustomConfirm = showCustomConfirm;
+window.hideCustomConfirm = hideCustomConfirm;
+
+// ===== 总结功能专用的 Promise 版本对话框 =====
+
+/**
+ * Promise 版本的确认对话框（用于 async/await）
+ * @param {string} title - 标题
+ * @param {string} text - 内容
+ * @returns {Promise<boolean>} - 用户是否确认
+ */
+window.showCustomConfirmAsync = (title, text) => {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-confirm-modal');
+        const customConfirmTitle = document.getElementById('custom-confirm-title');
+        const customConfirmText = document.getElementById('custom-confirm-text');
+        const customConfirmOkBtn = document.getElementById('custom-confirm-ok-btn');
+        const customConfirmCancelBtn = document.getElementById('custom-confirm-cancel-btn');
+
+        customConfirmTitle.textContent = title;
+        customConfirmText.innerHTML = text;
+        
+        customConfirmOkBtn.onclick = () => {
+            hideCustomConfirm();
+            resolve(true);
+        };
+        
+        customConfirmCancelBtn.onclick = () => {
+            hideCustomConfirm();
+            resolve(false);
+        };
+        
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        setTimeout(() => { modal.style.opacity = '1'; }, 10);
+    });
+};
+
+/**
+ * 简单的提示对话框
+ * @param {string} title - 标题
+ * @param {string} text - 内容
+ */
+window.showCustomAlert = (title, text) => {
+    // 复用确认对话框，但只显示确定按钮
+    const modal = document.getElementById('custom-confirm-modal');
+    const customConfirmTitle = document.getElementById('custom-confirm-title');
+    const customConfirmText = document.getElementById('custom-confirm-text');
+    const customConfirmOkBtn = document.getElementById('custom-confirm-ok-btn');
+    const customConfirmCancelBtn = document.getElementById('custom-confirm-cancel-btn');
+
+    customConfirmTitle.textContent = title;
+    customConfirmText.innerHTML = text;
+    
+    // 隐藏取消按钮
+    customConfirmCancelBtn.style.display = 'none';
+    
+    customConfirmOkBtn.onclick = () => {
+        customConfirmCancelBtn.style.display = ''; // 恢复显示
+        hideCustomConfirm();
+    };
+    
+    modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+    setTimeout(() => { modal.style.opacity = '1'; }, 10);
+};
+
+/**
+ * 显示加载提示（用于总结等耗时操作）
+ * @param {string} text - 提示文本
+ * @returns {Function} - 关闭函数
+ */
+window.showLoadingToast = (text) => {
+    // 创建 toast 元素
+    let toast = document.getElementById('loading-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'loading-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        `;
+        document.body.appendChild(toast);
+    }
+    
+    toast.innerHTML = `
+        <div style="
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        "></div>
+        <span>${text}</span>
+    `;
+    
+    // 添加旋转动画
+    if (!document.getElementById('loading-toast-style')) {
+        const style = document.createElement('style');
+        style.id = 'loading-toast-style';
+        style.textContent = `
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    toast.style.display = 'flex';
+    
+    // 返回关闭函数
+    return () => {
+        if (toast) {
+            toast.style.display = 'none';
+        }
+    };
+};
     
     const animateAndRemoveItem = (itemElement, onComplete) => {
         return new Promise(resolve => {
@@ -32488,120 +32653,135 @@ loadForumData().then(() => {
 
 // ===== 常量定义 =====
 const DEFAULT_SUMMARY_PROMPTS = {
-    dialog: `# 任务描述
-你的任务是接收用户提供的原文，对其进行深入分析和理解。
+    dialog: `你是一位专业的对话分析师，需要对提供的聊天记录进行总结。
 
-**客观视角**：请使用客观的第三人称进行总结。
-并使用"\${userNickname}"（代表用户）和"\${chat.originalName}"（代表AI角色）来指代对话双方。
+## 总结要求
 
-# 你的任务
-请仔细阅读上述聊天记录，并遵循以下要求，生成一段新的故事摘要：
+### 视角与称呼
+- 使用客观的第三人称视角
+- 用 "\${userNickname}" 指代用户
+- 用 "\${chat.originalName}" 指代 AI 角色
 
-新增大总结应当遵循以下原则：
-- **只需总结上次大总结到目前的新增部分剧情**
-- 按时间顺序或逻辑顺序组织信息，并包含具体的前后时间
+### 内容要点
+1. 提炼核心事件：记录关键情节、转折点和重要决定
+2. 追踪情感变化：捕捉双方的情绪波动和关系发展
+3. 记录重要信息：包括新设定、约定、秘密等关键细节
+4. 时间线索：按时间或逻辑顺序组织内容
 
-1. **核心事件提炼:** 识别并描述这段对话中发生的关键事件、转折点或重要行动。
-2. **情感与关系变化:** 捕捉并记录双方情绪上的主要变化、关系的进展。
-3. **关键信息与设定:** 记录任何新出现的、对未来故事重要的信息、设定、约定或秘密。
-4. **叙事风格:** 必须使用第三人称、过去时进行叙述。
-5. **保持客观:** 只总结聊天记录中明确发生或提到的事，不要进行过度的猜测。
-6. **忽略不重要的内容:** 省略日常的问候、无意义的闲聊和重复信息。
+### 写作规范
+- 使用第三人称过去时叙述
+- 只总结明确发生的事件，避免过度推测
+- 忽略日常问候和无关紧要的闲聊
+- 去除重复内容
 
-# 核心规则
-- **第三人称与命名**: 必须使用第三人称视角。请严格使用"\${userNickname}"和"\${chat.originalName}"来指代对话双方。
-- **输出格式**: 你的回复【必须且只能】是一个JSON对象，格式如下：
-    {"summary": "在这里写下你总结好的摘要。"}
+### 输出格式
+必须返回 JSON 格式：
+{"summary": "你的总结内容"}
 
-# 待总结的对话历史
+## 对话记录
 \${formattedHistory}
 
-现在，请开始你的总结工作。`,
+请开始总结。`,
 
-    call: `# 你的任务
-你是一个对话摘要专家。你的唯一任务是阅读下面的【视频通话记录】，并将其浓缩成【一段】流畅、连贯、客观、并且【极其精简】的摘要。
+    call: `你是通话记录分析专家，需要将视频通话内容浓缩为简短摘要。
 
-# 核心规则
-1. **【长度铁律】**: 你的总结【必须】非常简短，总长度【绝对不能超过80个字】。
-2. **客观事实**: 只记录通话中发生的最关键的事实、确认的约定或角色的核心情感变化。
-3. **第三人称与命名**: 必须使用第三人称。请严格使用"\${userNickname}"和"\${chat.originalName}"来指代对话双方。
-4. **输出格式**: 你的回复【必须且只能】是一个JSON对象，格式如下：
-    {"summary": "在这里写下你总结好的摘要。"}
+## 核心要求
+1. 长度限制：总结不超过 80 字
+2. 客观记录：只记录关键事实、约定和核心情感
+3. 称呼规范：用 "\${userNickname}" 和 "\${chat.originalName}" 指代双方
+4. 第三人称视角
 
-# 待总结的视频通话记录
+## 输出格式
+必须返回 JSON 格式：
+{"summary": "你的总结内容"}
+
+## 通话记录
 \${transcriptText}
 
-现在，请开始你的总结工作。`,
+请开始总结。`,
 
-    refine: `# 你的任务
-你是一个记忆整合专家。请阅读下面的"记忆要点列表"，并将它们整合成一个更加精炼、连贯的核心记忆摘要。
+    refine: `你是记忆整合专家，需要将多条记忆要点整合为精炼的核心摘要。
 
-# 核心要求
-1. **保留关键信息**: 请务必保留所有关键的人物、事件、设定和情感关系。
-2. **消除冗余**: 请移除重复的、或已经不再重要的旧信息。
-3. **客观视角**: 请使用客观的第三人称进行总结。并使用"\${userNickname}"和"\${chat.originalName}"来指代对话双方。
-4. **长度要求**: 最终的摘要总长度应控制在 \${wordCount} 个字左右。
-5. **格式要求**: 请确保你的回复是一个JSON对象，格式为：
-    {"summary": "在这里写下你整合并精炼后的核心记忆摘要。"}
+## 整合要求
+1. 保留所有关键信息：人物、事件、设定、情感关系
+2. 删除冗余内容：重复的或过时的信息
+3. 使用第三人称客观视角
+4. 用 "\${userNickname}" 和 "\${chat.originalName}" 指代双方
+5. 控制长度在 \${wordCount} 字左右
 
-# 待整合的记忆要点列表
+## 输出格式
+必须返回 JSON 格式：
+{"summary": "整合后的核心记忆"}
+
+## 待整合的记忆列表
 \${memoryContent}
 
-现在，请开始你的整合精炼工作。`
+请开始整合。`
 };
 
 // ===== 辅助函数 =====
 
 // 获取副 API 配置
 function getSecondaryApiConfig() {
+    // 直接从 appState 读取，而不是 localStorage
+    const config = appState.secondaryApiConfig || {};
     return {
-        apiUrl: localStorage.getItem('secondaryApiUrl') || '',
-        apiKey: localStorage.getItem('secondaryApiKey') || '',
-        model: localStorage.getItem('secondaryModel') || 'gpt-3.5-turbo'
+        apiUrl: config.url || '',
+        apiKey: config.key || '',
+        model: config.model || 'gpt-3.5-turbo'
     };
 }
 
-// 调用副 API
+// 调用副 API（使用系统统一的 callApi 函数）
 async function callSummaryApi(messages) {
-    const config = getSecondaryApiConfig();
-
-    if (!config.apiUrl || !config.apiKey) {
+    const config = appState.secondaryApiConfig;
+    
+    if (!config || !config.url || !config.key) {
         throw new Error('副 API 未配置，请先在设置中配置副 API');
     }
 
-    // 在 system 消息末尾添加破限词
-    if (appState.ethicalBypass && appState.ethicalBypass.enabled && appState.ethicalBypass.prompt) {
-        messages = messages.map(msg => {
-            if (msg.role === 'system') {
-                return {
-                    ...msg,
-                    content: msg.content + '\n\n' + appState.ethicalBypass.prompt
-                };
-            }
-            return msg;
+    try {
+        // 打印调试信息
+        console.log('📤 [总结API] 准备发送请求');
+        console.log('📤 [总结API] 消息数量:', messages.length);
+        console.log('📤 [总结API] 第一条消息长度:', messages[0]?.content?.length);
+        
+        // 打印完整的消息内容（用于调试）
+        console.log('📤 [总结API] 完整消息内容:');
+        messages.forEach((msg, index) => {
+            console.log(`消息 ${index}:`, {
+                role: msg.role,
+                contentLength: msg.content?.length,
+                contentPreview: msg.content?.substring(0, 500)
+            });
         });
+        
+        // 检查消息内容是否有问题
+        for (let i = 0; i < messages.length; i++) {
+            const msg = messages[i];
+            if (typeof msg.content !== 'string') {
+                console.error('❌ [总结API] 消息内容不是字符串:', msg);
+                throw new Error(`消息 ${i} 的 content 不是字符串类型`);
+            }
+        }
+        
+        // 使用系统统一的 callApi 函数，isMainChat=false 表示使用副 API
+        const response = await callApi(
+            messages,
+            false, // 使用副 API
+            {
+                temperature: 0.7
+            }
+        );
+
+        // callApi 返回的是 Response 对象（或模拟的），直接解析 JSON
+        const data = await response.json();
+        console.log('✅ [总结API] 收到响应');
+        return data.choices[0].message.content;
+    } catch (error) {
+        console.error('❌ [总结API] 调用失败:', error);
+        throw error;
     }
-
-    const response = await fetch(config.apiUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config.apiKey}`
-        },
-        body: JSON.stringify({
-            model: config.model,
-            messages: messages,
-            temperature: 0.7
-        })
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API 调用失败 (${response.status}): ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
 }
 
 // 解析总结响应
@@ -32781,30 +32961,41 @@ async function checkAndTriggerAutoSummary(chatId) {
     }
 
     const threshold = chat.autoSummary.threshold || 50;
-    const messageCount = chat.history.length;
+    const lastSummaryTimestamp = chat.lastMemorySummaryTimestamp || 0;
+    
+    // 统计自上次总结以来的新消息数（排除隐藏消息和系统消息）
+    const newMessages = chat.history.filter(m => 
+        m.timestamp > lastSummaryTimestamp && 
+        !m.isHidden && 
+        m.role !== 'system'
+    );
 
     // 检查是否达到阈值
-    if (messageCount >= threshold) {
-        console.log(`[自动总结] 消息数量 ${messageCount} 已达到阈值 ${threshold}，开始自动总结...`);
+    if (newMessages.length >= threshold) {
+        console.log(`[自动总结] 新消息数量 ${newMessages.length} 已达到阈值 ${threshold}，开始自动总结...`);
 
         try {
-            // 构建总结提示词
-            const summaryPrompt = getDialogSummaryPrompt();
+            // 格式化消息历史
+            const formattedHistory = newMessages.map(m => {
+                const role = m.role === 'user' ? (chat.personas?.my?.name || '用户') : (chat.originalName || chat.name);
+                const content = typeof m.content === 'string' ? m.content : '[多媒体内容]';
+                return `${role}: ${content}`;
+            }).join('\n');
 
-            // 构建 API 消息格式
+            // 构建总结提示词
+            let prompt = getDialogSummaryPrompt();
+            prompt = prompt
+                .replace(/\$\{userNickname\}/g, chat.personas?.my?.name || '用户')
+                .replace(/\$\{chat\.originalName\}/g, chat.originalName || chat.name)
+                .replace(/\$\{formattedHistory\}/g, formattedHistory);
+
+            // 调用副 API
             const apiMessages = [
-                {
-                    role: 'system',
-                    content: summaryPrompt
-                },
-                {
-                    role: 'user',
-                    content: `请总结以下对话内容（共 ${messageCount} 条消息）：\n\n${JSON.stringify(chat.history, null, 2)}`
-                }
+                { role: 'user', content: prompt }
             ];
 
-            // 调用总结 API
-            const summaryContent = await callSummaryApi(apiMessages);
+            const response = await callSummaryApi(apiMessages);
+            const summary = parseSummaryResponse(response);
 
             // 保存到长期记忆
             if (!chat.longTermMemory) {
@@ -32812,20 +33003,22 @@ async function checkAndTriggerAutoSummary(chatId) {
             }
 
             chat.longTermMemory.push({
-                content: summaryContent,
+                content: summary,
                 timestamp: Date.now(),
-                messageCount: messageCount,
+                messageCount: newMessages.length,
                 isGlobal: chat.globalMemoryEnabled || false
             });
 
-            // 清空历史记录（保留最近几条）
-            const keepCount = 10; // 保留最近10条消息
-            chat.history = chat.history.slice(-keepCount);
+            // 更新上次总结时间戳
+            chat.lastMemorySummaryTimestamp = Date.now();
+
+            // 标记已总结的消息为隐藏（可选，如果你想在界面上隐藏它们）
+            // newMessages.forEach(m => m.isHidden = true);
 
             // 保存到数据库
             await dbStorage.set(KEYS.CHATS, appState.chats);
 
-            console.log(`[自动总结] 总结完成，已保存到长期记忆，历史记录已清理`);
+            console.log(`[自动总结] 总结完成，已保存到长期记忆（共 ${newMessages.length} 条新消息）`);
 
             // 检查是否需要自动精炼
             if (chat.refineSettings && chat.refineSettings.autoRefineEnabled) {
@@ -32838,11 +33031,6 @@ async function checkAndTriggerAutoSummary(chatId) {
                 }
             }
 
-            // 如果总结模态窗口是打开的，刷新显示
-            const modal = document.getElementById('summary-modal');
-            if (modal && modal.style.display === 'flex') {
-                renderSummaryCards(chatId);
-            }
         } catch (error) {
             console.error('[自动总结] 失败:', error);
         }
@@ -32909,15 +33097,7 @@ function switchToViewPage() {
     document.getElementById('summary-view-page').style.display = 'block';
 }
 
-// 更新记忆数量显示
-function updateSummaryCount(chatId) {
-    const chat = appState.chats[chatId];
-    const count = chat.longTermMemory ? chat.longTermMemory.length : 0;
-    const countText = document.getElementById('summary-count-text');
-    if (countText) {
-        countText.textContent = `${count} 条记忆`;
-    }
-}
+// 更新记忆数量显示（已删除重复函数，统一使用 updateMemoryCount）
 
 // ===== 记忆卡片渲染 =====
 
@@ -33015,12 +33195,11 @@ function closeEditSummaryModal() {
  * @param {number} index - 记忆索引
  */
 async function deleteSummaryMemory(index) {
-    const confirmed = await showCustomConfirm('确认删除', '确定要删除这条总结吗？');
+    const confirmed = await showCustomConfirmAsync('确认删除', '确定要删除这条总结吗？');
     if (!confirmed) return;
 
     const chatId = appState.activeChatId;
     const chat = appState.chats[chatId];
-
     chat.longTermMemory.splice(index, 1);
     await dbStorage.set(KEYS.CHATS, appState.chats);
 
@@ -33176,7 +33355,7 @@ async function saveSummarySettings() {
  * 重置提示词为默认值
  */
 async function resetSummaryPrompts() {
-    const confirmed = await showCustomConfirm('确认重置', '确定要将所有提示词重置为默认值吗？');
+    const confirmed = await showCustomConfirmAsync('确认重置', '确定要将所有提示词重置为默认值吗？');
     if (!confirmed) return;
 
     // 清除 localStorage 中的自定义提示词
@@ -33204,7 +33383,7 @@ async function handleManualSummary() {
     console.log('用户选择的消息数量:', messageCount);
     if (!messageCount) return;
 
-    // 提取最近的消息
+    // 提取最近的消息（排除隐藏消息和系统消息）
     const recentMessages = chat.history
         .filter(m => !m.isHidden && m.role !== 'system')
         .slice(-messageCount);
@@ -33214,10 +33393,30 @@ async function handleManualSummary() {
         return;
     }
 
-    // 格式化对话历史
-    const formattedHistory = recentMessages.map(m =>
-        `${m.role === 'user' ? '用户' : 'AI'}: ${m.content}`
-    ).join('\n');
+    // 格式化对话历史（改进版：处理多媒体内容）
+    const formattedHistory = recentMessages.map(m => {
+        const role = m.role === 'user' ? (chat.personas?.my?.name || '用户') : (chat.originalName || chat.name);
+        let content = '';
+        
+        // 处理不同类型的消息内容
+        if (typeof m.content === 'string') {
+            content = m.content;
+        } else if (Array.isArray(m.content)) {
+            // 多模态消息（文本+图片等）
+            content = m.content.map(item => {
+                if (item.type === 'text') return item.text;
+                if (item.type === 'image_url') return '[图片]';
+                return '[多媒体内容]';
+            }).join(' ');
+        } else {
+            content = '[多媒体内容]';
+        }
+        
+        // 基本清理：只去除多余空白
+        content = content.trim();
+        
+        return `${role}: ${content}`;
+    }).join('\n');
 
     // 构建提示词
     let prompt = getDialogSummaryPrompt();
@@ -33231,12 +33430,17 @@ async function handleManualSummary() {
         { role: 'user', content: prompt }
     ];
 
+    // 显示加载提示
+    const closeLoading = showLoadingToast('正在生成总结...');
+
     try {
-        showCustomAlert('提示', '正在生成总结...');
         const response = await callSummaryApi(apiMessages);
 
         // 解析 JSON
         const summary = parseSummaryResponse(response);
+
+        // 关闭加载提示
+        closeLoading();
 
         // 显示预览对话框
         const confirmed = await showSummaryPreviewDialog(summary);
@@ -33263,6 +33467,7 @@ async function handleManualSummary() {
         }
 
     } catch (error) {
+        closeLoading();
         console.error('总结生成失败:', error);
         showCustomAlert('错误', error.message || '总结生成失败');
     }
@@ -33347,9 +33552,9 @@ async function refineSummaryContent() {
     const currentWordCount = currentContent.length;
 
     // 显示确认对话框
-    const confirmed = await showCustomConfirm(
+    const confirmed = await showCustomConfirmAsync(
         '确认精炼',
-        `当前总结共 ${currentWordCount} 字，精炼后将压缩为约 ${Math.floor(currentWordCount * 0.6)} 字。\n\n此操作会调用副 API，确定要继续吗？`
+        `当前总结共 ${currentWordCount} 字，精炼后将压缩为约 ${Math.floor(currentWordCount * 0.6)} 字。<br><br>此操作会调用副 API，确定要继续吗？`
     );
 
     if (!confirmed) return;
@@ -33369,12 +33574,17 @@ async function refineSummaryContent() {
         { role: 'user', content: prompt }
     ];
 
+    // 显示加载提示
+    const closeLoading = showLoadingToast('正在精炼总结...');
+
     try {
-        showCustomAlert('提示', '正在精炼总结...');
         const response = await callSummaryApi(apiMessages);
 
         // 解析 JSON
         const refinedSummary = parseSummaryResponse(response);
+
+        // 关闭加载提示
+        closeLoading();
 
         // 显示精炼前后对比对话框
         const userConfirmed = await showRefineComparisonDialog(currentContent, refinedSummary);
@@ -33400,6 +33610,7 @@ async function refineSummaryContent() {
         }
 
     } catch (error) {
+        closeLoading();
         console.error('精炼失败:', error);
         showCustomAlert('错误', error.message || '精炼失败');
     }
