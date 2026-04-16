@@ -12949,28 +12949,6 @@ document.getElementById('home-time-size-slider').addEventListener('input', async
     document.getElementById('home-btn-my-persona').onclick = () => showPersonaList('my');
        document.getElementById('home-btn-settings').onclick = () => showScreen('settings-hub-screen');
 
-// ===== 对话总结功能事件绑定 =====
-document.getElementById('open-summary-modal-btn').onclick = openSummaryModal;
-document.getElementById('close-summary-modal-btn').onclick = closeSummaryModal;
-document.getElementById('manual-summary-btn').onclick = handleManualSummary;
-document.getElementById('refine-summary-btn').onclick = refineSummaryContent;
-document.getElementById('open-summary-settings-btn').onclick = switchToSettingsPage;
-document.getElementById('summary-settings-back-btn').onclick = switchToViewPage;
-document.getElementById('save-summary-settings-btn').onclick = saveSummarySettings;
-document.getElementById('reset-prompts-btn').onclick = resetSummaryPrompts;
-document.getElementById('cancel-edit-summary-btn').onclick = () => document.getElementById('edit-summary-modal').style.display = 'none';
-document.getElementById('save-edited-summary-btn').onclick = saveEditedSummary;
-// 注意：regenerate-summary-btn, confirm-summary-btn, cancel-refine-btn, confirm-refine-btn
-// 这些按钮的事件在各自的 Promise 函数内部动态绑定，不在这里绑定
-
-// 开关切换
-document.getElementById('enable-auto-summary-toggle').onclick = function() {
-    this.classList.toggle('active');
-};
-document.getElementById('global-memory-toggle').onclick = function() {
-    this.classList.toggle('active');
-};
-
 // 滑块事件
 document.getElementById('auto-summary-interval-slider').oninput = function() {
     document.getElementById('auto-summary-interval-value').textContent = this.value + ' 条';
@@ -33071,3 +33049,26 @@ async function showRefineComparisonDialog(oldContent, newContent) {
 }
 
 console.log('✅ 总结功能已加载');
+
+// ===== 对话总结功能事件绑定 =====
+// 必须在所有函数定义之后绑定事件
+document.getElementById('open-summary-modal-btn').onclick = openSummaryModal;
+document.getElementById('close-summary-modal-btn').onclick = closeSummaryModal;
+document.getElementById('manual-summary-btn').onclick = handleManualSummary;
+document.getElementById('refine-summary-btn').onclick = refineSummaryContent;
+document.getElementById('open-summary-settings-btn').onclick = switchToSettingsPage;
+document.getElementById('summary-settings-back-btn').onclick = switchToViewPage;
+document.getElementById('save-summary-settings-btn').onclick = saveSummarySettings;
+document.getElementById('reset-prompts-btn').onclick = resetSummaryPrompts;
+document.getElementById('cancel-edit-summary-btn').onclick = () => document.getElementById('edit-summary-modal').style.display = 'none';
+document.getElementById('save-edited-summary-btn').onclick = saveEditedSummary;
+
+// 开关切换
+document.getElementById('enable-auto-summary-toggle').onclick = function() {
+    this.classList.toggle('active');
+};
+document.getElementById('global-memory-toggle').onclick = function() {
+    this.classList.toggle('active');
+};
+
+console.log('✅ 总结功能事件绑定完成');
