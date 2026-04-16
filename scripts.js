@@ -12935,12 +12935,12 @@ document.getElementById('open-summary-settings-btn').onclick = switchToSettingsP
 document.getElementById('summary-settings-back-btn').onclick = switchToViewPage;
 document.getElementById('save-summary-settings-btn').onclick = saveSummarySettings;
 document.getElementById('reset-prompts-btn').onclick = resetSummaryPrompts;
-document.getElementById('cancel-edit-summary-btn').onclick = () => document.getElementById('edit-summary-modal').classList.remove('active');
+document.getElementById('cancel-edit-summary-btn').onclick = () => document.getElementById('edit-summary-modal').style.display = 'none';
 document.getElementById('save-edited-summary-btn').onclick = saveEditedSummary;
 document.getElementById('regenerate-summary-btn').onclick = regenerateSummary;
-document.getElementById('cancel-summary-preview-btn').onclick = () => document.getElementById('summary-preview-modal').classList.remove('active');
+document.getElementById('cancel-summary-preview-btn').onclick = () => document.getElementById('summary-preview-modal').style.display = 'none';
 document.getElementById('confirm-summary-btn').onclick = confirmSummary;
-document.getElementById('cancel-refine-btn').onclick = () => document.getElementById('refine-comparison-modal').classList.remove('active');
+document.getElementById('cancel-refine-btn').onclick = () => document.getElementById('refine-comparison-modal').style.display = 'none';
 document.getElementById('confirm-refine-btn').onclick = confirmRefine;
 
 // 开关切换
@@ -32280,13 +32280,13 @@ function openSummaryModal() {
     // 更新记忆数量显示
     updateSummaryCount(chatId);
 
-    // 显示模态窗口 - 使用 classList.add('active')
-    document.getElementById('summary-modal').classList.add('active');
+    // 显示模态窗口 - 使用 style.display
+    document.getElementById('summary-modal').style.display = 'flex';
 }
 
 // 关闭总结模态窗口
 function closeSummaryModal() {
-    document.getElementById('summary-modal').classList.remove('active');
+    document.getElementById('summary-modal').style.display = 'none';
 }
 
 // 切换到设置页面
