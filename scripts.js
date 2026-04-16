@@ -32829,11 +32829,14 @@ async function resetSummaryPrompts() {
 // ===== 手动总结功能 =====
 
 async function handleManualSummary() {
+    console.log('手动总结按钮被点击');
     const chatId = appState.activeChatId;
     const chat = appState.chats[chatId];
+    console.log('当前聊天ID:', chatId, '历史消息数:', chat?.history?.length);
 
     // 显示选择对话框
     const messageCount = await showMessageCountDialog();
+    console.log('用户选择的消息数量:', messageCount);
     if (!messageCount) return;
 
     // 提取最近的消息
@@ -32963,8 +32966,10 @@ async function showSummaryPreviewDialog(summary) {
 // ===== 精炼功能 =====
 
 async function refineSummaryContent() {
+    console.log('精炼记忆按钮被点击');
     const chatId = appState.activeChatId;
     const chat = appState.chats[chatId];
+    console.log('当前聊天ID:', chatId, '长期记忆:', chat?.longTermMemory);
 
     // 检查是否有长期记忆
     if (!chat.longTermMemory || chat.longTermMemory.length === 0) {
