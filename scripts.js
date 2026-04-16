@@ -32077,3 +32077,680 @@ loadForumData().then(() => {
 
 // ▲▲▲ 论坛功能结束 ▲▲▲
 
+
+// ==================== 总结功能 JavaScript 代码 ====================
+
+// ===== 常量定义 =====
+const DEFAULT_SUMMARY_PROMPTS = {
+    dialog: `# 任务描述
+你的任务是接收用户提供的原文，对其进行深入分析和理解。
+
+**客观视角**：请使用客观的第三人称进行总结。
+并使用"\${userNickname}"（代表用户）和"\${chat.originalName}"（代表AI角色）来指代对话双方。
+
+# 你的任务
+请仔细阅读上述聊天记录，并遵循以下要求，生成一段新的故事摘要：
+
+新增大总结应当遵循以下原则：
+- **只需总结上次大总结到目前的新增部分剧情**
+- 按时间顺序或逻辑顺序组织信息，并包含具体的前后时间
+
+1. **核心事件提炼:** 识别并描述这段对话中发生的关键事件、转折点或重要行动。
+2. **情感与关系变化:** 捕捉并记录双方情绪上的主要变化、关系的进展。
+3. **关键信息与设定:** 记录任何新出现的、对未来故事重要的信息、设定、约定或秘密。
+4. **叙事风格:** 必须使用第三人称、过去时进行叙述。
+5. **保持客观:** 只总结聊天记录中明确发生或提到的事，不要进行过度的猜测。
+6. **忽略不重要的内容:** 省略日常的问候、无意义的闲聊和重复信息。
+
+# 核心规则
+- **第三人称与命名**: 必须使用第三人称视角。请严格使用"\${userNickname}"和"\${chat.originalName}"来指代对话双方。
+- **输出格式**: 你的回复【必须且只能】是一个JSON对象，格式如下：
+    {"summary": "在这里写下你总结好的摘要。"}
+
+# 待总结的对话历史
+\${formattedHistory}
+
+现在，请开始你的总结工作。`,
+
+    call: `# 你的任务
+你是一个对话摘要专家。你的唯一任务是阅读下面的【视频通话记录】，并将其浓缩成【一段】流畅、连贯、客观、并且【极其精简】的摘要。
+
+# 核心规则
+1. **【长度铁律】**: 你的总结【必须】非常简短，总长度【绝对不能超过80个字】。
+2. **客观事实**: 只记录通话中发生的最关键的事实、确认的约定或角色的核心情感变化。
+3. **第三人称与命名**: 必须使用第三人称。请严格使用"\${userNickname}"和"\${chat.originalName}"来指代对话双方。
+4. **输出格式**: 你的回复【必须且只能】是一个JSON对象，格式如下：
+    {"summary": "在这里写下你总结好的摘要。"}
+
+# 待总结的视频通话记录
+\${transcriptText}
+
+现在，请开始你的总结工作。`,
+
+    refine: `# 你的任务
+你是一个记忆整合专家。请阅读下面的"记忆要点列表"，并将它们整合成一个更加精炼、连贯的核心记忆摘要。
+
+# 核心要求
+1. **保留关键信息**: 请务必保留所有关键的人物、事件、设定和情感关系。
+2. **消除冗余**: 请移除重复的、或已经不再重要的旧信息。
+3. **客观视角**: 请使用客观的第三人称进行总结。并使用"\${userNickname}"和"\${chat.originalName}"来指代对话双方。
+4. **长度要求**: 最终的摘要总长度应控制在 \${wordCount} 个字左右。
+5. **格式要求**: 请确保你的回复是一个JSON对象，格式为：
+    {"summary": "在这里写下你整合并精炼后的核心记忆摘要。"}
+
+# 待整合的记忆要点列表
+\${memoryContent}
+
+现在，请开始你的整合精炼工作。`
+};
+
+// ===== 辅助函数 =====
+
+// 获取副 API 配置
+function getSecondaryApiConfig() {
+    return {
+        apiUrl: localStorage.getItem('secondaryApiUrl') || '',
+        apiKey: localStorage.getItem('secondaryApiKey') || '',
+        model: localStorage.getItem('secondaryModel') || 'gpt-3.5-turbo'
+    };
+}
+
+// 调用副 API
+async function callSummaryApi(messages) {
+    const config = getSecondaryApiConfig();
+
+    if (!config.apiUrl || !config.apiKey) {
+        throw new Error('副 API 未配置，请先在设置中配置副 API');
+    }
+
+    const response = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.apiKey}`
+        },
+        body: JSON.stringify({
+            model: config.model,
+            messages: messages,
+            temperature: 0.7
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`API 调用失败: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+}
+
+// 解析总结响应
+function parseSummaryResponse(text) {
+    try {
+        // 尝试直接解析
+        const json = JSON.parse(text);
+        return json.summary || text;
+    } catch (e) {
+        // 尝试提取 JSON 块
+        const match = text.match(/\{[\s\S]*"summary"[\s\S]*\}/);
+        if (match) {
+            try {
+                const json = JSON.parse(match[0]);
+                return json.summary;
+            } catch (e2) {
+                return text;
+            }
+        }
+        return text;
+    }
+}
+
+// HTML 转义
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 获取提示词
+function getDialogSummaryPrompt() {
+    return localStorage.getItem('customDialogSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.dialog;
+}
+
+function getCallSummaryPrompt() {
+    return localStorage.getItem('customCallSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.call;
+}
+
+function getRefineSummaryPrompt() {
+    return localStorage.getItem('customRefineSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.refine;
+}
+
+// ===== 模态窗口控制 =====
+
+// 打开总结模态窗口
+function openSummaryModal() {
+    const chatId = state.activeChatId;
+    const chat = state.chats[chatId];
+    if (!chat) return;
+
+    // 显示查看页面，隐藏设置页面
+    document.getElementById('summary-view-page').style.display = 'block';
+    document.getElementById('summary-settings-page').style.display = 'none';
+
+    // 渲染记忆卡片
+    renderSummaryCards(chatId);
+
+    // 更新记忆数量显示
+    updateSummaryCount(chatId);
+
+    // 显示模态窗口
+    document.getElementById('summary-modal').style.display = 'flex';
+}
+
+// 关闭总结模态窗口
+function closeSummaryModal() {
+    document.getElementById('summary-modal').style.display = 'none';
+}
+
+// 切换到设置页面
+function switchToSettingsPage() {
+    document.getElementById('summary-view-page').style.display = 'none';
+    document.getElementById('summary-settings-page').style.display = 'block';
+
+    // 加载当前设置
+    loadSummarySettings();
+}
+
+// 切换回查看页面
+function switchToViewPage() {
+    document.getElementById('summary-settings-page').style.display = 'none';
+    document.getElementById('summary-view-page').style.display = 'block';
+}
+
+// 更新记忆数量显示
+function updateSummaryCount(chatId) {
+    const chat = state.chats[chatId];
+    const count = chat.longTermMemory ? chat.longTermMemory.length : 0;
+    const countText = document.getElementById('summary-count-text');
+    if (countText) {
+        countText.textContent = `${count} 条记忆`;
+    }
+}
+
+// ===== 记忆卡片渲染 =====
+
+function renderSummaryCards(chatId) {
+    const chat = state.chats[chatId];
+    const container = document.getElementById('summary-cards-container');
+    const emptyState = document.getElementById('summary-empty-state');
+
+    if (!chat.longTermMemory || chat.longTermMemory.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+
+    // 按时间倒序排列（最新的在上面）
+    const memories = [...chat.longTermMemory].reverse();
+
+    container.innerHTML = memories.map((memory, index) => {
+        const actualIndex = chat.longTermMemory.length - 1 - index;
+        const timeStr = new Date(memory.timestamp).toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return `
+            <div class="summary-card">
+                <div class="summary-card-header">
+                    <span class="summary-card-time">📅 ${timeStr}</span>
+                </div>
+                <div class="summary-card-content">${escapeHtml(memory.content)}</div>
+                <div class="summary-card-actions">
+                    <button class="summary-card-btn" onclick="editSummaryMemory(${actualIndex})">编辑</button>
+                    <button class="summary-card-btn delete" onclick="deleteSummaryMemory(${actualIndex})">删除</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ===== 编辑和删除功能 =====
+
+let editingMemoryIndex = null;
+
+function editSummaryMemory(index) {
+    const chatId = state.activeChatId;
+    const chat = state.chats[chatId];
+    const memory = chat.longTermMemory[index];
+
+    editingMemoryIndex = index;
+    document.getElementById('edit-summary-textarea').value = memory.content;
+    document.getElementById('edit-summary-modal').style.display = 'flex';
+}
+
+async function saveEditedSummary() {
+    const chatId = state.activeChatId;
+    const chat = state.chats[chatId];
+    const newContent = document.getElementById('edit-summary-textarea').value.trim();
+
+    if (!newContent) {
+        showCustomAlert('错误', '总结内容不能为空');
+        return;
+    }
+
+    chat.longTermMemory[editingMemoryIndex].content = newContent;
+    await saveChatsToStorage();
+
+    closeEditSummaryModal();
+    renderSummaryCards(chatId);
+    showCustomAlert('成功', '总结已更新');
+}
+
+function closeEditSummaryModal() {
+    document.getElementById('edit-summary-modal').style.display = 'none';
+    editingMemoryIndex = null;
+}
+
+async function deleteSummaryMemory(index) {
+    const confirmed = await showCustomConfirm('确认删除', '确定要删除这条总结吗？');
+    if (!confirmed) return;
+
+    const chatId = state.activeChatId;
+    const chat = state.chats[chatId];
+
+    chat.longTermMemory.splice(index, 1);
+    await saveChatsToStorage();
+
+    renderSummaryCards(chatId);
+    updateSummaryCount(chatId);
+    showCustomAlert('成功', '总结已删除');
+}
+
+// ===== 设置页面功能 =====
+
+function loadSummarySettings() {
+    const chatId = state.activeChatId;
+    const chat = state.chats[chatId];
+
+    // 初始化设置对象
+    if (!chat.settings) chat.settings = {};
+
+    // 加载开关状态
+    const autoToggle = document.getElementById('enable-auto-summary-toggle');
+    if (chat.settings.enableAutoMemory) {
+        autoToggle.classList.add('active');
+    } else {
+        autoToggle.classList.remove('active');
+    }
+
+    const globalToggle = document.getElementById('global-memory-toggle');
+    if (chat.globalMemoryEnabled) {
+        globalToggle.classList.add('active');
+    } else {
+        globalToggle.classList.remove('active');
+    }
+
+    // 加载滑块值
+    const intervalSlider = document.getElementById('auto-summary-interval-slider');
+    const intervalValue = document.getElementById('auto-summary-interval-value');
+    intervalSlider.value = chat.settings.autoMemoryInterval || 25;
+    intervalValue.textContent = intervalSlider.value + ' 条';
+
+    const refineSlider = document.getElementById('refine-threshold-slider');
+    const refineValue = document.getElementById('refine-threshold-value');
+    refineSlider.value = chat.settings.summaryRefineThreshold || 2000;
+    refineValue.textContent = refineSlider.value + ' 字';
+
+    // 加载提示词
+    document.getElementById('dialog-summary-prompt-new').value =
+        localStorage.getItem('customDialogSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.dialog;
+    document.getElementById('call-summary-prompt-new').value =
+        localStorage.getItem('customCallSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.call;
+    document.getElementById('refine-summary-prompt-new').value =
+        localStorage.getItem('customRefineSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.refine;
+
+    // 绑定滑块事件
+    intervalSlider.oninput = () => {
+        intervalValue.textContent = intervalSlider.value + ' 条';
+    };
+
+    refineSlider.oninput = () => {
+        refineValue.textContent = refineSlider.value + ' 字';
+    };
+}
+
+// 切换提示词 Tab
+function switchPromptTab(tabName) {
+    // 切换 Tab 样式
+    document.querySelectorAll('.neuro-tab').forEach(tab => {
+        if (tab.dataset.tab === tabName) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+
+    // 切换 Textarea 显示
+    document.getElementById('dialog-summary-prompt-new').style.display =
+        tabName === 'dialog' ? 'block' : 'none';
+    document.getElementById('call-summary-prompt-new').style.display =
+        tabName === 'call' ? 'block' : 'none';
+    document.getElementById('refine-summary-prompt-new').style.display =
+        tabName === 'refine' ? 'block' : 'none';
+}
+
+// 保存总结设置
+async function saveSummarySettings() {
+    const chatId = state.activeChatId;
+    const chat = state.chats[chatId];
+
+    // 保存开关状态
+    if (!chat.settings) chat.settings = {};
+    chat.settings.enableAutoMemory =
+        document.getElementById('enable-auto-summary-toggle').classList.contains('active');
+    chat.globalMemoryEnabled =
+        document.getElementById('global-memory-toggle').classList.contains('active');
+
+    // 保存滑块值
+    chat.settings.autoMemoryInterval =
+        parseInt(document.getElementById('auto-summary-interval-slider').value);
+    chat.settings.summaryRefineThreshold =
+        parseInt(document.getElementById('refine-threshold-slider').value);
+
+    // 保存提示词
+    localStorage.setItem('customDialogSummaryPrompt',
+        document.getElementById('dialog-summary-prompt-new').value);
+    localStorage.setItem('customCallSummaryPrompt',
+        document.getElementById('call-summary-prompt-new').value);
+    localStorage.setItem('customRefineSummaryPrompt',
+        document.getElementById('refine-summary-prompt-new').value);
+
+    await saveChatsToStorage();
+
+    showCustomAlert('成功', '设置已保存');
+    switchToViewPage();
+}
+
+// 重置提示词为默认值
+function resetSummaryPrompts() {
+    if (!confirm('确定要重置所有提示词为默认值吗？')) return;
+
+    document.getElementById('dialog-summary-prompt-new').value = DEFAULT_SUMMARY_PROMPTS.dialog;
+    document.getElementById('call-summary-prompt-new').value = DEFAULT_SUMMARY_PROMPTS.call;
+    document.getElementById('refine-summary-prompt-new').value = DEFAULT_SUMMARY_PROMPTS.refine;
+
+    showCustomAlert('成功', '提示词已重置');
+}
+
+// ===== 手动总结功能 =====
+
+async function handleManualSummary() {
+    const chatId = state.activeChatId;
+    const chat = state.chats[chatId];
+
+    // 显示选择对话框
+    const messageCount = await showMessageCountDialog();
+    if (!messageCount) return;
+
+    // 提取最近的消息
+    const recentMessages = chat.history
+        .filter(m => !m.isHidden && m.role !== 'system')
+        .slice(-messageCount);
+
+    if (recentMessages.length === 0) {
+        showCustomAlert('提示', '没有可总结的消息');
+        return;
+    }
+
+    // 格式化对话历史
+    const formattedHistory = recentMessages.map(m =>
+        `${m.role === 'user' ? '用户' : 'AI'}: ${m.content}`
+    ).join('\n');
+
+    // 构建提示词
+    let prompt = getDialogSummaryPrompt();
+    prompt = prompt
+        .replace(/\$\{userNickname\}/g, chat.personas?.my?.name || '用户')
+        .replace(/\$\{chat\.originalName\}/g, chat.originalName || chat.name)
+        .replace(/\$\{formattedHistory\}/g, formattedHistory);
+
+    // 调用副 API
+    const apiMessages = [
+        { role: 'user', content: prompt }
+    ];
+
+    try {
+        showCustomAlert('提示', '正在生成总结...');
+        const response = await callSummaryApi(apiMessages);
+
+        // 解析 JSON
+        const summary = parseSummaryResponse(response);
+
+        // 显示预览对话框
+        const confirmed = await showSummaryPreviewDialog(summary);
+
+        if (confirmed) {
+            // 添加到长期记忆
+            if (!chat.longTermMemory) chat.longTermMemory = [];
+            chat.longTermMemory.push({
+                content: summary,
+                timestamp: Date.now()
+            });
+
+            // 更新时间戳
+            chat.lastMemorySummaryTimestamp = Date.now();
+
+            // 保存
+            await saveChatsToStorage();
+
+            // 刷新卡片显示
+            renderSummaryCards(chatId);
+            updateSummaryCount(chatId);
+
+            showCustomAlert('成功', '总结已添加');
+        }
+
+    } catch (error) {
+        console.error('总结生成失败:', error);
+        showCustomAlert('错误', error.message || '总结生成失败');
+    }
+}
+
+// 显示消息数量选择对话框
+async function showMessageCountDialog() {
+    return new Promise((resolve) => {
+        const options = ['最近 20 条', '最近 50 条', '最近 100 条', '自定义'];
+        const choice = prompt('选择要总结的消息数量：\n1. 最近 20 条\n2. 最近 50 条\n3. 最近 100 条\n4. 自定义\n\n请输入数字 1-4：');
+
+        if (!choice) {
+            resolve(null);
+            return;
+        }
+
+        const index = parseInt(choice) - 1;
+        if (index === 0) resolve(20);
+        else if (index === 1) resolve(50);
+        else if (index === 2) resolve(100);
+        else if (index === 3) {
+            const custom = prompt('请输入要总结的消息数量：', '50');
+            const count = parseInt(custom);
+            if (isNaN(count) || count <= 0) {
+                showCustomAlert('错误', '请输入有效的数字');
+                resolve(null);
+            } else {
+                resolve(count);
+            }
+        } else {
+            resolve(null);
+        }
+    });
+}
+
+// 显示总结预览对话框
+async function showSummaryPreviewDialog(summary) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('summary-preview-modal');
+        const previewContent = document.getElementById('summary-preview-content');
+
+        previewContent.textContent = summary;
+        modal.style.display = 'flex';
+
+        // 确认按钮
+        document.getElementById('confirm-summary-btn').onclick = () => {
+            modal.style.display = 'none';
+            resolve(true);
+        };
+
+        // 重新生成按钮
+        document.getElementById('regenerate-summary-btn').onclick = () => {
+            modal.style.display = 'none';
+            handleManualSummary();
+            resolve(false);
+        };
+
+        // 取消按钮
+        document.getElementById('cancel-summary-btn').onclick = () => {
+            modal.style.display = 'none';
+            resolve(false);
+        };
+    });
+}
+
+// ===== 精炼功能 =====
+
+async function refineSummaryContent() {
+    const chatId = state.activeChatId;
+    const chat = state.chats[chatId];
+
+    // 检查是否有长期记忆
+    if (!chat.longTermMemory || chat.longTermMemory.length === 0) {
+        showCustomAlert('提示', '还没有总结内容，无法精炼');
+        return;
+    }
+
+    // 计算当前总字数
+    const currentContent = chat.longTermMemory.map(m => m.content).join('\n\n');
+    const currentWordCount = currentContent.length;
+
+    // 显示确认对话框
+    const confirmed = await showCustomConfirm(
+        '确认精炼',
+        `当前总结共 ${currentWordCount} 字，精炼后将压缩为约 ${Math.floor(currentWordCount * 0.6)} 字。\n\n此操作会调用副 API，确定要继续吗？`
+    );
+
+    if (!confirmed) return;
+
+    // 构建精炼提示词
+    let prompt = getRefineSummaryPrompt();
+    const targetWordCount = chat.settings?.summaryRefineThreshold || 2000;
+
+    prompt = prompt
+        .replace(/\$\{userNickname\}/g, chat.personas?.my?.name || '用户')
+        .replace(/\$\{chat\.originalName\}/g, chat.originalName || chat.name)
+        .replace(/\$\{memoryContent\}/g, currentContent)
+        .replace(/\$\{wordCount\}/g, targetWordCount);
+
+    // 调用副 API
+    const apiMessages = [
+        { role: 'user', content: prompt }
+    ];
+
+    try {
+        showCustomAlert('提示', '正在精炼总结...');
+        const response = await callSummaryApi(apiMessages);
+
+        // 解析 JSON
+        const refinedSummary = parseSummaryResponse(response);
+
+        // 显示精炼前后对比对话框
+        const userConfirmed = await showRefineComparisonDialog(currentContent, refinedSummary);
+
+        if (userConfirmed) {
+            // 清空原有记忆
+            chat.longTermMemory = [];
+
+            // 添加精炼后的内容
+            chat.longTermMemory.push({
+                content: refinedSummary,
+                timestamp: Date.now()
+            });
+
+            // 保存
+            await saveChatsToStorage();
+
+            // 刷新卡片显示
+            renderSummaryCards(chatId);
+            updateSummaryCount(chatId);
+
+            showCustomAlert('成功', `精炼完成！从 ${currentWordCount} 字压缩到 ${refinedSummary.length} 字`);
+        }
+
+    } catch (error) {
+        console.error('精炼失败:', error);
+        showCustomAlert('错误', error.message || '精炼失败');
+    }
+}
+
+// 显示精炼前后对比对话框
+async function showRefineComparisonDialog(oldContent, newContent) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('refine-comparison-modal');
+        const oldContentEl = document.getElementById('refine-old-content');
+        const newContentEl = document.getElementById('refine-new-content');
+        const oldWordCount = document.getElementById('refine-old-word-count');
+        const newWordCount = document.getElementById('refine-new-word-count');
+
+        oldContentEl.textContent = oldContent;
+        newContentEl.textContent = newContent;
+        oldWordCount.textContent = `${oldContent.length} 字`;
+        newWordCount.textContent = `${newContent.length} 字`;
+
+        modal.style.display = 'flex';
+
+        // 确认替换按钮
+        document.getElementById('confirm-refine-btn').onclick = () => {
+            modal.style.display = 'none';
+            resolve(true);
+        };
+
+        // 取消按钮
+        document.getElementById('cancel-refine-btn').onclick = () => {
+            modal.style.display = 'none';
+            resolve(false);
+        };
+    });
+}
+
+// ===== 事件绑定 =====
+
+// 在 DOMContentLoaded 或初始化时绑定事件
+document.addEventListener('DOMContentLoaded', function() {
+    // 入口按钮点击事件
+    const openBtn = document.getElementById('open-summary-modal-btn');
+    if (openBtn) {
+        openBtn.addEventListener('click', openSummaryModal);
+    }
+
+    // 开关切换事件
+    const autoToggle = document.getElementById('enable-auto-summary-toggle');
+    if (autoToggle) {
+        autoToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+    }
+
+    const globalToggle = document.getElementById('global-memory-toggle');
+    if (globalToggle) {
+        globalToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+    }
+});
+
+console.log('✅ 总结功能已加载');

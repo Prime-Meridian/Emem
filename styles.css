@@ -4384,3 +4384,504 @@ html.user-platform-ios .diary-reading-container {
 
 /* ==================== */
 
+/* ==================== 总结功能 Neumorphism 样式 ==================== */
+
+/* 模态窗口基础 */
+.neuro-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.neuro-modal-container {
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    background: #E8ECEF;
+    border-radius: 20px;
+    box-shadow:
+        12px 12px 24px rgba(163, 177, 198, 0.6),
+        -12px -12px 24px rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.neuro-modal-container-sm {
+    max-width: 500px;
+}
+
+.neuro-modal-container-lg {
+    max-width: 900px;
+}
+
+/* Header */
+.neuro-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(163, 177, 198, 0.2);
+}
+
+.neuro-modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.neuro-back-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #E8ECEF;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    box-shadow:
+        4px 4px 8px rgba(163, 177, 198, 0.5),
+        -4px -4px 8px rgba(255, 255, 255, 0.8);
+    transition: all 0.2s;
+}
+
+.neuro-back-btn:active {
+    box-shadow:
+        inset 2px 2px 4px rgba(163, 177, 198, 0.5),
+        inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+}
+
+.neuro-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #E8ECEF;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    box-shadow:
+        4px 4px 8px rgba(163, 177, 198, 0.5),
+        -4px -4px 8px rgba(255, 255, 255, 0.8);
+    transition: all 0.2s;
+}
+
+.neuro-close-btn:active {
+    box-shadow:
+        inset 2px 2px 4px rgba(163, 177, 198, 0.5),
+        inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+}
+
+/* Body */
+.neuro-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+}
+
+/* Footer */
+.neuro-modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px;
+    border-top: 1px solid rgba(163, 177, 198, 0.2);
+}
+
+/* 按钮 */
+.neuro-btn-primary {
+    flex: 1;
+    background: #007AFF;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow:
+        4px 4px 8px rgba(0, 122, 255, 0.3),
+        -2px -2px 6px rgba(255, 255, 255, 0.5);
+    transition: all 0.2s;
+}
+
+.neuro-btn-primary:active {
+    box-shadow:
+        inset 2px 2px 4px rgba(0, 100, 200, 0.5),
+        inset -2px -2px 4px rgba(100, 150, 255, 0.3);
+}
+
+.neuro-btn-secondary {
+    flex: 1;
+    background: #E8ECEF;
+    color: #007AFF;
+    border: 1px solid rgba(0, 122, 255, 0.2);
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow:
+        4px 4px 8px rgba(163, 177, 198, 0.4),
+        -4px -4px 8px rgba(255, 255, 255, 0.8);
+    transition: all 0.2s;
+}
+
+.neuro-btn-secondary:active {
+    box-shadow:
+        inset 2px 2px 4px rgba(163, 177, 198, 0.5),
+        inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+}
+
+/* 记忆卡片 */
+.summary-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.summary-card {
+    background: #FEFAF3;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow:
+        inset 3px 3px 6px rgba(163, 177, 198, 0.3),
+        inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+}
+
+.summary-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.summary-card-time {
+    font-size: 13px;
+    color: #999;
+}
+
+.summary-card-content {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #333;
+    margin-bottom: 12px;
+    white-space: pre-wrap;
+}
+
+.summary-card-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.summary-card-btn {
+    background: #E8ECEF;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    box-shadow:
+        3px 3px 6px rgba(163, 177, 198, 0.4),
+        -3px -3px 6px rgba(255, 255, 255, 0.8);
+    transition: all 0.2s;
+}
+
+.summary-card-btn:active {
+    box-shadow:
+        inset 2px 2px 4px rgba(163, 177, 198, 0.4),
+        inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+}
+
+.summary-card-btn.delete {
+    color: #ff3b30;
+}
+
+/* 空状态 */
+.summary-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.empty-hint {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.6;
+}
+
+/* 设置页面 */
+.neuro-settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.neuro-setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+}
+
+.neuro-setting-label {
+    font-size: 15px;
+    color: #333;
+}
+
+/* 滑块 */
+.neuro-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.neuro-slider {
+    width: 150px;
+    height: 6px;
+    border-radius: 3px;
+    background: #E8ECEF;
+    box-shadow:
+        inset 2px 2px 4px rgba(163, 177, 198, 0.4),
+        inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.neuro-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007AFF;
+    cursor: pointer;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.neuro-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007AFF;
+    cursor: pointer;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+.neuro-slider-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: #007AFF;
+    min-width: 60px;
+    text-align: right;
+}
+
+/* 提示词区域 */
+.neuro-prompt-section {
+    margin-top: 24px;
+}
+
+.neuro-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.neuro-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.neuro-tab {
+    flex: 1;
+    background: #E8ECEF;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    box-shadow:
+        4px 4px 8px rgba(163, 177, 198, 0.4),
+        -4px -4px 8px rgba(255, 255, 255, 0.8);
+    transition: all 0.2s;
+}
+
+.neuro-tab.active {
+    color: #007AFF;
+    box-shadow:
+        inset 2px 2px 4px rgba(163, 177, 198, 0.4),
+        inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+}
+
+.neuro-textarea {
+    width: 100%;
+    background: #FEFAF3;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #333;
+    resize: vertical;
+    box-shadow:
+        inset 3px 3px 6px rgba(163, 177, 198, 0.3),
+        inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+    font-family: inherit;
+}
+
+.neuro-textarea:focus {
+    outline: none;
+}
+
+/* 提示信息 */
+.neuro-hint {
+    background: #FFF9E6;
+    border-left: 3px solid #FFD700;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #856404;
+    line-height: 1.6;
+}
+
+.neuro-prompt-hint {
+    background: #E8F4FF;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+}
+
+.hint-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #0066CC;
+    margin-bottom: 8px;
+}
+
+.hint-list {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 12px;
+    color: #555;
+}
+
+.hint-list code {
+    background: rgba(0, 122, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    color: #007AFF;
+}
+
+/* 总结预览 */
+.summary-preview-content {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.8;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.neuro-card {
+    background: #FEFAF3;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow:
+        inset 3px 3px 6px rgba(163, 177, 198, 0.3),
+        inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+}
+
+/* 精炼对比 */
+.refine-comparison-container {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.refine-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.refine-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.refine-column-header h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.word-count-badge {
+    background: #007AFF;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.refine-content {
+    flex: 1;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.refine-arrow {
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    color: #007AFF;
+    font-weight: bold;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .neuro-modal-container {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .refine-comparison-container {
+        flex-direction: column;
+    }
+
+    .refine-arrow {
+        transform: rotate(90deg);
+        margin: 10px 0;
+    }
+}
