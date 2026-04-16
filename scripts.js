@@ -32604,6 +32604,15 @@ function renderSummaryCards(chatId) {
 
 let editingMemoryIndex = null;
 
+// ==================== 编辑和删除记忆功能 ====================
+
+// 全局变量：当前正在编辑的记忆索引
+let editingMemoryIndex = null;
+
+/**
+ * 编辑记忆
+ * @param {number} index - 记忆索引
+ */
 function editSummaryMemory(index) {
     const chatId = appState.activeChatId;
     const chat = appState.chats[chatId];
@@ -32614,6 +32623,9 @@ function editSummaryMemory(index) {
     document.getElementById('edit-summary-modal').style.display = 'flex';
 }
 
+/**
+ * 保存编辑后的记忆
+ */
 async function saveEditedSummary() {
     const chatId = appState.activeChatId;
     const chat = appState.chats[chatId];
@@ -32625,18 +32637,25 @@ async function saveEditedSummary() {
     }
 
     chat.longTermMemory[editingMemoryIndex].content = newContent;
-    await saveChatsToStorage();
+    await dbStorage.set(KEYS.CHATS, appState.chats);
 
     closeEditSummaryModal();
     renderSummaryCards(chatId);
     showCustomAlert('成功', '总结已更新');
 }
 
+/**
+ * 关闭编辑模态窗口
+ */
 function closeEditSummaryModal() {
     document.getElementById('edit-summary-modal').style.display = 'none';
     editingMemoryIndex = null;
 }
 
+/**
+ * 删除记忆
+ * @param {number} index - 记忆索引
+ */
 async function deleteSummaryMemory(index) {
     const confirmed = await showCustomConfirm('确认删除', '确定要删除这条总结吗？');
     if (!confirmed) return;
@@ -32645,10 +32664,9 @@ async function deleteSummaryMemory(index) {
     const chat = appState.chats[chatId];
 
     chat.longTermMemory.splice(index, 1);
-    await saveChatsToStorage();
+    await dbStorage.set(KEYS.CHATS, appState.chats);
 
     renderSummaryCards(chatId);
-    updateSummaryCount(chatId);
     showCustomAlert('成功', '总结已删除');
 }
 
