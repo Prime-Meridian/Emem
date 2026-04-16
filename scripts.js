@@ -12938,11 +12938,8 @@ document.getElementById('save-summary-settings-btn').onclick = saveSummarySettin
 document.getElementById('reset-prompts-btn').onclick = resetSummaryPrompts;
 document.getElementById('cancel-edit-summary-btn').onclick = () => document.getElementById('edit-summary-modal').style.display = 'none';
 document.getElementById('save-edited-summary-btn').onclick = saveEditedSummary;
-document.getElementById('regenerate-summary-btn').onclick = regenerateSummary;
-document.getElementById('cancel-summary-preview-btn').onclick = () => document.getElementById('summary-preview-modal').style.display = 'none';
-document.getElementById('confirm-summary-btn').onclick = confirmSummary;
-document.getElementById('cancel-refine-btn').onclick = () => document.getElementById('refine-comparison-modal').style.display = 'none';
-document.getElementById('confirm-refine-btn').onclick = confirmRefine;
+// 注意：regenerate-summary-btn, confirm-summary-btn, cancel-refine-btn, confirm-refine-btn
+// 这些按钮的事件在各自的 Promise 函数内部动态绑定，不在这里绑定
 
 // 开关切换
 document.getElementById('enable-auto-summary-toggle').onclick = function() {
