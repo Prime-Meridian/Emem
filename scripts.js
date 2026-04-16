@@ -32266,8 +32266,8 @@ function getRefineSummaryPrompt() {
 
 // 打开总结模态窗口
 function openSummaryModal() {
-    const chatId = state.activeChatId;
-    const chat = state.chats[chatId];
+    const chatId = appState.activeChatId;
+    const chat = appState.chats[chatId];
     if (!chat) return;
 
     // 显示查看页面，隐藏设置页面
@@ -32306,7 +32306,7 @@ function switchToViewPage() {
 
 // 更新记忆数量显示
 function updateSummaryCount(chatId) {
-    const chat = state.chats[chatId];
+    const chat = appState.chats[chatId];
     const count = chat.longTermMemory ? chat.longTermMemory.length : 0;
     const countText = document.getElementById('summary-count-text');
     if (countText) {
@@ -32317,7 +32317,7 @@ function updateSummaryCount(chatId) {
 // ===== 记忆卡片渲染 =====
 
 function renderSummaryCards(chatId) {
-    const chat = state.chats[chatId];
+    const chat = appState.chats[chatId];
     const container = document.getElementById('summary-cards-container');
     const emptyState = document.getElementById('summary-empty-state');
 
@@ -32362,8 +32362,8 @@ function renderSummaryCards(chatId) {
 let editingMemoryIndex = null;
 
 function editSummaryMemory(index) {
-    const chatId = state.activeChatId;
-    const chat = state.chats[chatId];
+    const chatId = appState.activeChatId;
+    const chat = appState.chats[chatId];
     const memory = chat.longTermMemory[index];
 
     editingMemoryIndex = index;
@@ -32372,8 +32372,8 @@ function editSummaryMemory(index) {
 }
 
 async function saveEditedSummary() {
-    const chatId = state.activeChatId;
-    const chat = state.chats[chatId];
+    const chatId = appState.activeChatId;
+    const chat = appState.chats[chatId];
     const newContent = document.getElementById('edit-summary-textarea').value.trim();
 
     if (!newContent) {
@@ -32398,8 +32398,8 @@ async function deleteSummaryMemory(index) {
     const confirmed = await showCustomConfirm('确认删除', '确定要删除这条总结吗？');
     if (!confirmed) return;
 
-    const chatId = state.activeChatId;
-    const chat = state.chats[chatId];
+    const chatId = appState.activeChatId;
+    const chat = appState.chats[chatId];
 
     chat.longTermMemory.splice(index, 1);
     await saveChatsToStorage();
@@ -32412,8 +32412,8 @@ async function deleteSummaryMemory(index) {
 // ===== 设置页面功能 =====
 
 function loadSummarySettings() {
-    const chatId = state.activeChatId;
-    const chat = state.chats[chatId];
+    const chatId = appState.activeChatId;
+    const chat = appState.chats[chatId];
 
     // 初始化设置对象
     if (!chat.settings) chat.settings = {};
@@ -32484,8 +32484,8 @@ function switchPromptTab(tabName) {
 
 // 保存总结设置
 async function saveSummarySettings() {
-    const chatId = state.activeChatId;
-    const chat = state.chats[chatId];
+    const chatId = appState.activeChatId;
+    const chat = appState.chats[chatId];
 
     // 保存开关状态
     if (!chat.settings) chat.settings = {};
@@ -32528,8 +32528,8 @@ function resetSummaryPrompts() {
 // ===== 手动总结功能 =====
 
 async function handleManualSummary() {
-    const chatId = state.activeChatId;
-    const chat = state.chats[chatId];
+    const chatId = appState.activeChatId;
+    const chat = appState.chats[chatId];
 
     // 显示选择对话框
     const messageCount = await showMessageCountDialog();
@@ -32662,8 +32662,8 @@ async function showSummaryPreviewDialog(summary) {
 // ===== 精炼功能 =====
 
 async function refineSummaryContent() {
-    const chatId = state.activeChatId;
-    const chat = state.chats[chatId];
+    const chatId = appState.activeChatId;
+    const chat = appState.chats[chatId];
 
     // 检查是否有长期记忆
     if (!chat.longTermMemory || chat.longTermMemory.length === 0) {
