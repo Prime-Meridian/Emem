@@ -32600,10 +32600,6 @@ function renderSummaryCards(chatId) {
     }).join('');
 }
 
-// ===== 编辑和删除功能 =====
-
-let editingMemoryIndex = null;
-
 // ==================== 编辑和删除记忆功能 ====================
 
 // 全局变量：当前正在编辑的记忆索引
