@@ -12929,6 +12929,7 @@ document.getElementById('home-time-size-slider').addEventListener('input', async
 
 // ===== 对话总结功能事件绑定 =====
 document.getElementById('open-summary-modal-btn').onclick = openSummaryModal;
+document.getElementById('close-summary-modal-btn').onclick = closeSummaryModal;
 document.getElementById('manual-summary-btn').onclick = handleManualSummary;
 document.getElementById('refine-summary-btn').onclick = refineSummaryContent;
 document.getElementById('open-summary-settings-btn').onclick = switchToSettingsPage;
@@ -32281,7 +32282,15 @@ function openSummaryModal() {
     updateSummaryCount(chatId);
 
     // 显示模态窗口 - 使用 style.display
-    document.getElementById('summary-modal').style.display = 'flex';
+    const modal = document.getElementById('summary-modal');
+    modal.style.display = 'flex';
+
+    // 点击背景遮罩关闭模态窗口
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            closeSummaryModal();
+        }
+    };
 }
 
 // 关闭总结模态窗口
