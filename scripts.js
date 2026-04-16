@@ -32468,6 +32468,17 @@ async function checkAndTriggerAutoSummary(chatId) {
 
             console.log(`[自动总结] 总结完成，已保存到长期记忆，历史记录已清理`);
 
+            // 检查是否需要自动精炼
+            if (chat.refineSettings && chat.refineSettings.autoRefineEnabled) {
+                const totalWordCount = chat.longTermMemory.reduce((sum, m) => sum + m.content.length, 0);
+                const refineThreshold = chat.refineSettings.threshold || 2000;
+
+                if (totalWordCount > refineThreshold) {
+                    console.log(`[自动精炼] 记忆总字数 ${totalWordCount} 超过阈值 ${refineThreshold}，触发自动精炼`);
+                    await refineSummaryContent();
+                }
+            }
+
             // 如果总结模态窗口是打开的，刷新显示
             const modal = document.getElementById('summary-modal');
             if (modal && modal.style.display === 'flex') {
@@ -32676,6 +32687,13 @@ function loadSummarySettings() {
         autoToggle.classList.remove('active');
     }
 
+    const autoRefineToggle = document.getElementById('enable-auto-refine-toggle');
+    if (chat.refineSettings.autoRefineEnabled) {
+        autoRefineToggle.classList.add('active');
+    } else {
+        autoRefineToggle.classList.remove('active');
+    }
+
     const globalToggle = document.getElementById('global-memory-toggle');
     if (chat.globalMemoryEnabled) {
         globalToggle.classList.add('active');
@@ -32689,10 +32707,8 @@ function loadSummarySettings() {
     intervalSlider.value = chat.autoSummary.threshold || 50;
     intervalValue.textContent = intervalSlider.value + ' 条';
 
-    const refineSlider = document.getElementById('refine-threshold-slider');
-    const refineValue = document.getElementById('refine-threshold-value');
-    refineSlider.value = chat.refineSettings.threshold || 2000;
-    refineValue.textContent = refineSlider.value + ' 字';
+    const refineInput = document.getElementById('refine-threshold-input');
+    refineInput.value = chat.refineSettings.threshold || 2000;
 
     // 加载提示词
     loadPromptSettings();
@@ -32700,10 +32716,6 @@ function loadSummarySettings() {
     // 绑定滑块事件
     intervalSlider.oninput = () => {
         intervalValue.textContent = intervalSlider.value + ' 条';
-    };
-
-    refineSlider.oninput = () => {
-        refineValue.textContent = refineSlider.value + ' 字';
     };
 }
 
@@ -32777,12 +32789,14 @@ async function saveSummarySettings() {
     chat.globalMemoryEnabled =
         document.getElementById('global-memory-toggle').classList.contains('active');
 
-    // 保存精炼阈值
+    // 保存精炼设置
     if (!chat.refineSettings) {
         chat.refineSettings = {};
     }
+    chat.refineSettings.autoRefineEnabled =
+        document.getElementById('enable-auto-refine-toggle').classList.contains('active');
     chat.refineSettings.threshold =
-        parseInt(document.getElementById('refine-threshold-slider').value);
+        parseInt(document.getElementById('refine-threshold-input').value);
 
     // 保存提示词到 localStorage
     localStorage.setItem('customDialogSummaryPrompt',
