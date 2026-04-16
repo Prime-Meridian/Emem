@@ -32688,7 +32688,7 @@ function loadSummarySettings() {
     }
 
     const autoRefineToggle = document.getElementById('enable-auto-refine-toggle');
-    if (chat.refineSettings.autoRefineEnabled) {
+    if (chat.refineSettings && chat.refineSettings.autoRefineEnabled) {
         autoRefineToggle.classList.add('active');
     } else {
         autoRefineToggle.classList.remove('active');
