@@ -12206,6 +12206,7 @@ const renderAllMessagesSelectionState = () => {
 // --- ▲▲▲ 新增函數到此結束 ▲▲▲ ---
 
 const setupEventListeners = () => {
+    console.log('🔧 setupEventListeners 开始执行');
 
 // 添加安全的 getElementById 辅助函数
 const safeGetElement = (id) => {
@@ -13018,11 +13019,15 @@ document.getElementById('api-settings-back-btn').onclick = () => showScreen('set
     document.getElementById('main-hub-edit-btn').onclick = (e) => { appState.editMode.chat = !appState.editMode.chat; e.target.textContent = appState.editMode.chat ? '完成' : '编辑'; renderChatList(); };
     ['ai', 'my'].forEach(type => { document.getElementById(`${type}-persona-edit-btn`).onclick = (e) => { appState.editMode[`${type}_persona`] = !appState.editMode[`${type}_persona`]; e.target.textContent = appState.editMode[`${type}_persona`] ? '完成' : '编辑'; renderPersonaList(type); }; });
     // 后台活动按钮点击事件已移动到对话设定页面
-    
+
+    console.log('🔍 准备绑定 chat-settings-btn');
+    const chatSettingsBtn = document.getElementById('chat-settings-btn');
+    console.log('🔍 chat-settings-btn 元素:', chatSettingsBtn);
     document.getElementById('chat-settings-btn').onclick = () => {
         console.log('聊天设置按钮被点击');
         openChatSettings();
     };
+    console.log('🔍 chat-settings-btn 绑定完成');
     document.getElementById('action-send-image').onclick = () => { document.getElementById('image-upload-input').click(); };
     document.getElementById('image-upload-input').addEventListener('change', async (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = async (e) => { const base64Image = e.target.result; const chat = appState.chats[appState.activeChatId]; if (!chat) return; await checkAndInsertTimestamp(); const imageTimestamp = Date.now(); const imageData = { type: 'just_image', url: base64Image }; appendMessage({ role: 'user', content: imageData, timestamp: imageTimestamp }); chat.history.push({ role: 'user', content: imageData, timestamp: imageTimestamp }); await dbStorage.set(KEYS.CHATS, appState.chats); }; reader.readAsDataURL(file); event.target.value = ''; });
     document.getElementById('action-send-image-text').onclick = openImageModal; document.getElementById('cancel-image-btn').onclick = closeImageModal; document.getElementById('send-image-btn').onclick = sendImageMessage; document.getElementById('action-send-location').onclick = openLocationModal; document.getElementById('action-send-voice').onclick = openVoiceModal;
@@ -14730,6 +14735,7 @@ const originalRenderDiaryList = renderDiaryList;
     // --- 初始化播放模式按钮的UI ---
     updatePlaybackModeButtonUI();
 
+    console.log('✅ setupEventListeners 执行完成');
 }; // <--- 这是 setupEventListeners 函数的正确结尾
 
 const updateRealTimeClock = () => {
