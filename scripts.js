@@ -32341,6 +32341,78 @@ function buildLongTermMemoryContext(chat, chatId) {
     return memoryText;
 }
 
+// ==================== 记忆卡片渲染功能 ====================
+
+/**
+ * 渲染总结卡片列表
+ * @param {string} chatId - 聊天ID
+ */
+function renderSummaryCards(chatId) {
+    const chat = appState.chats[chatId];
+    const container = document.getElementById('summary-cards-container');
+    const emptyState = document.getElementById('summary-empty-state');
+
+    if (!chat || !chat.longTermMemory || chat.longTermMemory.length === 0) {
+        container.innerHTML = '';
+        if (emptyState) {
+            emptyState.style.display = 'block';
+        }
+        return;
+    }
+
+    if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+
+    // 按时间倒序排列（最新的在上面）
+    const memories = [...chat.longTermMemory].reverse();
+
+    container.innerHTML = memories.map((memory, index) => {
+        const actualIndex = chat.longTermMemory.length - 1 - index;
+        const date = new Date(memory.timestamp);
+        const timeStr = date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        // 全局标记
+        const globalBadge = memory.isGlobal ? '<span style="background: #007AFF; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 8px;">全局</span>' : '';
+
+        return `
+            <div class="summary-card">
+                <div class="summary-card-header">
+                    <span class="summary-card-time">📅 ${timeStr}${globalBadge}</span>
+                </div>
+                <div class="summary-card-content">${escapeHtml(memory.content)}</div>
+                <div class="summary-card-actions">
+                    <button class="summary-card-btn" onclick="editSummaryMemory(${actualIndex})">编辑</button>
+                    <button class="summary-card-btn delete" onclick="deleteSummaryMemory(${actualIndex})">删除</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // 更新记忆数量显示
+    updateMemoryCount(chatId);
+}
+
+/**
+ * 更新记忆数量显示
+ * @param {string} chatId - 聊天ID
+ */
+function updateMemoryCount(chatId) {
+    const chat = appState.chats[chatId];
+    const countText = document.getElementById('summary-count-text');
+
+    if (countText && chat) {
+        const count = chat.longTermMemory ? chat.longTermMemory.length : 0;
+        countText.textContent = `${count} 条记忆`;
+    }
+}
+
 // 获取提示词
 function getDialogSummaryPrompt() {
     return localStorage.getItem('customDialogSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.dialog;
@@ -32366,11 +32438,8 @@ function openSummaryModal() {
     document.getElementById('summary-view-page').style.display = 'block';
     document.getElementById('summary-settings-page').style.display = 'none';
 
-    // 渲染记忆卡片
+    // 渲染记忆卡片（内部会调用 updateMemoryCount）
     renderSummaryCards(chatId);
-
-    // 更新记忆数量显示
-    updateSummaryCount(chatId);
 
     // 显示模态窗口 - 使用 style.display
     const modal = document.getElementById('summary-modal');
