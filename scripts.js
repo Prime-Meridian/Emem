@@ -6756,6 +6756,12 @@ async function requestCallDecision() {
 - 如果决定拒接: {"action": "decline", "reason": "我现在有点忙，晚点打给你吧。"}
 - 如果决定接听: {"action": "accept", "reason": ""}`;
 
+        // 注入长期记忆
+        const longTermMemoryContext = buildLongTermMemoryContext(chat, appState.activeChatId);
+        if (longTermMemoryContext) {
+            systemPrompt += longTermMemoryContext;
+        }
+
         // 添加解除道德限制的提示词到末尾
         if (appState.ethicalBypass && appState.ethicalBypass.enabled && appState.ethicalBypass.prompt) {
             systemPrompt += '\n\n' + appState.ethicalBypass.prompt;
@@ -8891,7 +8897,13 @@ ${shopItemsPrompt}
             }
         }
         systemPrompt = injectedPromptsContent + modeInstruction + baseSystemPrompt;
-        
+
+        // 注入长期记忆到系统提示词
+        const longTermMemoryContext = buildLongTermMemoryContext(chat, appState.activeChatId);
+        if (longTermMemoryContext) {
+            systemPrompt += longTermMemoryContext;
+        }
+
         // 添加解除道德限制的提示词到末尾
         if (appState.ethicalBypass && appState.ethicalBypass.enabled && appState.ethicalBypass.prompt) {
             systemPrompt += '\n\n' + appState.ethicalBypass.prompt;
@@ -9870,7 +9882,13 @@ const triggerAutoDiary = async (chatId, conversationContext, hasEmotionalContent
 
         // 构建系统提示词
         let systemPrompt = `你是${aiPersona.name}。${aiPersona.content}`;
-        
+
+        // 注入长期记忆
+        const longTermMemoryContext = buildLongTermMemoryContext(chat, chatId);
+        if (longTermMemoryContext) {
+            systemPrompt += longTermMemoryContext;
+        }
+
         // 添加解除道德限制的提示词到末尾
         if (appState.ethicalBypass && appState.ethicalBypass.enabled && appState.ethicalBypass.prompt) {
             systemPrompt += '\n\n' + appState.ethicalBypass.prompt;
@@ -17694,6 +17712,12 @@ async function generateAiMomentPost(chatId) {
 例如:
 {"text": "今天聊了很多，感觉心情都变好了。希望明天也是晴天。", "image_prompts": ["一只微笑的云朵", "阳光下的咖啡杯"]}`;
 
+        // 注入长期记忆
+        const longTermMemoryContext = buildLongTermMemoryContext(chat, chatId);
+        if (longTermMemoryContext) {
+            systemPrompt += longTermMemoryContext;
+        }
+
         // 添加解除道德限制的提示词到末尾
         if (appState.ethicalBypass && appState.ethicalBypass.enabled && appState.ethicalBypass.prompt) {
             systemPrompt += '\n\n' + appState.ethicalBypass.prompt;
@@ -19047,6 +19071,12 @@ ${worldBookContent}
 
     // 整合自定义提示词和基础系统提示词
     let systemPrompt = injectedPromptsContent + baseSystemPrompt;
+
+    // 注入长期记忆
+    const longTermMemoryContext = buildLongTermMemoryContext(chat, chatId);
+    if (longTermMemoryContext) {
+        systemPrompt += longTermMemoryContext;
+    }
 
     // 添加解除道德限制的提示词到末尾
     if (appState.ethicalBypass && appState.ethicalBypass.enabled && appState.ethicalBypass.prompt) {
@@ -32245,6 +32275,70 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ==================== 上下文注入功能 ====================
+
+/**
+ * 构建长期记忆上下文文本
+ * @param {Object} chat - 当前聊天对象
+ * @param {string} chatId - 聊天ID
+ * @returns {string} 格式化的长期记忆文本
+ */
+function buildLongTermMemoryContext(chat, chatId) {
+    if (!chat || !chat.longTermMemory || chat.longTermMemory.length === 0) {
+        return '';
+    }
+
+    let memoryText = '\n\n# 你的长期记忆 (已发生的事实)\n';
+
+    // 按时间顺序排列记忆（最早的在前）
+    const sortedMemories = [...chat.longTermMemory].sort((a, b) => a.timestamp - b.timestamp);
+
+    sortedMemories.forEach(memory => {
+        const date = new Date(memory.timestamp);
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        memoryText += `- ${dateStr}：${memory.content}\n`;
+    });
+
+    // 如果启用了全局记忆，添加其他角色的记忆
+    if (chat.settings?.globalMemoryEnabled) {
+        const globalMemories = [];
+
+        // 遍历所有其他聊天，收集全局记忆
+        Object.keys(appState.chats).forEach(otherChatId => {
+            if (otherChatId === chatId) return; // 跳过当前聊天
+
+            const otherChat = appState.chats[otherChatId];
+            if (!otherChat || !otherChat.longTermMemory || otherChat.longTermMemory.length === 0) {
+                return;
+            }
+
+            // 只收集标记为全局的记忆
+            const globalItems = otherChat.longTermMemory.filter(m => m.isGlobal);
+            if (globalItems.length > 0) {
+                globalMemories.push({
+                    chatName: otherChat.name,
+                    memories: globalItems
+                });
+            }
+        });
+
+        // 如果有全局记忆，添加到上下文
+        if (globalMemories.length > 0) {
+            memoryText += '\n# 全局长期记忆 (其他角色的重要记忆)\n';
+            globalMemories.forEach(({ chatName, memories }) => {
+                memoryText += `## 来自 ${chatName} 的全局记忆\n`;
+                memories.forEach(memory => {
+                    const date = new Date(memory.timestamp);
+                    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                    memoryText += `- ${dateStr}：${memory.content}\n`;
+                });
+            });
+        }
+    }
+
+    return memoryText;
 }
 
 // 获取提示词
