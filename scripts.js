@@ -2079,6 +2079,35 @@ window.closeDiaryReading = closeDiaryReading;
     window.showScreen = showScreen;
 
     const showCustomConfirm = (title, text, onOkCallback) => {
+        // 支持 Promise 方式调用
+        if (!onOkCallback) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-confirm-modal');
+                const customConfirmTitle = document.getElementById('custom-confirm-title');
+                const customConfirmText = document.getElementById('custom-confirm-text');
+                const customConfirmOkBtn = document.getElementById('custom-confirm-ok-btn');
+                const customConfirmCancelBtn = document.getElementById('custom-confirm-cancel-btn');
+
+                customConfirmTitle.textContent = title;
+                customConfirmText.innerHTML = text;
+
+                customConfirmOkBtn.onclick = () => {
+                    hideCustomConfirm();
+                    resolve(true);
+                };
+
+                customConfirmCancelBtn.onclick = () => {
+                    hideCustomConfirm();
+                    resolve(false);
+                };
+
+                modal.style.display = 'flex';
+                modal.style.visibility = 'visible';
+                setTimeout(() => { modal.style.opacity = '1'; }, 10);
+            });
+        }
+
+        // 兼容旧的回调方式
         const modal = document.getElementById('custom-confirm-modal');
         const customConfirmTitle = document.getElementById('custom-confirm-title');
         const customConfirmText = document.getElementById('custom-confirm-text');
@@ -32876,8 +32905,13 @@ async function handleManualSummary() {
     ];
 
     try {
-        showCustomAlert('提示', '正在生成总结...');
+        // 显示加载提示
+        const loadingAlert = showCustomAlert('提示', '正在生成总结，请稍候...');
+
         const response = await callSummaryApi(apiMessages);
+
+        // 关闭加载提示
+        if (loadingAlert && loadingAlert.close) loadingAlert.close();
 
         // 解析 JSON
         const summary = parseSummaryResponse(response);
@@ -32908,7 +32942,9 @@ async function handleManualSummary() {
 
     } catch (error) {
         console.error('总结生成失败:', error);
-        showCustomAlert('错误', error.message || '总结生成失败');
+        const errorMsg = error.message || '总结生成失败';
+        console.error('详细错误信息:', error);
+        showCustomAlert('错误', `总结生成失败：${errorMsg}`);
     }
 }
 
@@ -33014,8 +33050,13 @@ async function refineSummaryContent() {
     ];
 
     try {
-        showCustomAlert('提示', '正在精炼总结...');
+        // 显示加载提示
+        const loadingAlert = showCustomAlert('提示', '正在精炼总结，请稍候...');
+
         const response = await callSummaryApi(apiMessages);
+
+        // 关闭加载提示
+        if (loadingAlert && loadingAlert.close) loadingAlert.close();
 
         // 解析 JSON
         const refinedSummary = parseSummaryResponse(response);
@@ -33045,7 +33086,9 @@ async function refineSummaryContent() {
 
     } catch (error) {
         console.error('精炼失败:', error);
-        showCustomAlert('错误', error.message || '精炼失败');
+        const errorMsg = error.message || '精炼失败';
+        console.error('详细错误信息:', error);
+        showCustomAlert('错误', `精炼失败：${errorMsg}`);
     }
 }
 
