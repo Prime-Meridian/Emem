@@ -12790,9 +12790,13 @@ setupFileUploadHelper('widget-avatar-upload-input', null, async (src) => {
         if (appState.replyingToMessage) {
             messageData.replyTo = { role: appState.replyingToMessage.role, author: appState.replyingToMessage.author, content: appState.replyingToMessage.content, timestamp: appState.replyingToMessage.timestamp };
         }
-        appendMessage(messageData); 
-        chat.history.push(messageData); 
+        appendMessage(messageData);
+        chat.history.push(messageData);
         await dbStorage.set(KEYS.CHATS, appState.chats);
+
+        // 检查并触发自动总结
+        await checkAndTriggerAutoSummary(appState.activeChatId);
+
         // manageProactiveTimer(appState.activeChatId); // 主动搭话功能已删除
         chatInput.value = '';
         chatInput.style.height = 'auto';
@@ -32410,6 +32414,76 @@ function updateMemoryCount(chatId) {
     if (countText && chat) {
         const count = chat.longTermMemory ? chat.longTermMemory.length : 0;
         countText.textContent = `${count} 条记忆`;
+    }
+}
+
+// ==================== 自动总结触发机制 ====================
+
+/**
+ * 检查并触发自动总结
+ * @param {string} chatId - 聊天ID
+ */
+async function checkAndTriggerAutoSummary(chatId) {
+    const chat = appState.chats[chatId];
+    if (!chat || !chat.autoSummary || !chat.autoSummary.enabled) {
+        return;
+    }
+
+    const threshold = chat.autoSummary.threshold || 50;
+    const messageCount = chat.history.length;
+
+    // 检查是否达到阈值
+    if (messageCount >= threshold) {
+        console.log(`[自动总结] 消息数量 ${messageCount} 已达到阈值 ${threshold}，开始自动总结...`);
+
+        try {
+            // 构建总结提示词
+            const summaryPrompt = getDialogSummaryPrompt();
+
+            // 构建 API 消息格式
+            const apiMessages = [
+                {
+                    role: 'system',
+                    content: summaryPrompt
+                },
+                {
+                    role: 'user',
+                    content: `请总结以下对话内容（共 ${messageCount} 条消息）：\n\n${JSON.stringify(chat.history, null, 2)}`
+                }
+            ];
+
+            // 调用总结 API
+            const summaryContent = await callSummaryApi(apiMessages);
+
+            // 保存到长期记忆
+            if (!chat.longTermMemory) {
+                chat.longTermMemory = [];
+            }
+
+            chat.longTermMemory.push({
+                content: summaryContent,
+                timestamp: Date.now(),
+                messageCount: messageCount,
+                isGlobal: chat.globalMemoryEnabled || false
+            });
+
+            // 清空历史记录（保留最近几条）
+            const keepCount = 10; // 保留最近10条消息
+            chat.history = chat.history.slice(-keepCount);
+
+            // 保存到数据库
+            await dbStorage.set(KEYS.CHATS, appState.chats);
+
+            console.log(`[自动总结] 总结完成，已保存到长期记忆，历史记录已清理`);
+
+            // 如果总结模态窗口是打开的，刷新显示
+            const modal = document.getElementById('summary-modal');
+            if (modal && modal.style.display === 'flex') {
+                renderSummaryCards(chatId);
+            }
+        } catch (error) {
+            console.error('[自动总结] 失败:', error);
+        }
     }
 }
 
