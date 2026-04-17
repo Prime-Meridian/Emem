@@ -1078,223 +1078,124 @@
             </header>
             <div class="settings-page-content" style="padding-bottom: 40px;">
                 <div class="tutorial-container">
-                    <!-- 快速开始 -->
+                    <!-- 🎨 自定义与个性化 -->
                     <div class="tutorial-section">
-                        <h3 class="tutorial-title">🚀 快速开始</h3>
+                        <h3 class="tutorial-title">🎨 自定义与个性化</h3>
                         <div class="tutorial-card">
-                            <h4>1. 配置 API</h4>
-                            <p>进入 <strong>设置 → API 设定</strong>，配置你的 OpenAI 或 Gemini API</p>
                             <ul>
-                                <li><strong>主 API</strong>：用于手动聊天</li>
-                                <li><strong>副 API</strong>：用于自动功能（朋友圈、公众号、总结等）</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>2. 创建 AI 角色</h4>
-                            <p>点击主屏幕的 <strong>联系人</strong>，然后点击右上角 <strong>+</strong> 按钮</p>
-                            <ul>
-                                <li>选择或创建 AI 人设</li>
-                                <li>设置角色名称、头像和详细设定</li>
-                                <li>开始对话！</li>
+                                <li><strong>一键导入美化</strong>：支持导出/导入所有自定义美化设置</li>
+                                <li><strong>自定义APP图标</strong>：设置 → APP图标 → 上传图片替换所有图标</li>
+                                <li><strong>个性化气泡</strong>：每个聊天页面可设置独立CSS气泡样式（置空则使用全局气泡）</li>
+                                <li><strong>切换显示模式</strong>：新增灵动岛显示效果切换（记得在设置里选择安卓/iOS模式）</li>
+                                <li><strong>线下隐藏头像</strong>：通过独立CSS实现，例如：<code>.chat-messages.offline-mode .message-wrapper .avatar { display: none !important; }</code></li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 核心功能 -->
+                    <!-- 💬 聊天功能 -->
                     <div class="tutorial-section">
-                        <h3 class="tutorial-title">💬 核心功能</h3>
+                        <h3 class="tutorial-title">💬 聊天功能</h3>
                         <div class="tutorial-card">
-                            <h4>聊天系统</h4>
                             <ul>
-                                <li><strong>单人聊天</strong>：一对一 AI 对话</li>
-                                <li><strong>群聊</strong>：多个 AI 角色互动</li>
-                                <li><strong>消息编辑</strong>：长按消息可编辑、删除、引用</li>
-                                <li><strong>多选操作</strong>：批量删除或转发消息</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>视频通话</h4>
-                            <p>点击聊天界面右上角的视频图标，开始实时语音对话</p>
-                            <ul>
-                                <li>支持实时语音识别</li>
-                                <li>AI 实时回复</li>
-                                <li>通话记录自动保存</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>表情包管理</h4>
-                            <p>在聊天界面点击表情图标，管理你的表情包</p>
-                            <ul>
-                                <li>支持批量导入 JSON 格式</li>
-                                <li>分为"我的表情"和"对方表情"</li>
-                                <li>支持多选删除</li>
+                                <li><strong>消息操作</strong>：双击消息可进行重置、编辑（包括文字、语音、图片等所有格式），系统消息（灰色）不可编辑</li>
+                                <li><strong>图片显示</strong>：长按图片显示文字（不会自动隐藏）</li>
+                                <li><strong>消息管理</strong>：多选消息批量删除、一键清空聊天记录、搜索聊天记录</li>
+                                <li><strong>引用消息</strong>：AI可正确引用对话内容进行回复</li>
+                                <li><strong>线上/线下模式</strong>：分别支持独立CSS气泡，线下模式兼容HTML</li>
+                                <li><strong>操作提示</strong>：消息接收时接收按钮会顺时针旋转，成功后停止；遇到问题可关闭页面重新刷新（不影响存档）</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 高级功能 -->
+                    <!-- 😊 表情包功能 -->
                     <div class="tutorial-section">
-                        <h3 class="tutorial-title">⚡ 高级功能</h3>
+                        <h3 class="tutorial-title">😊 表情包功能</h3>
                         <div class="tutorial-card">
-                            <h4>对话总结</h4>
-                            <p>进入 <strong>对话设定 → 对话总结</strong></p>
                             <ul>
-                                <li><strong>手动总结</strong>：选择消息数量，生成对话摘要</li>
-                                <li><strong>自动总结</strong>：达到阈值自动生成，不打扰用户</li>
-                                <li><strong>记忆精炼</strong>：压缩整合过长的记忆</li>
-                                <li><strong>全局记忆</strong>：让某个对话的总结可被其他对话看到</li>
-                            </ul>
-                            <p class="tutorial-note">💡 总结功能使用副 API，确保已配置</p>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>记忆深度管理</h4>
-                            <p>在 <strong>对话设定</strong> 中设置记忆轮数</p>
-                            <ul>
-                                <li>控制发送给 API 的历史消息数量</li>
-                                <li>自动注入长期记忆（总结内容）</li>
-                                <li>支持全局记忆共享</li>
-                                <li>视频通话也应用记忆深度</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>智能主动消息</h4>
-                            <p>在 <strong>对话设定</strong> 中启用后台主动消息</p>
-                            <ul>
-                                <li>AI 会智能地主动发送消息</li>
-                                <li>包括当前聊天和后台聊天</li>
-                                <li>可设置检查间隔（建议 60-120 秒）</li>
-                                <li>支持浏览器通知提醒</li>
+                                <li>批量导入表情包（兼容eve文件格式）</li>
+                                <li>三行显示表情包，支持批量删除</li>
+                                <li>点击灵敏度优化（滑动不会误触发送）</li>
+                                <li>点击框外任意位置返回</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 社交功能 -->
+                    <!-- 🎵 音乐功能 -->
                     <div class="tutorial-section">
-                        <h3 class="tutorial-title">🌟 社交功能</h3>
+                        <h3 class="tutorial-title">🎵 音乐功能</h3>
                         <div class="tutorial-card">
-                            <h4>朋友圈</h4>
-                            <p>AI 会自动发布动态，你也可以点赞和评论</p>
                             <ul>
-                                <li>支持文字 + AI 生成图片</li>
-                                <li>位置信息显示</li>
-                                <li>点赞和评论互动</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>日记系统</h4>
-                            <p>AI 会根据对话内容自动写日记</p>
-                            <ul>
-                                <li>可设置最小间隔（避免过于频繁）</li>
-                                <li>支持按角色筛选</li>
-                                <li>支持多选删除</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>论坛 & 公众号</h4>
-                            <ul>
-                                <li><strong>论坛</strong>：浏览和发布帖子</li>
-                                <li><strong>公众号</strong>：AI 自动推送文章</li>
+                                <li><strong>搜索音乐</strong>：支持搜索功能（链接时效性短，建议使用链接导入）</li>
+                                <li><strong>一起听功能</strong>：右上角点击"加入一起听"或在聊天页面左下角功能栏开启</li>
+                                <li><strong>互动与控制</strong>：聊天框内可实时交流，按回车发送，右键返回查看AI回复；AI可控制切歌、暂停、下一首</li>
+                                <li><strong>退出一起听</strong>：点击退出会将聊天记录保存到主聊天中</li>
+                                <li><strong>动图播放器</strong>：音乐页面支持动图显示</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 定制化 -->
+                    <!-- 📝 日记与心声 -->
                     <div class="tutorial-section">
-                        <h3 class="tutorial-title">🎨 界面定制</h3>
+                        <h3 class="tutorial-title">📝 日记与心声</h3>
                         <div class="tutorial-card">
-                            <h4>美化选项</h4>
-                            <p>进入 <strong>设置 → 自定义美化</strong></p>
+                            <h4>日记功能</h4>
                             <ul>
-                                <li><strong>深色模式</strong>：护眼夜间模式</li>
-                                <li><strong>壁纸设定</strong>：自定义主屏幕和聊天背景</li>
-                                <li><strong>App 图标</strong>：更换主屏幕应用图标</li>
-                                <li><strong>自定义 CSS</strong>：高级用户可自定义样式</li>
+                                <li><strong>主动生成</strong>：使用主API</li>
+                                <li><strong>自动触发</strong>：使用副API</li>
+                                <li>支持导入导出，可调节日记间隔时间（自定义日记生成频率）</li>
                             </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>显示模式</h4>
-                            <p>在设置中切换显示模式</p>
+                            <h4>心声功能</h4>
                             <ul>
-                                <li>支持多种界面显示风格</li>
-                                <li>灵动岛通知优先级最高</li>
-                                <li>撤回消息和通话通知清晰可见</li>
+                                <li>点击聊天顶部AI名字区域主动查看，接收完消息自动弹窗</li>
+                                <li>支持滚动查看，点击框外区域关闭</li>
+                                <li>右上角开关控制主动弹窗（✓=开启，✗=关闭）</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 数据管理 -->
+                    <!-- 🔧 API设置 -->
                     <div class="tutorial-section">
-                        <h3 class="tutorial-title">💾 数据管理</h3>
+                        <h3 class="tutorial-title">🔧 API设置</h3>
                         <div class="tutorial-card">
-                            <h4>备份与恢复</h4>
-                            <p>在设置底部找到数据管理选项</p>
                             <ul>
-                                <li><strong>汇出全部资料</strong>：导出所有数据为 JSON</li>
-                                <li><strong>汇入备份档案</strong>：恢复之前的备份</li>
-                                <li><strong>数据分析</strong>：查看存储空间使用情况</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>图片存储优化</h4>
-                            <p>在设置中启用图片存储优化</p>
-                            <ul>
-                                <li>聊天图片只保留 AI 描述文字</li>
-                                <li>不保存原图，节省空间</li>
-                                <li>可一键压缩历史图片</li>
+                                <li><strong>双API预设</strong>：主API和副API可保存切换（建议副API使用免费/便宜的）</li>
+                                <li><strong>主动搭话</strong>：频率可调</li>
+                                <li><strong>尾部破限</strong>：可自行选择开启/关闭</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 技术说明 -->
+                    <!-- 💰 钱包与商城 -->
                     <div class="tutorial-section">
-                        <h3 class="tutorial-title">🔧 技术说明</h3>
+                        <h3 class="tutorial-title">💰 钱包与商城</h3>
                         <div class="tutorial-card">
-                            <h4>PWA 支持</h4>
                             <ul>
-                                <li>支持添加到主屏幕</li>
-                                <li>离线可用（部分功能）</li>
-                                <li>iOS 全屏体验优化</li>
-                                <li>灵动岛适配</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>API 兼容性</h4>
-                            <ul>
-                                <li><strong>OpenAI 格式</strong>：标准 /chat/completions 端点</li>
-                                <li><strong>Google Gemini</strong>：自动检测并转换格式</li>
-                                <li>支持自定义 API 端点</li>
+                                <li><strong>转账功能</strong>：AI可以退钱</li>
+                                <li><strong>钱包系统</strong>：打工挣钱或向AI乞讨</li>
+                                <li><strong>商城功能</strong>：点击右上角设置按钮添加商品，点击管理按钮批量删除商品</li>
+                                <li><strong>商品图标</strong>：支持emoji或自定义URL作为商品图标</li>
+                                <li><strong>使用商品</strong>：点击商品 → 选择目标角色 → 发送礼品卡片给角色</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 使用技巧 -->
+                    <!-- 🎯 其他功能 -->
                     <div class="tutorial-section">
-                        <h3 class="tutorial-title">💡 使用技巧</h3>
+                        <h3 class="tutorial-title">🎯 其他功能</h3>
                         <div class="tutorial-card">
-                            <h4>优化体验</h4>
                             <ul>
-                                <li>定期备份数据，避免意外丢失</li>
-                                <li>合理设置记忆轮数，平衡上下文和成本</li>
-                                <li>启用图片存储优化，节省空间</li>
-                                <li>使用副 API 处理自动功能，节省主 API 额度</li>
-                                <li>添加到主屏幕，获得更好的 PWA 体验</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>常见问题</h4>
-                            <ul>
-                                <li><strong>API 调用失败</strong>：检查 API 配置和网络连接</li>
-                                <li><strong>消息发送慢</strong>：可能是 API 响应慢或网络问题</li>
-                                <li><strong>存储空间不足</strong>：使用数据分析查看占用，清理不需要的内容</li>
-                                <li><strong>通知不工作</strong>：检查浏览器通知权限设置</li>
+                                <li><strong>拍一拍</strong>：互动功能</li>
+                                <li><strong>语音聊天</strong>：文字格式（无真实语音功能），支持滚动查看，单击语音条操作</li>
+                                <li><strong>朋友圈</strong>：AI可正常回复互动</li>
+                                <li><strong>随笔</strong>：新增关闭按钮</li>
+                                <li><strong>全屏显示</strong>：支持iOS真全屏</li>
                             </ul>
                         </div>
                     </div>
 
                     <!-- 底部提示 -->
                     <div class="tutorial-footer">
-                        <p>💡 更多功能等你探索！</p>
-                        <p>遇到问题？检查 API 配置或查看浏览器控制台日志</p>
+                        <p>💡 遇到问题？尝试关闭页面重新刷新，或检查 API 配置</p>
                     </div>
                 </div>
             </div>
