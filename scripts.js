@@ -33940,15 +33940,17 @@ function runMomentsActivityTick() {
         return;
     }
     
-    // 获取所有启用了朋友圈功能的对话
-    const allChats = Object.values(appState.chats).filter(chat =>
-        chat.name &&
-        chat.name !== '系统通知' &&
-        chat.personas &&
-        chat.personas.ai &&
-        chat.momentsActivity &&
-        chat.momentsActivity.enabled
-    );
+    // 获取所有启用了朋友圈功能的对话(包含chatId)
+    const allChats = Object.entries(appState.chats)
+        .filter(([chatId, chat]) =>
+            chat.name &&
+            chat.name !== '系统通知' &&
+            chat.personas &&
+            chat.personas.ai &&
+            chat.momentsActivity &&
+            chat.momentsActivity.enabled
+        )
+        .map(([chatId, chat]) => ({ chatId, chat }));
     
     if (allChats.length === 0) {
         console.log('💡 没有对话启用朋友圈功能，停止定时器');
@@ -33959,14 +33961,14 @@ function runMomentsActivityTick() {
     console.log(`📊 当前有 ${allChats.length} 个对话启用了朋友圈功能`);
     
     // 随机选择一个角色发朋友圈
-    const selectedChat = allChats[Math.floor(Math.random() * allChats.length)];
-    console.log(`🎯 角色 "${selectedChat.name}" 被选中发朋友圈`);
+    const selected = allChats[Math.floor(Math.random() * allChats.length)];
+    console.log(`🎯 角色 "${selected.chat.name}" 被选中发朋友圈`);
     
-    triggerMomentsPost(selectedChat);
+    triggerMomentsPost(selected.chatId, selected.chat);
 }
 
 // 触发发朋友圈
-async function triggerMomentsPost(chat) {
+async function triggerMomentsPost(chatId, chat) {
     try {
         console.log(`[AI发朋友圈] 触发了 ${chat.name} 的朋友圈发送`);
         
