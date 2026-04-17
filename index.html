@@ -1110,9 +1110,9 @@
                     <!-- 😊 表情包功能 -->
                     <div class="tutorial-section">
                         <h3 class="tutorial-title">😊 表情包功能</h3>
-                        <div class="tutorial-card">
+<div class="tutorial-card">
                             <ul>
-                                <li>批量导入表情包（兼容eve文件格式）</li>
+                                <li>批量导入表情包</li>
                                 <li>三行显示表情包，支持批量删除</li>
                                 <li>点击灵敏度优化（滑动不会误触发送）</li>
                                 <li>点击框外任意位置返回</li>
@@ -1209,7 +1209,7 @@
         <div id="select-chat-for-forum-share-modal" class="screen" style="background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 10500;"><div class="modal-box"><header class="app-header" style="border-bottom: 1px solid #eee; padding-left:0; padding-right: 0;"><h2 style="position: static; transform: none;">分享到聊天</h2></header><div class="list-container" id="modal-forum-share-chat-list" style="max-height: 400px;"></div><div class="settings-actions" style="border-top: 1px solid #eee; padding: 15px 0 0 0;"><button id="cancel-forum-share-chat-selection-btn" class="action-btn-secondary" style="width: 100%;">取消</button></div></div></div>
         <div id="sticker-import-modal" class="screen" style="background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 100;"><div class="modal-box"><h3>选择导入方式</h3><div class="form-group"><p style="color: #666; margin-bottom: 20px;">选择导入方式：</p><div style="display: flex; flex-direction: column; gap: 15px;"><button id="import-json-btn" class="save-btn" style="padding: 18px 20px; min-height: 52px;">从JSON文件导入</button><button id="import-text-btn" class="save-btn" style="padding: 18px 20px; min-height: 52px;">从文本粘贴导入</button></div></div><div class="settings-actions"><button id="cancel-sticker-import-btn" class="action-btn-secondary">取消</button></div></div></div>
         <div id="sticker-target-modal" class="screen" style="background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 100;"><div class="modal-box"><h3>选择导入目标</h3><div class="form-group"><p style="color: #666; margin-bottom: 20px;">将表情包导入到：</p><div style="display: flex; flex-direction: column; gap: 15px;"><button id="import-to-user-btn" class="save-btn" style="padding: 18px 20px; min-height: 52px;">导入到我的表情包</button><button id="import-to-ai-btn" class="save-btn" style="padding: 18px 20px; min-height: 52px;">导入到AI角色表情包</button></div></div><div class="settings-actions"><button id="cancel-sticker-target-btn" class="action-btn-secondary">取消</button></div></div></div>
-        <div id="sticker-text-modal" class="screen" style="background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 100;"><div class="modal-box"><h3>粘贴表情包文本</h3><div class="form-group"><label>请粘贴表情包文本（每行格式：URL,描述）</label><textarea id="sticker-text-input" rows="10" placeholder="https://example.com/image1.jpg,表情包1&#10;https://example.com/image2.jpg,表情包2" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: monospace; font-size: 14px;"></textarea></div><div class="settings-actions"><button id="cancel-sticker-text-btn" class="action-btn-secondary">取消</button><button id="import-sticker-text-btn" class="save-btn">导入</button></div></div></div>
+        <div id="sticker-text-modal" class="screen" style="background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 100;"><div class="modal-box"><h3>粘贴表情包文本</h3><div class="form-group"><label>请粘贴表情包文本（每行格式：名称:URL）</label><textarea id="sticker-text-input" rows="10" placeholder="表情包1:https://example.com/image1.jpg&#10;表情包2:https://example.com/image2.jpg" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: monospace; font-size: 14px;"></textarea></div><div class="settings-actions"><button id="cancel-sticker-text-btn" class="action-btn-secondary">取消</button><button id="import-sticker-text-btn" class="save-btn">导入</button></div></div></div>
 
         <!-- 音乐搜索页面 -->
         <div id="music-search-modal" class="screen">

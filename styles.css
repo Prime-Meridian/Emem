@@ -3229,6 +3229,8 @@ img{image-rendering:optimizeSpeed;image-rendering:-webkit-optimize-contrast;imag
 /* 使用教程样式 */
 .tutorial-container {
     padding: 0;
+    user-select: text !important;
+    -webkit-user-select: text !important;
 }
 
 .tutorial-section {
@@ -3275,6 +3277,18 @@ img{image-rendering:optimizeSpeed;image-rendering:-webkit-optimize-contrast;imag
     line-height: 1.8;
     color: var(--text-secondary);
     margin-bottom: 6px;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+.tutorial-card code {
+    background-color: var(--input-bg);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: monospace;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    word-break: break-all;
 }
 
 .tutorial-card strong {

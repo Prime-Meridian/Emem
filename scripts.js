@@ -13822,9 +13822,17 @@ document.getElementById('import-sticker-text-btn').onclick = async () => {
             const trimmedLine = line.trim();
             if (!trimmedLine) continue;
             
-            // 支持两种格式：URL,描述 或 纯URL
-            const commaIndex = trimmedLine.indexOf(',');
-            if (commaIndex > -1) {
+            // 支持两种格式：名称：URL 或 纯URL
+            const colonIndex = trimmedLine.indexOf('：') > -1 ? trimmedLine.indexOf('：') : trimmedLine.indexOf(':');
+            if (colonIndex > -1) {
+                const name = trimmedLine.substring(0, colonIndex).trim();
+                const url = trimmedLine.substring(colonIndex + 1).trim();
+                if (url && name) {
+                    stickers.push({ url, name });
+                }
+            } else if (trimmedLine.indexOf(',') > -1) {
+                // 兼容旧版的 URL,描述 格式
+                const commaIndex = trimmedLine.indexOf(',');
                 const url = trimmedLine.substring(0, commaIndex).trim();
                 const name = trimmedLine.substring(commaIndex + 1).trim();
                 if (url && name) {
