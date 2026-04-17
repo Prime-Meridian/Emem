@@ -775,22 +775,8 @@
                     </div>
                 </div>
                 <button id="compress-history-images-btn" style="width: 100%; padding: 10px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 8px;">
-                    数据分析
+                    压缩历史图片
                 </button>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 8px;">
-                    <button id="clear-diary-btn" style="padding: 8px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
-                        清空日记
-                    </button>
-                    <button id="clear-forum-btn" style="padding: 8px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
-                        清空论坛
-                    </button>
-                    <button id="clear-stickers-btn" style="padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
-                        压缩表情包
-                    </button>
-                    <button id="clear-moments-btn" style="padding: 8px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
-                        清空朋友圈
-                    </button>
-                </div>
             </div>
             <div class="settings-item">
                 <span class="item-label">平台模式</span>
@@ -1525,9 +1511,16 @@
                         </div>
 
                         <div class="settings-item">
-                            <span class="item-label">精炼目标字数</span>
+                            <span class="item-label">启用自动精炼</span>
+                            <div id="enable-auto-refine-toggle" class="toggle-switch">
+                                <div class="toggle-knob"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-item">
+                            <span class="item-label">精炼阈值（字数）</span>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <input type="number" id="refine-target-input" min="500" max="10000" step="100" value="2000" style="width: 100px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                                <input type="number" id="refine-threshold-input" min="500" max="10000" step="100" value="2000" style="width: 100px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
                                 <span style="font-size: 13px; color: #666;">字</span>
                             </div>
                         </div>

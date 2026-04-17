@@ -353,7 +353,7 @@ async function callApi(messages, isMainChat = true, options = {}) {
         response = await fetch(`${apiConfig.url.replace(/\/$/, '')}/chat/completions`, {
             method: 'POST',
             headers: { 
-                'Content-Type': 'application/json', 
+                'Content-Type': 'application/json; charset=utf-8', 
                 'Authorization': `Bearer ${apiConfig.key}` 
             },
             body: bodyString
@@ -33020,7 +33020,16 @@ async function checkAndTriggerAutoSummary(chatId) {
 
             console.log(`[自动总结] 总结完成，已保存到长期记忆（共 ${newMessages.length} 条新消息）`);
 
-    
+            // 检查是否需要自动精炼
+            if (chat.refineSettings && chat.refineSettings.autoRefineEnabled) {
+                const totalWordCount = chat.longTermMemory.reduce((sum, m) => sum + m.content.length, 0);
+                const refineThreshold = chat.refineSettings.threshold || 2000;
+
+                if (totalWordCount > refineThreshold) {
+                    console.log(`[自动精炼] 记忆总字数 ${totalWordCount} 超过阈值 ${refineThreshold}，触发自动精炼`);
+                    await refineSummaryContent();
+                }
+            }
 
         } catch (error) {
             console.error('[自动总结] 失败:', error);
@@ -33090,6 +33099,48 @@ function switchToViewPage() {
 
 // 更新记忆数量显示（已删除重复函数，统一使用 updateMemoryCount）
 
+// ===== 记忆卡片渲染 =====
+
+function renderSummaryCards(chatId) {
+    const chat = appState.chats[chatId];
+    const container = document.getElementById('summary-cards-container');
+    const emptyState = document.getElementById('summary-empty-state');
+
+    if (!chat.longTermMemory || chat.longTermMemory.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+
+    // 按时间倒序排列（最新的在上面）
+    const memories = [...chat.longTermMemory].reverse();
+
+    container.innerHTML = memories.map((memory, index) => {
+        const actualIndex = chat.longTermMemory.length - 1 - index;
+        const timeStr = new Date(memory.timestamp).toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return `
+            <div class="summary-card">
+                <div class="summary-card-header">
+                    <span class="summary-card-time">📅 ${timeStr}</span>
+                </div>
+                <div class="summary-card-content">${escapeHtml(memory.content)}</div>
+                <div class="summary-card-actions">
+                    <button class="summary-card-btn" onclick="editSummaryMemory(${actualIndex})">编辑</button>
+                    <button class="summary-card-btn delete" onclick="deleteSummaryMemory(${actualIndex})">删除</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
 
 // ==================== 编辑和删除记忆功能 ====================
 
@@ -33174,6 +33225,12 @@ function loadSummarySettings() {
         autoToggle.classList.remove('active');
     }
 
+    const autoRefineToggle = document.getElementById('enable-auto-refine-toggle');
+    if (chat.refineSettings && chat.refineSettings.autoRefineEnabled) {
+        autoRefineToggle.classList.add('active');
+    } else {
+        autoRefineToggle.classList.remove('active');
+    }
 
     const globalToggle = document.getElementById('global-memory-toggle');
     if (chat.globalMemoryEnabled) {
@@ -33188,10 +33245,8 @@ function loadSummarySettings() {
     intervalSlider.value = chat.autoSummary.threshold || 50;
     intervalValue.textContent = intervalSlider.value + ' 条';
 
-    const refineInput = document.getElementById('refine-target-input');
-    if (refineInput) {
-        refineInput.value = chat.refineSettings?.targetWordCount || 2000;
-    }
+    const refineInput = document.getElementById('refine-threshold-input');
+    refineInput.value = chat.refineSettings.threshold || 2000;
 
     // 加载提示词
     loadPromptSettings();
@@ -33276,8 +33331,10 @@ async function saveSummarySettings() {
     if (!chat.refineSettings) {
         chat.refineSettings = {};
     }
-    chat.refineSettings.targetWordCount =
-        parseInt(document.getElementById('refine-target-input').value) || 2000;
+    chat.refineSettings.autoRefineEnabled =
+        document.getElementById('enable-auto-refine-toggle').classList.contains('active');
+    chat.refineSettings.threshold =
+        parseInt(document.getElementById('refine-threshold-input').value);
 
     // 保存提示词到 localStorage
     localStorage.setItem('customDialogSummaryPrompt',
@@ -33469,10 +33526,10 @@ async function showSummaryPreviewDialog(summary) {
         };
 
         // 取消按钮
-    document.getElementById('cancel-summary-preview-btn').onclick = () => {
-        modal.style.display = 'none';
-        resolve(false);
-    };
+        document.getElementById('cancel-summary-btn').onclick = () => {
+            modal.style.display = 'none';
+            resolve(false);
+        };
     });
 }
 
@@ -33504,7 +33561,7 @@ async function refineSummaryContent() {
 
     // 构建精炼提示词
     let prompt = getRefineSummaryPrompt();
-    const targetWordCount = chat.refineSettings?.targetWordCount || 2000;
+    const targetWordCount = chat.settings?.summaryRefineThreshold || 2000;
 
     prompt = prompt
         .replace(/\$\{userNickname\}/g, chat.personas?.my?.name || '用户')

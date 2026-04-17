@@ -33188,10 +33188,8 @@ function loadSummarySettings() {
     intervalSlider.value = chat.autoSummary.threshold || 50;
     intervalValue.textContent = intervalSlider.value + ' 条';
 
-    const refineInput = document.getElementById('refine-target-input');
-    if (refineInput) {
-        refineInput.value = chat.refineSettings?.targetWordCount || 2000;
-    }
+    const refineInput = document.getElementById('refine-threshold-input');
+    refineInput.value = chat.refineSettings.threshold || 2000;
 
     // 加载提示词
     loadPromptSettings();
@@ -33504,7 +33502,7 @@ async function refineSummaryContent() {
 
     // 构建精炼提示词
     let prompt = getRefineSummaryPrompt();
-    const targetWordCount = chat.refineSettings?.targetWordCount || 2000;
+    const targetWordCount = chat.settings?.summaryRefineThreshold || 2000;
 
     prompt = prompt
         .replace(/\$\{userNickname\}/g, chat.personas?.my?.name || '用户')

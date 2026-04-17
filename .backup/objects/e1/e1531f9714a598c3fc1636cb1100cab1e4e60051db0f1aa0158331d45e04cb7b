@@ -1,0 +1,169 @@
+# 总结功能修复报告
+
+## 修复内容
+
+### 1. 删除重复函数
+- **问题**：`updateSummaryCount` 和 `updateMemoryCount` 两个函数功能完全相同
+- **修复**：删除 `updateSummaryCount`，统一使用 `updateMemoryCount`
+
+### 2. 修复自动总结逻辑（核心修复）
+**原问题**：
+- 检查的是"总消息数"而不是"新消息数"
+- 直接清空历史记录，导致用户丢失对话
+- 没有使用 `lastMemorySummaryTimestamp` 追踪
+
+**修复后**：
+```javascript
+// 现在正确追踪自上次总结以来的新消息
+const lastSummaryTimestamp = chat.lastMemorySummaryTimestamp || 0;
+const newMessages = chat.history.filter(m => 
+    m.timestamp > lastSummaryTimestamp && 
+    !m.isHidden && 
+    m.role !== 'system'
+);
+
+// 只总结新消息，不删除历史记录
+// 更新时间戳以便下次追踪
+chat.lastMemorySummaryTimestamp = Date.now();
+```
+
+### 3. 改进消息格式化
+**原问题**：
+- 只是简单的 `用户: xxx` 和 `AI: xxx`
+- 无法处理多媒体内容（图片、语音等）
+- 没有使用角色的真实名字
+
+**修复后**：
+```javascript
+// 使用角色真实名字
+const role = m.role === 'user' ? 
+    (chat.personas?.my?.name || '用户') : 
+    (chat.originalName || chat.name);
+
+// 智能处理多媒体内容
+if (typeof m.content === 'string') {
+    content = m.content;
+} else if (Array.isArray(m.content)) {
+    // 多模态消息
+    content = m.content.map(item => {
+        if (item.type === 'text') return item.text;
+        if (item.type === 'image_url') return '[图片]';
+        return '[多媒体内容]';
+    }).join(' ');
+}
+```
+
+---
+
+## 功能说明
+
+### 核心功能
+
+#### 1. 手动总结
+- **入口**：对话设定 → 总结按钮 → 手动总结
+- **流程**：
+  1. 选择要总结的消息数量（20/50/100/自定义）
+  2. 系统提取最近的消息（排除隐藏和系统消息）
+  3. 调用副 API 生成总结
+  4. 显示预览对话框，用户确认后保存
+
+#### 2. 自动总结
+- **触发条件**：每次发送消息后检查
+- **逻辑**：
+  - 检查是否启用自动总结（`chat.autoSummary.enabled`）
+  - 统计自上次总结以来的新消息数
+  - 达到阈值（默认 50 条）时自动触发
+  - 后台生成总结并保存，不打扰用户
+
+#### 3. 记忆精炼
+- **作用**：当长期记忆字数过多时，压缩整合
+- **流程**：
+  1. 检查总字数是否超过阈值（默认 2000 字）
+  2. 调用副 API 进行精炼
+  3. 显示精炼前后对比
+  4. 用户确认后替换原有记忆
+
+#### 4. 全局记忆
+- **功能**：让某个对话的总结可以被其他对话看到
+- **用途**：适合世界观设定、角色背景等通用信息
+- **开关**：在总结设置中启用
+
+### 数据结构
+
+```javascript
+chat = {
+    longTermMemory: [
+        {
+            content: "总结内容",
+            timestamp: 1234567890,
+            messageCount: 50,
+            isGlobal: false
+        }
+    ],
+    lastMemorySummaryTimestamp: 1234567890,  // 上次总结的时间戳
+    autoSummary: {
+        enabled: true,      // 是否启用自动总结
+        threshold: 50       // 触发阈值（消息数）
+    },
+    refineSettings: {
+        autoRefineEnabled: false,  // 是否自动精炼
+        threshold: 2000            // 精炼阈值（字数）
+    },
+    globalMemoryEnabled: false  // 是否启用全局记忆
+}
+```
+
+### API 调用
+
+- **使用副 API**：所有总结功能使用副 API（Secondary API）
+- **降级策略**：副 API 不可用时自动使用主 API
+- **提示词**：可在设置中自定义三种提示词
+  - 对话总结提示词
+  - 通话总结提示词
+  - 记忆精炼提示词
+
+### 界面入口
+
+1. **对话设定页面**：点击"总结"按钮
+2. **总结模态窗口**：
+   - 查看页面：显示所有总结卡片
+   - 设置页面：配置自动总结、全局记忆、提示词等
+
+### 注意事项
+
+1. **不会删除历史记录**：修复后的版本只追踪时间戳，不删除消息
+2. **多媒体内容处理**：图片等内容会被标记为 `[图片]`，不会发送给 API
+3. **时间戳追踪**：使用 `lastMemorySummaryTimestamp` 确保不重复总结
+4. **错误处理**：所有 API 调用都有 try-catch，失败不会影响正常使用
+
+---
+
+## 测试建议
+
+1. **测试自动总结**：
+   - 启用自动总结，设置阈值为 10 条
+   - 发送 10 条消息，观察是否自动触发
+   - 检查 `lastMemorySummaryTimestamp` 是否更新
+
+2. **测试手动总结**：
+   - 点击手动总结，选择消息数量
+   - 检查预览对话框是否正常显示
+   - 确认后检查长期记忆是否保存
+
+3. **测试记忆精炼**：
+   - 手动添加多条总结（或修改阈值为较小值）
+   - 点击精炼按钮
+   - 检查精炼前后对比是否正确
+
+4. **测试多媒体消息**：
+   - 发送包含图片的消息
+   - 触发总结，检查是否正确标记为 `[图片]`
+
+---
+
+## 已知限制
+
+1. **副 API 配置**：需要在 API 设定中配置副 API
+2. **提示词变量**：提示词中的 `${userNickname}` 等变量需要正确配置
+3. **破限功能**：如果启用破限，会在提示词末尾添加破限文本
+

@@ -1525,9 +1525,9 @@
                         </div>
 
                         <div class="settings-item">
-                            <span class="item-label">精炼目标字数</span>
+                            <span class="item-label">精炼阈值（字数）</span>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <input type="number" id="refine-target-input" min="500" max="10000" step="100" value="2000" style="width: 100px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                                <input type="number" id="refine-threshold-input" min="500" max="10000" step="100" value="2000" style="width: 100px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
                                 <span style="font-size: 13px; color: #666;">字</span>
                             </div>
                         </div>
