@@ -29276,6 +29276,7 @@ ${isR18 ? `**[R18专区特别要求]**
     
     let content = data.choices[0].message.content;
     content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    content = content.replace(/^<reality>\s*/i, '').replace(/\s*<\/reality>$/i, '');
     
     const result = JSON.parse(content);
     
