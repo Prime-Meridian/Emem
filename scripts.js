@@ -33629,7 +33629,7 @@ document.getElementById('global-memory-toggle').onclick = function() {
     const CLICK_TIMEOUT = 500; // 500ms内的点击才算连续
     const REQUIRED_CLICKS = 5;
 
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', async function(e) {
         const now = Date.now();
         
         // 如果距离上次点击超过500ms,重置计数
@@ -33645,16 +33645,21 @@ document.getElementById('global-memory-toggle').onclick = function() {
             clickCount = 0; // 重置计数,避免重复触发
             
             if (confirm('检测到连续5次点击。是否重置所有自定义CSS设置?\n\n这将清除:\n- 自定义CSS\n- 全局CSS\n- 自定义字体\n\n页面将自动刷新。')) {
-                // 清空所有CSS相关的localStorage（直接使用键名字符串）
-                localStorage.removeItem('custom_css_v2');
-                localStorage.removeItem('custom_global_css_v1');
-                localStorage.removeItem('custom_font_url_v2');
-                localStorage.removeItem('custom_font_family_v1');
-                
-                console.log('✅ CSS设置已重置');
-                
-                // 刷新页面
-                location.reload();
+                try {
+                    // 清空所有CSS相关的数据库存储
+                    await dbStorage.set(KEYS.CUSTOM_CSS, '');
+                    await dbStorage.set(KEYS.CUSTOM_GLOBAL_CSS, '');
+                    await dbStorage.set(KEYS.CUSTOM_FONT_URL, '');
+                    await dbStorage.set(KEYS.CUSTOM_FONT_FAMILY, '');
+                    
+                    console.log('✅ CSS设置已重置');
+                    
+                    // 刷新页面
+                    location.reload();
+                } catch (error) {
+                    console.error('❌ 重置CSS失败:', error);
+                    alert('重置失败，请稍后重试');
+                }
             }
         }
     });
