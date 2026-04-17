@@ -13471,9 +13471,9 @@ document.getElementById('auto-summary-interval-slider').oninput = function() {
 };
 
 // 提示词 Tab 切换
-document.getElementById('prompt-tab-dialog').onclick = () => switchPromptTab('dialog');
-document.getElementById('prompt-tab-call').onclick = () => switchPromptTab('call');
-document.getElementById('prompt-tab-refine').onclick = () => switchPromptTab('refine');
+safeSetOnClick('prompt-tab-dialog', () => switchPromptTab('dialog'));
+safeSetOnClick('prompt-tab-call', () => switchPromptTab('call'));
+safeSetOnClick('prompt-tab-refine', () => switchPromptTab('refine'));
 
 // ▼▼▼ 在 setupEventListeners 函数内，加入这段最终代码 ▼▼▼
 
@@ -13491,38 +13491,38 @@ document.getElementById('import-file-input').addEventListener('change', handleIm
 // ▲▲▲ 代码加到这里结束 ▲▲▲
 
     // 设置主页的返回按钮
-    document.getElementById('settings-hub-back-btn').onclick = () => showScreen('home-screen');
+    safeSetOnClick('settings-hub-back-btn', () => showScreen('home-screen'));
 
     // 设置主页里的"API 设定"项目
-    document.getElementById('settings-hub-api-btn').onclick = () => {
+    safeSetOnClick('settings-hub-api-btn', () => {
         loadApiPresets();
         switchApiMode('primary'); // 默认显示主API
         showScreen('api-settings-screen');
-    };
+    });
 
-document.getElementById('settings-hub-wallpaper-btn').onclick = () => {
+safeSetOnClick('settings-hub-wallpaper-btn', () => {
     // 在显示页面前，先获取预览图片的元素
     const previewImg = document.getElementById('home-wallpaper-preview');
     previewImg.src = appState.homeWallpaper || '';
     // 然后再显示设定页面
     showScreen('home-settings-screen');
-};
-    document.getElementById('main-hub-back-btn').onclick = () => showScreen('home-screen');
+});
+    safeSetOnClick('main-hub-back-btn', () => showScreen('home-screen'));
     // ▼▼▼ 修改這一行 ▼▼▼
-document.getElementById('api-settings-back-btn').onclick = () => showScreen('settings-hub-screen');
-    document.getElementById('chat-settings-back-btn').onclick = () => { 
+safeSetOnClick('api-settings-back-btn', () => showScreen('settings-hub-screen'));
+    safeSetOnClick('chat-settings-back-btn', () => { 
         const chat = appState.chats[appState.activeChatId]; 
         if (chat) { 
             // 【修复】使用统一的更新函数来同时更新 phone-screen 和 chat-messages
             updateChatScreenVisuals(chat.isOfflineMode);
         } 
         showScreen('chat-screen'); 
-    };
-    document.getElementById('home-settings-back-btn').onclick = () => showScreen('settings-hub-screen');
-    document.getElementById('create-chat-back-btn').onclick = () => showScreen('main-hub-screen');
-    document.getElementById('persona-editor-back-btn').onclick = () => showPersonaList(appState.currentPersonaType);
-    document.getElementById('call-log-back-btn').onclick = () => showScreen('chat-screen');
-    document.getElementById('cancel-chat-selection-btn').onclick = closeChatSelectionForMomentModal;
+    });
+    safeSetOnClick('home-settings-back-btn', () => showScreen('settings-hub-screen'));
+    safeSetOnClick('create-chat-back-btn', () => showScreen('main-hub-screen'));
+    safeSetOnClick('persona-editor-back-btn', () => showPersonaList(appState.currentPersonaType));
+    safeSetOnClick('call-log-back-btn', () => showScreen('chat-screen'));
+    safeSetOnClick('cancel-chat-selection-btn', closeChatSelectionForMomentModal);
     document.getElementById('select-chat-for-moment-modal').onclick = (e) => { if (e.target === e.currentTarget) closeChatSelectionForMomentModal(); };
     document.getElementById('ai-persona-list-back-btn').onclick = () => { if(appState.editMode.ai_persona){ appState.editMode.ai_persona = false; document.getElementById('ai-persona-edit-btn').textContent = '编辑'; } showScreen('home-screen'); };
     document.getElementById('my-persona-list-back-btn').onclick = () => { if(appState.editMode.my_persona){ appState.editMode.my_persona = false; document.getElementById('my-persona-edit-btn').textContent = '编辑'; } showScreen('home-screen'); };
