@@ -1192,12 +1192,12 @@
                             </ul>
                         </div>
                         <div class="tutorial-card">
-                            <h4>显示模式</h4>
+                            <h4>显示模式（西瑞斯修复）</h4>
                             <p>在设置中切换显示模式</p>
                             <ul>
-                                <li>支持多种界面显示风格</li>
-                                <li>灵动岛通知优先级最高</li>
-                                <li>撤回消息和通话通知清晰可见</li>
+                                <li>灵动岛通知已修复 z-index 层级</li>
+                                <li>撤回消息和通话通知不再被遮挡</li>
+                                <li>无需切换显示模式即可正常查看</li>
                             </ul>
                         </div>
                     </div>
@@ -1247,26 +1247,17 @@
                         </div>
                     </div>
 
-                    <!-- 使用技巧 -->
+                    <!-- 更新日志 -->
                     <div class="tutorial-section">
-                        <h3 class="tutorial-title">💡 使用技巧</h3>
+                        <h3 class="tutorial-title">📝 最近更新（西瑞斯）</h3>
                         <div class="tutorial-card">
-                            <h4>优化体验</h4>
+                            <h4>2026-04-17</h4>
                             <ul>
-                                <li>定期备份数据，避免意外丢失</li>
-                                <li>合理设置记忆轮数，平衡上下文和成本</li>
-                                <li>启用图片存储优化，节省空间</li>
-                                <li>使用副 API 处理自动功能，节省主 API 额度</li>
-                                <li>添加到主屏幕，获得更好的 PWA 体验</li>
-                            </ul>
-                        </div>
-                        <div class="tutorial-card">
-                            <h4>常见问题</h4>
-                            <ul>
-                                <li><strong>API 调用失败</strong>：检查 API 配置和网络连接</li>
-                                <li><strong>消息发送慢</strong>：可能是 API 响应慢或网络问题</li>
-                                <li><strong>存储空间不足</strong>：使用数据分析查看占用，清理不需要的内容</li>
-                                <li><strong>通知不工作</strong>：检查浏览器通知权限设置</li>
+                                <li>✅ 移除打赏功能，保持项目免费开源</li>
+                                <li>✅ 修复灵动岛 z-index 层级问题</li>
+                                <li>✅ 优化视频通话记忆深度应用</li>
+                                <li>✅ 删除无用的通话总结功能</li>
+                                <li>✅ 完善对话总结系统</li>
                             </ul>
                         </div>
                     </div>
