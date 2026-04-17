@@ -18379,10 +18379,10 @@ function resetAiMomentTimer(chatId) {
                              hoursSinceLastChat > 72 ? 1.15 : 1.0;
     
     // 5. 综合所有因素计算最终延迟
-    // 使用全局配置的间隔作为基准（用户可调）
-    const userSetInterval = aiMomentsSettings.interval || 60; // 默认60分钟
-    const baseMinMinutes = userSetInterval * 0.5; // 最小为设定值的50%
-    const baseMaxMinutes = userSetInterval * 1.5; // 最大为设定值的150%
+    // 基础范围：20分钟 到 80分钟（优化后更合理）
+    // 在300秒间隔下(2.24x倍率)，标准约为45-180分钟（0.75-3小时，平均约2小时）
+    const baseMinMinutes = 20;
+    const baseMaxMinutes = 80;
     
     // 应用所有调整因素
     const finalMultiplier = intervalMultiplier * activityFactor * globalActivityFactor * intimacyFactor * inactivityPenalty;
@@ -18414,12 +18414,6 @@ function resetAiMomentTimer(chatId) {
 
 // 初始化所有AI的定时器 (修正后)
 function initAiMomentTimers() {
-    // 检查全局开关
-    if (!aiMomentsSettings.enabled) {
-        console.log("[朋友圈系统] AI自动发圈功能未启用，跳过初始化");
-        return;
-    }
-    
     console.log("[朋友圈系统] 正在初始化所有AI的自主发帖定时器...");
     for (const chatId in appState.chats) {
         // 使用正确的 type 属性来判断是否为群聊
@@ -19830,10 +19824,9 @@ function loadBackgroundActivitySettings() {
 
 
 
-// 页面加载时初始化后台活动设置
+// 页面加载时初始化后台活动设置  
 function initializeAdditionalSettings() {
     loadBackgroundActivitySettings();
-    loadAiMomentsSettings();
     
     // 更新按钮状态
     setTimeout(() => {

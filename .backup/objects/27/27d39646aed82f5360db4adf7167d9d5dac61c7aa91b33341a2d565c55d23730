@@ -19830,10 +19830,9 @@ function loadBackgroundActivitySettings() {
 
 
 
-// 页面加载时初始化后台活动设置
+// 页面加载时初始化后台活动设置  
 function initializeAdditionalSettings() {
     loadBackgroundActivitySettings();
-    loadAiMomentsSettings();
     
     // 更新按钮状态
     setTimeout(() => {

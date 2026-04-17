@@ -1172,12 +1172,6 @@ let backgroundActivitySettings = {
     timerId: null
 };
 
-// === AI朋友圈系统：全局配置 ===
-let aiMomentsSettings = {
-    enabled: false,
-    interval: 60, // 默认60分钟检查一次（注意：这里是分钟，不是秒）
-};
-
 // 提前定义 applyCustomGlobalCss 函数，避免在 DOMContentLoaded 中调用时出现初始化错误
 const applyCustomGlobalCss = (cssCode) => {
     let styleTag = document.getElementById('custom-global-style');
@@ -13497,38 +13491,38 @@ document.getElementById('import-file-input').addEventListener('change', handleIm
 // ▲▲▲ 代码加到这里结束 ▲▲▲
 
     // 设置主页的返回按钮
-    safeSetOnClick('settings-hub-back-btn', () => showScreen('home-screen'));
+    document.getElementById('settings-hub-back-btn').onclick = () => showScreen('home-screen');
 
     // 设置主页里的"API 设定"项目
-    safeSetOnClick('settings-hub-api-btn', () => {
+    document.getElementById('settings-hub-api-btn').onclick = () => {
         loadApiPresets();
         switchApiMode('primary'); // 默认显示主API
         showScreen('api-settings-screen');
-    });
+    };
 
-safeSetOnClick('settings-hub-wallpaper-btn', () => {
+document.getElementById('settings-hub-wallpaper-btn').onclick = () => {
     // 在显示页面前，先获取预览图片的元素
     const previewImg = document.getElementById('home-wallpaper-preview');
     previewImg.src = appState.homeWallpaper || '';
     // 然后再显示设定页面
     showScreen('home-settings-screen');
-});
-    safeSetOnClick('main-hub-back-btn', () => showScreen('home-screen'));
+};
+    document.getElementById('main-hub-back-btn').onclick = () => showScreen('home-screen');
     // ▼▼▼ 修改這一行 ▼▼▼
-safeSetOnClick('api-settings-back-btn', () => showScreen('settings-hub-screen'));
-    safeSetOnClick('chat-settings-back-btn', () => { 
+document.getElementById('api-settings-back-btn').onclick = () => showScreen('settings-hub-screen');
+    document.getElementById('chat-settings-back-btn').onclick = () => { 
         const chat = appState.chats[appState.activeChatId]; 
         if (chat) { 
             // 【修复】使用统一的更新函数来同时更新 phone-screen 和 chat-messages
             updateChatScreenVisuals(chat.isOfflineMode);
         } 
         showScreen('chat-screen'); 
-    });
-    safeSetOnClick('home-settings-back-btn', () => showScreen('settings-hub-screen'));
-    safeSetOnClick('create-chat-back-btn', () => showScreen('main-hub-screen'));
-    safeSetOnClick('persona-editor-back-btn', () => showPersonaList(appState.currentPersonaType));
-    safeSetOnClick('call-log-back-btn', () => showScreen('chat-screen'));
-    safeSetOnClick('cancel-chat-selection-btn', closeChatSelectionForMomentModal);
+    };
+    document.getElementById('home-settings-back-btn').onclick = () => showScreen('settings-hub-screen');
+    document.getElementById('create-chat-back-btn').onclick = () => showScreen('main-hub-screen');
+    document.getElementById('persona-editor-back-btn').onclick = () => showPersonaList(appState.currentPersonaType);
+    document.getElementById('call-log-back-btn').onclick = () => showScreen('chat-screen');
+    document.getElementById('cancel-chat-selection-btn').onclick = closeChatSelectionForMomentModal;
     document.getElementById('select-chat-for-moment-modal').onclick = (e) => { if (e.target === e.currentTarget) closeChatSelectionForMomentModal(); };
     document.getElementById('ai-persona-list-back-btn').onclick = () => { if(appState.editMode.ai_persona){ appState.editMode.ai_persona = false; document.getElementById('ai-persona-edit-btn').textContent = '编辑'; } showScreen('home-screen'); };
     document.getElementById('my-persona-list-back-btn').onclick = () => { if(appState.editMode.my_persona){ appState.editMode.my_persona = false; document.getElementById('my-persona-edit-btn').textContent = '编辑'; } showScreen('home-screen'); };
@@ -18379,10 +18373,10 @@ function resetAiMomentTimer(chatId) {
                              hoursSinceLastChat > 72 ? 1.15 : 1.0;
     
     // 5. 综合所有因素计算最终延迟
-    // 使用全局配置的间隔作为基准（用户可调）
-    const userSetInterval = aiMomentsSettings.interval || 60; // 默认60分钟
-    const baseMinMinutes = userSetInterval * 0.5; // 最小为设定值的50%
-    const baseMaxMinutes = userSetInterval * 1.5; // 最大为设定值的150%
+    // 基础范围：20分钟 到 80分钟（优化后更合理）
+    // 在300秒间隔下(2.24x倍率)，标准约为45-180分钟（0.75-3小时，平均约2小时）
+    const baseMinMinutes = 20;
+    const baseMaxMinutes = 80;
     
     // 应用所有调整因素
     const finalMultiplier = intervalMultiplier * activityFactor * globalActivityFactor * intimacyFactor * inactivityPenalty;
@@ -18414,12 +18408,6 @@ function resetAiMomentTimer(chatId) {
 
 // 初始化所有AI的定时器 (修正后)
 function initAiMomentTimers() {
-    // 检查全局开关
-    if (!aiMomentsSettings.enabled) {
-        console.log("[朋友圈系统] AI自动发圈功能未启用，跳过初始化");
-        return;
-    }
-    
     console.log("[朋友圈系统] 正在初始化所有AI的自主发帖定时器...");
     for (const chatId in appState.chats) {
         // 使用正确的 type 属性来判断是否为群聊
@@ -18495,9 +18483,6 @@ window.openScheduledMessageModal = function openScheduledMessageModal() {
     
     // 更新后台活动状态显示
     updateBackgroundActivityStatus();
-    
-    // 更新AI朋友圈状态显示
-    updateAiMomentsStatus();
     
     // 显示模态框
     modal.classList.add('visible');
@@ -18660,134 +18645,6 @@ function handleBackgroundIntervalChange() {
         
         configureBackgroundActivity(true, interval);
         updateBackgroundActivityStatus();
-    }
-}
-
-// === AI朋友圈配置函数 ===
-
-// 更新AI朋友圈状态显示
-function updateAiMomentsStatus() {
-    const toggle = document.getElementById('ai-moments-toggle');
-    const intervalInput = document.getElementById('ai-moments-interval-input');
-    const statusDiv = document.getElementById('ai-moments-status');
-    const statusText = document.getElementById('ai-moments-status-text');
-    
-    if (toggle && intervalInput && statusDiv && statusText) {
-        // 设置当前状态
-        toggle.checked = aiMomentsSettings.enabled;
-        intervalInput.value = aiMomentsSettings.interval;
-        
-        // 更新状态显示
-        if (aiMomentsSettings.enabled) {
-            statusText.textContent = `自动发圈已启用，平均每${aiMomentsSettings.interval}分钟发布`;
-            statusDiv.style.backgroundColor = '#e8f5e8';
-            statusDiv.style.color = '#2d5a2d';
-        } else {
-            statusText.textContent = '自动发圈未启用';
-            statusDiv.style.backgroundColor = '#f5f5f5';
-            statusDiv.style.color = '#666';
-        }
-        
-        // 添加事件监听器
-        if (!toggle.hasAttribute('data-listeners-added')) {
-            toggle.addEventListener('change', handleAiMomentsToggle);
-            toggle.setAttribute('data-listeners-added', 'true');
-        }
-        
-        if (!intervalInput.hasAttribute('data-listeners-added')) {
-            intervalInput.addEventListener('change', handleAiMomentsIntervalChange);
-            intervalInput.setAttribute('data-listeners-added', 'true');
-        }
-    }
-}
-
-// 处理AI朋友圈开关切换
-function handleAiMomentsToggle() {
-    const toggle = document.getElementById('ai-moments-toggle');
-    const intervalInput = document.getElementById('ai-moments-interval-input');
-    
-    if (toggle && intervalInput) {
-        const enabled = toggle.checked;
-        const interval = parseInt(intervalInput.value) || 60;
-        
-        configureAiMoments(enabled, interval);
-        updateAiMomentsStatus();
-        
-        if (enabled) {
-            alert(`AI自动发朋友圈已启用！\n\nAI会根据聊天内容智能生成朋友圈，平均每${interval}分钟发布一次。`);
-        } else {
-            alert('AI自动发朋友圈已停用。');
-        }
-    }
-}
-
-// 处理AI朋友圈间隔时间变化
-function handleAiMomentsIntervalChange() {
-    const toggle = document.getElementById('ai-moments-toggle');
-    const intervalInput = document.getElementById('ai-moments-interval-input');
-    
-    if (toggle && intervalInput && toggle.checked) {
-        const interval = Math.max(15, parseInt(intervalInput.value) || 60);
-        intervalInput.value = interval;
-        
-        configureAiMoments(true, interval);
-        updateAiMomentsStatus();
-    }
-}
-
-// 配置AI朋友圈系统
-function configureAiMoments(enabled, interval = 60) {
-    aiMomentsSettings.enabled = enabled;
-    aiMomentsSettings.interval = Math.max(15, interval);
-    
-    // 保存到localStorage
-    try {
-        const settingsToSave = {
-            enabled: aiMomentsSettings.enabled,
-            interval: aiMomentsSettings.interval
-        };
-        localStorage.setItem('aiMomentsSettings', JSON.stringify(settingsToSave));
-        console.log('✅ AI朋友圈设置已保存:', settingsToSave);
-    } catch (error) {
-        console.error('❌ 保存AI朋友圈设置失败:', error);
-    }
-    
-    // 重新初始化所有AI的朋友圈定时器
-    if (enabled) {
-        console.log('🚀 启动AI朋友圈系统');
-        initAiMomentTimers();
-    } else {
-        console.log('⏹️ 停止AI朋友圈系统');
-        stopAllAiMomentTimers();
-    }
-}
-
-// 停止所有AI朋友圈定时器
-function stopAllAiMomentTimers() {
-    for (const chatId in aiMomentTimers) {
-        if (aiMomentTimers[chatId]) {
-            clearTimeout(aiMomentTimers[chatId]);
-            delete aiMomentTimers[chatId];
-        }
-    }
-    console.log('🛑 所有AI朋友圈定时器已停止');
-}
-
-// 加载AI朋友圈设置
-function loadAiMomentsSettings() {
-    try {
-        const saved = localStorage.getItem('aiMomentsSettings');
-        if (saved) {
-            const settings = JSON.parse(saved);
-            aiMomentsSettings.enabled = settings.enabled || false;
-            aiMomentsSettings.interval = settings.interval || 60;
-            
-            console.log('✅ 已加载AI朋友圈设置:', aiMomentsSettings);
-        } else {
-            console.log('💡 未找到保存的AI朋友圈设置，使用默认值');
-        }
-    } catch (error) {
-        console.error('❌ 加载AI朋友圈设置失败:', error);
     }
 }
 
@@ -19830,10 +19687,9 @@ function loadBackgroundActivitySettings() {
 
 
 
-// 页面加载时初始化后台活动设置
+// 页面加载时初始化后台活动设置  
 function initializeAdditionalSettings() {
     loadBackgroundActivitySettings();
-    loadAiMomentsSettings();
     
     // 更新按钮状态
     setTimeout(() => {
@@ -33766,105 +33622,4 @@ document.getElementById('global-memory-toggle').onclick = function() {
     this.classList.toggle('active');
 };
 
-// ==================== 五连击重置CSS功能 ====================
-(function() {
-    let clickCount = 0;
-    let lastClickTime = 0;
-    const CLICK_TIMEOUT = 500; // 500ms内的点击才算连续
-    const REQUIRED_CLICKS = 5;
-
-    document.addEventListener('click', async function(e) {
-        const now = Date.now();
-        
-        // 如果距离上次点击超过500ms,重置计数
-        if (now - lastClickTime > CLICK_TIMEOUT) {
-            clickCount = 0;
-        }
-        
-        clickCount++;
-        lastClickTime = now;
-        
-        // 达到5次点击
-        if (clickCount >= REQUIRED_CLICKS) {
-            clickCount = 0; // 重置计数,避免重复触发
-            
-            if (confirm('检测到连续5次点击。是否重置所有自定义CSS设置?\n\n这将清除:\n- 自定义CSS\n- 全局CSS\n- 自定义字体\n\n页面将自动刷新。')) {
-                try {
-                    // 清空所有CSS相关的数据库存储
-                    await dbStorage.set(KEYS.CUSTOM_CSS, '');
-                    await dbStorage.set(KEYS.CUSTOM_GLOBAL_CSS, '');
-                    await dbStorage.set(KEYS.CUSTOM_FONT_URL, '');
-                    await dbStorage.set(KEYS.CUSTOM_FONT_FAMILY, '');
-                    
-                    console.log('✅ CSS设置已重置');
-                    
-                    // 刷新页面
-                    location.reload();
-                } catch (error) {
-                    console.error('❌ 重置CSS失败:', error);
-                    alert('重置失败，请稍后重试');
-                }
-            }
-        }
-    });
-    
-    console.log('✅ 五连击重置CSS功能已启用');
-})();
-
 console.log('✅ 总结功能事件绑定完成');
-
-// ==================== 移除服务器推送功能 ====================
-(function() {
-    // 等待DOM加载完成后移除相关元素
-    const removeServerPushFeatures = () => {
-        // 移除定时消息模态框
-        const scheduledMessageModal = document.getElementById('scheduled-message-modal');
-        if (scheduledMessageModal) {
-            scheduledMessageModal.remove();
-            console.log('✅ 已移除定时消息模态框');
-        }
-        
-        // 移除服务器推送开关的整个设置项
-        const serverPushToggle = document.getElementById('server-push-toggle');
-        if (serverPushToggle) {
-            const toggleParent = serverPushToggle.closest('.settings-item');
-            if (toggleParent) {
-                toggleParent.remove();
-                console.log('✅ 已移除服务器推送开关');
-            }
-        }
-        
-        // 移除定时消息设置按钮和相关区域
-        const elementsToRemove = [
-            'open-server-push-schedule-btn',
-            'schedule-message-section',
-            'server-push-status-text'
-        ];
-        
-        elementsToRemove.forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                // 如果是按钮，移除其父容器
-                const parent = element.closest('.settings-item') || element.closest('.form-group');
-                if (parent) {
-                    parent.remove();
-                } else {
-                    element.remove();
-                }
-                console.log(`✅ 已移除元素: ${id}`);
-            }
-        });
-    };
-    
-    // 立即执行一次
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', removeServerPushFeatures);
-    } else {
-        removeServerPushFeatures();
-    }
-    
-    // 延迟执行确保所有元素都已加载
-    setTimeout(removeServerPushFeatures, 500);
-    
-    console.log('✅ 服务器推送功能移除脚本已加载');
-})();

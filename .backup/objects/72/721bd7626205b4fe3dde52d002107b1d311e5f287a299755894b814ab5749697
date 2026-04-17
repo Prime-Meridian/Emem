@@ -1172,12 +1172,6 @@ let backgroundActivitySettings = {
     timerId: null
 };
 
-// === AI朋友圈系统：全局配置 ===
-let aiMomentsSettings = {
-    enabled: false,
-    interval: 60, // 默认60分钟检查一次（注意：这里是分钟，不是秒）
-};
-
 // 提前定义 applyCustomGlobalCss 函数，避免在 DOMContentLoaded 中调用时出现初始化错误
 const applyCustomGlobalCss = (cssCode) => {
     let styleTag = document.getElementById('custom-global-style');
@@ -6601,14 +6595,14 @@ const openChatSettings = () => {
         };
     }
 
-    document.getElementById('settings-profile-item').onclick = () => {
+    safeSetOnClick('settings-profile-item', () => {
         const personaIndex = appState.personas.ai.findIndex(p => p.name === chat.personas.ai.name);
         if (personaIndex > -1) {
             openPersonaEditor('ai', personaIndex);
         } else {
             alert('错误：在AI人设库中找不到对应的角色资料。');
         }
-    };
+    });
     
     document.getElementById('phone-screen').classList.remove('offline-active');
 
@@ -12735,11 +12729,11 @@ setupBeautifyPreviewListeners();
 
 viewModeBtn.addEventListener('click', toggleViewMode);
 
-safeSetOnClick('export-theme-btn', exportTheme);
+safeSetOnClick('export-theme-btn', exportTheme));
 safeSetOnClick('import-theme-btn', () => {
     const themeImportInput = safeGetElement('theme-import-input');
     if (themeImportInput) themeImportInput.click();
-});
+}));
 safeAddEventListener('theme-import-input', 'change', handleThemeImport);
 
 const setupTextureUpload = (buttonId, inputId, stateKey, applyFunction, statusId) => {
@@ -12747,7 +12741,7 @@ const setupTextureUpload = (buttonId, inputId, stateKey, applyFunction, statusId
     safeSetOnClick(buttonId, () => {
         const inputEl = safeGetElement(inputId);
         if (inputEl) inputEl.click();
-    });
+    }));
 
     // 当用户选择了文件
     safeAddEventListener(inputId, 'change', (event) => {
@@ -12776,39 +12770,39 @@ safeSetOnClick('clear-default-bg-btn', () => {
     applyDefaultBackgroundTexture('');
     const statusEl = safeGetElement('default-bg-status');
     if (statusEl) statusEl.textContent = '已清除';
-});
+}));
 safeSetOnClick('clear-top-bar-btn', () => {
     appState.topBarTexture = '';
     applyTopBarTexture('');
     const statusEl = safeGetElement('top-bar-status');
     if (statusEl) statusEl.textContent = '已清除';
-});
+}));
 safeSetOnClick('clear-bottom-bar-btn', () => {
     appState.bottomBarTexture = '';
     applyBottomBarTexture('');
     const statusEl = safeGetElement('bottom-bar-status');
     if (statusEl) statusEl.textContent = '已清除';
-});
+}));
 
 // ▲▲▲ 新事件监听到此结束 ▲▲▲
 
 // ... setupEventListeners 函数的其余部分 ...
 
 // 为"设为主要形象"按钮绑定点击事件
-safeSetOnClick('set-primary-persona-btn', setAsPrimaryPersona);
+safeSetOnClick('set-primary-persona-btn', setAsPrimaryPersona));
 
 safeSetOnClick('modal-btn-end-music-session-from-player', async () => {
     await endListenTogether(true); // 调用结束函数
     closeMusicContactSelectionModal(); // 关闭当前弹窗
     // 不需要 alert，直接返回主屏幕
     console.log('已退出听歌模式');
-});
+}));
 
-safeSetOnClick('select-contact-for-music-btn', openMusicContactSelectionModal);
-safeSetOnClick('cancel-music-contact-selection-btn', closeMusicContactSelectionModal);
+safeSetOnClick('select-contact-for-music-btn', openMusicContactSelectionModal));
+safeSetOnClick('cancel-music-contact-selection-btn', closeMusicContactSelectionModal));
 
 // ====== 论坛分享聊天选择相关事件监听器 ======
-safeSetOnClick('cancel-forum-share-chat-selection-btn', closeForumShareChatSelectionModal);
+safeSetOnClick('cancel-forum-share-chat-selection-btn', closeForumShareChatSelectionModal));
 
 // 点击弹窗背景关闭
 const forumShareModal = document.getElementById('select-chat-for-forum-share-modal');
@@ -12822,7 +12816,7 @@ if (forumShareModal) {
 
 // ====== 音乐会话相关事件监听器 ======
 // 右侧按钮 - 触发AI回复（类似"等待回复"按钮）
-safeSetOnClick('music-receive-btn', triggerMusicAIResponse);
+safeSetOnClick('music-receive-btn', triggerMusicAIResponse));
 
 // 音乐输入框回车发送用户消息
 safeAddEventListener('music-message-input', 'keydown', (e) => {
@@ -12886,7 +12880,7 @@ if (saveMusicWorldBooksBtn) {
 }
 
 // 退出音乐会话按钮（新版本）
-document.getElementById('modal-btn-end-music-session-from-player-new').onclick = async () => {
+safeSetOnClick('modal-btn-end-music-session-from-player-new', async () => {
     // 弹出确认框
     const confirmed = confirm('确认退出一起听吗？\n\n退出后聊天记录将保存到主聊天中，但音乐会继续播放。');
     if (!confirmed) {
@@ -12919,7 +12913,7 @@ document.getElementById('modal-btn-end-music-session-from-player-new').onclick =
     });
 
     // ▼▼▼ 用这个新版本替换旧的 settings-hub-beautify-btn.onclick ▼▼▼
-document.getElementById('settings-hub-beautify-btn').onclick = () => {
+safeSetOnClick('settings-hub-beautify-btn', () => {
     // --- 已有代码，保持不变 ---
     document.getElementById('custom-font-url-input').value = appState.customFontUrl || '';
     document.getElementById('custom-css-input').value = appState.customCss || '';
@@ -12945,7 +12939,7 @@ document.getElementById('settings-hub-beautify-btn').onclick = () => {
     showScreen('custom-beautification-screen');
 };
 
-document.getElementById('save-beautification-btn').onclick = async () => {
+safeSetOnClick('save-beautification-btn', async () => {
     // 1. 获取所有美化设置值
     const newFontUrl = document.getElementById('custom-font-url-input').value.trim();
     const newFontFamily = document.getElementById('custom-font-family-input').value.trim(); // 新增
@@ -13034,7 +13028,7 @@ fontSizeSlider.addEventListener('input', () => {
 // ▲▲▲ 新增代码结束 ▲▲▲
 
 // "自定义美化"页 -> 返回按钮
-document.getElementById('custom-beautification-back-btn').onclick = () => showScreen('settings-hub-screen');
+safeSetOnClick('custom-beautification-back-btn', () => showScreen('settings-hub-screen');
 
 // --- 【新增】使用教程按钮事件 ---
 const tutorialBtn = document.getElementById('settings-hub-tutorial-btn');
@@ -13069,12 +13063,12 @@ showScreen('disclaimer-screen');
     safeSetOnClick('cancel-outgoing-call-btn', () => {
         showScreen('chat-screen');
         appendSystemMessageToChat('呼叫已取消');
-    });
+    }))))));
 
 // ... setupEventListeners 函数内部的其他代码 ...
 
     // 为 Dock 栏的音乐按钮添加点击事件
-    safeSetOnClick('home-btn-music', openMusicSelectionModal);
+    safeSetOnClick('home-btn-music', openMusicSelectionModal));
 
     // ... setupEventListeners 函数内部的其他代码 ...
 
@@ -13105,17 +13099,17 @@ safeSetOnClick('save-sticker-name-btn', async () => {
         if (stickerModal) stickerModal.classList.remove('active');
         appState.pendingSticker = null;
     }
-});
+}));
 
 safeSetOnClick('cancel-sticker-name-btn', () => {
     const stickerModal = document.getElementById('sticker-name-modal');
     if (stickerModal) stickerModal.classList.remove('active');
     appState.pendingSticker = null; // 取消操作，清空暂存的图片
-});
+}));
 
  // 为表情包切换按钮绑定事件
-safeSetOnClick('switch-to-my-stickers', () => switchStickerView('my'));
-safeSetOnClick('switch-to-ai-stickers', () => switchStickerView('ai'));
+safeSetOnClick('switch-to-my-stickers', () => switchStickerView('my')));
+safeSetOnClick('switch-to-ai-stickers', () => switchStickerView('ai')));
 
 // 为多选功能按钮绑定事件
 safeSetOnClick('multi-select-stickers-btn', () => {
@@ -13124,19 +13118,19 @@ safeSetOnClick('multi-select-stickers-btn', () => {
     } else {
         enterStickerMultiSelectMode();
     }
-});
+}));
 
-safeSetOnClick('select-all-stickers-btn', selectAllStickers);
-safeSetOnClick('deselect-all-stickers-btn', deselectAllStickers);
-safeSetOnClick('delete-selected-stickers-btn', deleteSelectedStickers);
-safeSetOnClick('cancel-multi-select-btn', exitStickerMultiSelectMode);
-    safeSetOnClick('save-edit-btn', saveMessageEdit);
-    safeSetOnClick('cancel-edit-btn', cancelMessageEdit);
-    safeSetOnClick('action-view-diary', writeAndShowAIDiary);
+safeSetOnClick('select-all-stickers-btn', selectAllStickers));
+safeSetOnClick('deselect-all-stickers-btn', deselectAllStickers));
+safeSetOnClick('delete-selected-stickers-btn', deleteSelectedStickers));
+safeSetOnClick('cancel-multi-select-btn', exitStickerMultiSelectMode));
+    safeSetOnClick('save-edit-btn', saveMessageEdit));
+    safeSetOnClick('cancel-edit-btn', cancelMessageEdit));
+    safeSetOnClick('action-view-diary', writeAndShowAIDiary));
     safeSetOnClick('close-diary-modal-btn', () => {
         const diaryModal = document.getElementById('diary-modal');
         if (diaryModal) diaryModal.style.display = 'none';
-    });
+    }));
     const diaryModalEl = document.getElementById('diary-modal');
     if (diaryModalEl) {
         diaryModalEl.onclick = (e) => {
@@ -13152,7 +13146,7 @@ safeSetOnClick('cancel-multi-select-btn', exitStickerMultiSelectMode);
     safeSetOnClick('trigger-chat-wallpaper-upload', () => {
         const uploadEl = document.getElementById('chat-wallpaper-upload');
         if (uploadEl) uploadEl.click();
-    });
+    }));
     document.getElementById('chat-wallpaper-upload').addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -13215,24 +13209,24 @@ safeSetOnClick('cancel-multi-select-btn', exitStickerMultiSelectMode);
     });
 
 
-safeSetOnClick('settings-hub-widget-btn', openWidgetSettings);
+safeSetOnClick('settings-hub-widget-btn', openWidgetSettings));
 
 // “小组件设定”页 -> 返回按钮
-safeSetOnClick('widget-settings-back-btn', () => showScreen('settings-hub-screen'));
+safeSetOnClick('widget-settings-back-btn', () => showScreen('settings-hub-screen')));
 
 // “小组件设定”页 -> 三个“更换”按钮，分别触发对应的隐藏上传框
 safeSetOnClick('change-widget-bg-btn', () => {
     const uploadEl = document.getElementById('widget-bg-upload-input');
     if (uploadEl) uploadEl.click();
-});
+}));
 safeSetOnClick('change-widget-footer-btn', () => {
     const uploadEl = document.getElementById('widget-footer-upload-input');
     if (uploadEl) uploadEl.click();
-});
+}));
 safeSetOnClick('change-widget-avatar-btn', () => {
     const uploadEl = document.getElementById('widget-avatar-upload-input');
     if (uploadEl) uploadEl.click();
-});
+}));
 
 // a. 处理背景图上传
 setupFileUploadHelper('widget-bg-upload-input', null, async (src) => {
@@ -13266,7 +13260,7 @@ setupFileUploadHelper('widget-bg-upload-input', null, async (src) => {
                 applyWidgetImages();
             }
         );
-    });
+    }));
 
 // 主动搭话功能已删除，相关事件处理已清理
 
@@ -13274,7 +13268,7 @@ setupFileUploadHelper('widget-bg-upload-input', null, async (src) => {
         
         alert('小组件设定已保存！');
         showScreen('home-screen'); // 返回主屏幕
-    });
+    }));
 
 // b. 处理页脚图上传
 setupFileUploadHelper('widget-footer-upload-input', null, async (src) => {
@@ -13362,7 +13356,7 @@ chatInput.addEventListener('keydown', (event) => {
 });
 // --- 新增代码结束 ---
 
-    document.getElementById('settings-hub-icon-btn').onclick = () => {
+    safeSetOnClick('settings-hub-icon-btn', () => {
     
         appState.tempCustomIcons = JSON.parse(JSON.stringify(appState.customIcons));
         // 2. 渲染设定页
@@ -13371,7 +13365,7 @@ chatInput.addEventListener('keydown', (event) => {
     };
 
     // 点击“保存全部图示”按钮
-document.getElementById('save-icon-changes-btn').onclick = async () => {
+safeSetOnClick('save-icon-changes-btn', async () => {
     // 1. 将临时状态的更改正式应用到主状态
     appState.customIcons = JSON.parse(JSON.stringify(appState.tempCustomIcons));
     // 2. 保存到数据库
@@ -13391,7 +13385,7 @@ document.getElementById('save-icon-changes-btn').onclick = async () => {
         showScreen('settings-hub-screen');
     };
 
-document.getElementById('cancel-icon-changes-btn').onclick = () => {
+safeSetOnClick('cancel-icon-changes-btn', () => {
  
     showCustomConfirm(
         '清除全部自定义图示',
@@ -13418,32 +13412,32 @@ document.getElementById('cancel-icon-changes-btn').onclick = () => {
     document.getElementById('icon-settings-back-btn').onclick = cancelIconChanges;
     document.getElementById('icon-upload-input').addEventListener('change', handleIconUpload);
 
-    document.getElementById('home-btn-prompt').onclick = () => { renderPromptList(); showScreen('prompt-list-screen'); };
-    document.getElementById('modal-btn-post-my-moment').onclick = () => { document.getElementById('moments-action-modal').classList.remove('active'); document.getElementById('post-text-input').value = ''; document.getElementById('post-image-text-input').value = ''; document.getElementById('post-location-input').value = ''; showScreen('create-post-screen'); };
-    document.getElementById('modal-btn-generate-ai-moment').onclick = () => { document.getElementById('moments-action-modal').classList.remove('active'); openChatSelectionForMomentModal(); };
-    document.getElementById('modal-btn-cancel-moments-action').onclick = () => { document.getElementById('moments-action-modal').classList.remove('active'); };
-    document.getElementById('modal-btn-add-contact').onclick = () => { document.getElementById('create-new-modal').classList.remove('active'); openPersonaSelectionModal('add_contact'); };
+    safeSetOnClick('home-btn-prompt', () => { renderPromptList(); showScreen('prompt-list-screen'); };
+    safeSetOnClick('modal-btn-post-my-moment', () => { document.getElementById('moments-action-modal').classList.remove('active'); document.getElementById('post-text-input').value = ''; document.getElementById('post-image-text-input').value = ''; document.getElementById('post-location-input').value = ''; showScreen('create-post-screen'); };
+    safeSetOnClick('modal-btn-generate-ai-moment', () => { document.getElementById('moments-action-modal').classList.remove('active'); openChatSelectionForMomentModal(); };
+    safeSetOnClick('modal-btn-cancel-moments-action', () => { document.getElementById('moments-action-modal').classList.remove('active'); };
+    safeSetOnClick('modal-btn-add-contact', () => { document.getElementById('create-new-modal').classList.remove('active'); openPersonaSelectionModal('add_contact'); };
 
 // ▼▼▼ 将您剪切的代码粘贴在这里 ▼▼▼
-document.getElementById('modal-btn-new-chat').onclick = () => {
+safeSetOnClick('modal-btn-new-chat', () => {
     document.getElementById('create-new-modal').classList.remove('active');
     showScreen('create-chat-screen');
 };
-document.getElementById('modal-btn-new-group').onclick = () => {
+safeSetOnClick('modal-btn-new-group', () => {
     document.getElementById('create-new-modal').classList.remove('active');
     openCreateGroupChatScreen(); 
 };
-document.getElementById('modal-btn-cancel-create').onclick = () => {
+safeSetOnClick('modal-btn-cancel-create', () => {
     document.getElementById('create-new-modal').classList.remove('active');
 };
 // ▲▲▲ 粘贴到此结束 ▲▲▲
 
     document.getElementById('select-prompt-btn').onclick = openPromptSelectionModal;
-    document.getElementById('me-page-profile-item').onclick = () => showPersonaList('my');
+    safeSetOnClick('me-page-profile-item', () => showPersonaList('my');
     document.getElementById('offline-mode-toggle').onclick = toggleOfflineMode;
-    document.getElementById('prompt-list-back-btn').onclick = () => showScreen('home-screen');
-    document.getElementById('prompt-editor-back-btn').onclick = () => showScreen('prompt-list-screen');
-    document.getElementById('add-prompt-btn').onclick = () => openPromptEditor(-1);
+    safeSetOnClick('prompt-list-back-btn', () => showScreen('home-screen');
+    safeSetOnClick('prompt-editor-back-btn', () => showScreen('prompt-list-screen');
+    safeSetOnClick('add-prompt-btn', () => openPromptEditor(-1);
     document.getElementById('prompt-edit-btn').onclick = (e) => { appState.editMode.prompt = !appState.editMode.prompt; e.target.textContent = appState.editMode.prompt ? '完成' : '编辑'; renderPromptList(); };
 document.getElementById('settings-hub-dark-mode-toggle').onclick = toggleDarkMode;
 document.getElementById('display-mode-toggle').onclick = toggleDisplayMode;
@@ -13462,14 +13456,14 @@ document.getElementById('home-time-size-slider').addEventListener('input', async
     applyHomeTimeSize(newSize);
     await dbStorage.set(KEYS.HOME_TIME_SIZE, newSize);
 });
-    document.getElementById('save-prompt-btn').onclick = async () => { const title = document.getElementById('prompt-title-input').value.trim(); const content = document.getElementById('prompt-content-input').value.trim(); if (!title || !content) { alert('标题和内容都不能为空！'); return; } const promptData = { id: `prompt_${Date.now()}`, title, content }; if (appState.editingPromptIndex === -1) { appState.prompts.push(promptData); } else { const originalId = appState.prompts[appState.editingPromptIndex].id; appState.prompts[appState.editingPromptIndex] = { ...promptData, id: originalId }; } await dbStorage.set(KEYS.PROMPTS, appState.prompts); renderPromptList(); showScreen('prompt-list-screen'); };
+    safeSetOnClick('save-prompt-btn', async () => { const title = document.getElementById('prompt-title-input').value.trim(); const content = document.getElementById('prompt-content-input').value.trim(); if (!title || !content) { alert('标题和内容都不能为空！'); return; } const promptData = { id: `prompt_${Date.now()}`, title, content }; if (appState.editingPromptIndex === -1) { appState.prompts.push(promptData); } else { const originalId = appState.prompts[appState.editingPromptIndex].id; appState.prompts[appState.editingPromptIndex] = { ...promptData, id: originalId }; } await dbStorage.set(KEYS.PROMPTS, appState.prompts); renderPromptList(); showScreen('prompt-list-screen'); };
     document.body.addEventListener('click', () => { document.querySelectorAll('.interaction-popup.active').forEach(p => { p.classList.remove('active'); }); }, true);
     document.getElementById('custom-confirm-cancel-btn').onclick = hideCustomConfirm;
-    document.getElementById('home-btn-main-hub').onclick = () => { switchTab('chat'); showScreen('main-hub-screen'); };
+    safeSetOnClick('home-btn-main-hub', () => { switchTab('chat'); showScreen('main-hub-screen'); };
    
-    document.getElementById('home-btn-ai-persona').onclick = () => showPersonaList('ai');
-    document.getElementById('home-btn-my-persona').onclick = () => showPersonaList('my');
-       document.getElementById('home-btn-settings').onclick = () => showScreen('settings-hub-screen');
+    safeSetOnClick('home-btn-ai-persona', () => showPersonaList('ai');
+    safeSetOnClick('home-btn-my-persona', () => showPersonaList('my');
+       safeSetOnClick('home-btn-settings', () => showScreen('settings-hub-screen');
 
 // 滑块事件
 document.getElementById('auto-summary-interval-slider').oninput = function() {
@@ -13477,9 +13471,9 @@ document.getElementById('auto-summary-interval-slider').oninput = function() {
 };
 
 // 提示词 Tab 切换
-safeSetOnClick('prompt-tab-dialog', () => switchPromptTab('dialog'));
-safeSetOnClick('prompt-tab-call', () => switchPromptTab('call'));
-safeSetOnClick('prompt-tab-refine', () => switchPromptTab('refine'));
+safeSetOnClick('prompt-tab-dialog', () => switchPromptTab('dialog');
+safeSetOnClick('prompt-tab-call', () => switchPromptTab('call');
+safeSetOnClick('prompt-tab-refine', () => switchPromptTab('refine');
 
 // ▼▼▼ 在 setupEventListeners 函数内，加入这段最终代码 ▼▼▼
 
@@ -13487,7 +13481,7 @@ safeSetOnClick('prompt-tab-refine', () => switchPromptTab('refine'));
 document.getElementById('export-data-btn').onclick = exportDataSimple;
 
 // “设定”页面 -> “汇入”按钮 (它会触发隐藏的档案选择框)
-document.getElementById('import-data-btn').onclick = () => {
+safeSetOnClick('import-data-btn', () => {
     document.getElementById('import-file-input').click();
 };
 
@@ -13497,14 +13491,14 @@ document.getElementById('import-file-input').addEventListener('change', handleIm
 // ▲▲▲ 代码加到这里结束 ▲▲▲
 
     // 设置主页的返回按钮
-    safeSetOnClick('settings-hub-back-btn', () => showScreen('home-screen'));
+    safeSetOnClick('settings-hub-back-btn', () => showScreen('home-screen');
 
     // 设置主页里的"API 设定"项目
     safeSetOnClick('settings-hub-api-btn', () => {
         loadApiPresets();
         switchApiMode('primary'); // 默认显示主API
         showScreen('api-settings-screen');
-    });
+    };
 
 safeSetOnClick('settings-hub-wallpaper-btn', () => {
     // 在显示页面前，先获取预览图片的元素
@@ -13512,10 +13506,10 @@ safeSetOnClick('settings-hub-wallpaper-btn', () => {
     previewImg.src = appState.homeWallpaper || '';
     // 然后再显示设定页面
     showScreen('home-settings-screen');
-});
-    safeSetOnClick('main-hub-back-btn', () => showScreen('home-screen'));
+};
+    safeSetOnClick('main-hub-back-btn', () => showScreen('home-screen');
     // ▼▼▼ 修改這一行 ▼▼▼
-safeSetOnClick('api-settings-back-btn', () => showScreen('settings-hub-screen'));
+safeSetOnClick('api-settings-back-btn', () => showScreen('settings-hub-screen');
     safeSetOnClick('chat-settings-back-btn', () => { 
         const chat = appState.chats[appState.activeChatId]; 
         if (chat) { 
@@ -13523,16 +13517,16 @@ safeSetOnClick('api-settings-back-btn', () => showScreen('settings-hub-screen'))
             updateChatScreenVisuals(chat.isOfflineMode);
         } 
         showScreen('chat-screen'); 
-    });
-    safeSetOnClick('home-settings-back-btn', () => showScreen('settings-hub-screen'));
-    safeSetOnClick('create-chat-back-btn', () => showScreen('main-hub-screen'));
-    safeSetOnClick('persona-editor-back-btn', () => showPersonaList(appState.currentPersonaType));
-    safeSetOnClick('call-log-back-btn', () => showScreen('chat-screen'));
-    safeSetOnClick('cancel-chat-selection-btn', closeChatSelectionForMomentModal);
+    };
+    safeSetOnClick('home-settings-back-btn', () => showScreen('settings-hub-screen');
+    safeSetOnClick('create-chat-back-btn', () => showScreen('main-hub-screen');
+    safeSetOnClick('persona-editor-back-btn', () => showPersonaList(appState.currentPersonaType);
+    safeSetOnClick('call-log-back-btn', () => showScreen('chat-screen');
+    document.getElementById('cancel-chat-selection-btn').onclick = closeChatSelectionForMomentModal;
     document.getElementById('select-chat-for-moment-modal').onclick = (e) => { if (e.target === e.currentTarget) closeChatSelectionForMomentModal(); };
-    document.getElementById('ai-persona-list-back-btn').onclick = () => { if(appState.editMode.ai_persona){ appState.editMode.ai_persona = false; document.getElementById('ai-persona-edit-btn').textContent = '编辑'; } showScreen('home-screen'); };
-    document.getElementById('my-persona-list-back-btn').onclick = () => { if(appState.editMode.my_persona){ appState.editMode.my_persona = false; document.getElementById('my-persona-edit-btn').textContent = '编辑'; } showScreen('home-screen'); };
-    document.getElementById('chat-back-btn').onclick = () => { if (appState.editMode.chat) { appState.editMode.chat = false; document.getElementById('main-hub-edit-btn').textContent = '编辑'; } document.getElementById('phone-screen').classList.remove('offline-active'); switchTab('chat'); showScreen('main-hub-screen'); };
+    safeSetOnClick('ai-persona-list-back-btn', () => { if(appState.editMode.ai_persona){ appState.editMode.ai_persona = false; document.getElementById('ai-persona-edit-btn').textContent = '编辑'; } showScreen('home-screen'); };
+    safeSetOnClick('my-persona-list-back-btn', () => { if(appState.editMode.my_persona){ appState.editMode.my_persona = false; document.getElementById('my-persona-edit-btn').textContent = '编辑'; } showScreen('home-screen'); };
+    safeSetOnClick('chat-back-btn', () => { if (appState.editMode.chat) { appState.editMode.chat = false; document.getElementById('main-hub-edit-btn').textContent = '编辑'; } document.getElementById('phone-screen').classList.remove('offline-active'); switchTab('chat'); showScreen('main-hub-screen'); };
     document.querySelectorAll('.tab-item').forEach(tab => tab.onclick = () => switchTab(tab.id.replace('tab-btn-', '')));
     document.getElementById('main-hub-edit-btn').onclick = (e) => { appState.editMode.chat = !appState.editMode.chat; e.target.textContent = appState.editMode.chat ? '完成' : '编辑'; renderChatList(); };
     ['ai', 'my'].forEach(type => { document.getElementById(`${type}-persona-edit-btn`).onclick = (e) => { appState.editMode[`${type}_persona`] = !appState.editMode[`${type}_persona`]; e.target.textContent = appState.editMode[`${type}_persona`] ? '完成' : '编辑'; renderPersonaList(type); }; });
@@ -13541,12 +13535,12 @@ safeSetOnClick('api-settings-back-btn', () => showScreen('settings-hub-screen'))
     console.log('🔍 准备绑定 chat-settings-btn');
     const chatSettingsBtn = document.getElementById('chat-settings-btn');
     console.log('🔍 chat-settings-btn 元素:', chatSettingsBtn);
-    document.getElementById('chat-settings-btn').onclick = () => {
+    safeSetOnClick('chat-settings-btn', () => {
         console.log('聊天设置按钮被点击');
         openChatSettings();
     };
     console.log('🔍 chat-settings-btn 绑定完成');
-    document.getElementById('action-send-image').onclick = () => { document.getElementById('image-upload-input').click(); };
+    safeSetOnClick('action-send-image', () => { document.getElementById('image-upload-input').click(); };
     document.getElementById('image-upload-input').addEventListener('change', async (event) => { 
         const file = event.target.files[0]; 
         if (!file) return; 
@@ -13577,7 +13571,7 @@ document.getElementById('action-start-videocall').onclick = requestCallDecision;
 
 // 选歌弹窗的“取消”和“开始播放”按钮
 document.getElementById('cancel-music-selection-btn').onclick = closeMusicSelectionModal;
-document.getElementById('start-music-session-btn').onclick = () => {
+safeSetOnClick('start-music-session-btn', () => {
     const song = document.getElementById('music-song-input').value.trim();
     const artist = document.getElementById('music-artist-input').value.trim();
     const url = document.getElementById('music-url-input').value.trim();
@@ -13740,11 +13734,11 @@ if (importTextBtn) {
 }
 
 // 导入目标选择模态框事件监听器
-document.getElementById('cancel-sticker-target-btn').onclick = () => {
+safeSetOnClick('cancel-sticker-target-btn', () => {
     document.getElementById('sticker-target-modal').classList.remove('active');
 };
 
-document.getElementById('import-to-user-btn').onclick = () => {
+safeSetOnClick('import-to-user-btn', () => {
     document.getElementById('sticker-target-modal').classList.remove('active');
     appState.stickerImportTarget = 'user';
     
@@ -13755,7 +13749,7 @@ document.getElementById('import-to-user-btn').onclick = () => {
     }
 };
 
-document.getElementById('import-to-ai-btn').onclick = () => {
+safeSetOnClick('import-to-ai-btn', () => {
     document.getElementById('sticker-target-modal').classList.remove('active');
     appState.stickerImportTarget = 'ai';
     
@@ -13767,12 +13761,12 @@ document.getElementById('import-to-ai-btn').onclick = () => {
 };
 
 // 文本导入模态框事件监听器
-document.getElementById('cancel-sticker-text-btn').onclick = () => {
+safeSetOnClick('cancel-sticker-text-btn', () => {
     document.getElementById('sticker-text-modal').classList.remove('active');
     document.getElementById('sticker-text-input').value = '';
 };
 
-document.getElementById('import-sticker-text-btn').onclick = async () => {
+safeSetOnClick('import-sticker-text-btn', async () => {
     const textInput = document.getElementById('sticker-text-input').value.trim();
     if (!textInput) {
         alert('请输入表情包文本');
@@ -13892,11 +13886,11 @@ document.getElementById('sticker-json-import-input').addEventListener('change', 
     event.target.value = '';
 });
 
-document.getElementById('add-ai-persona-btn').onclick = () => openPersonaEditor('ai', -1); document.getElementById('add-my-persona-btn').onclick = () => openPersonaEditor('my', -1); document.getElementById('save-preset-btn').onclick = async () => { const name = document.getElementById('preset-name-input').value.trim(); if (!name) { alert('预设名称不能为空！'); return; } const content = document.getElementById('preset-content-input').value.trim(); const avatar = document.getElementById('preset-avatar-preview').src; const type = appState.currentPersonaType; const index = appState.editingPresetIndex; const newData = { name, content, avatar }; if (index > -1) { await updatePersonaAndCascadeChanges(index, type, newData); } else { appState.personas[type].push(newData); const key = type === 'ai' ? KEYS.PERSONA_AI : KEYS.PERSONA_MY; await dbStorage.set(key, appState.personas[type]); } showPersonaList(type); }; document.getElementById('create-chat-btn').onclick = async () => { const name = document.getElementById('new-chat-name-input').value.trim(); if (!name) return alert('請為對話取一個名稱！'); if (!appState.newChatTempPersonas.ai || !appState.newChatTempPersonas.my) return alert('請為雙方選擇角色設定！'); const newChatId = 'chat_' + Date.now(); appState.chats[newChatId] = { name, type: 'single', history: [], personas: { ...appState.newChatTempPersonas }, wallpaper: null, memoryRounds: 0, isOfflineMode: false, heartVoiceMode: 'simple', aiHeartVoice: '初次见面，有点紧张呢...', bubbleCSS: { online: '', offline: '' } }; await dbStorage.set(KEYS.CHATS, appState.chats); document.getElementById('new-chat-name-input').value = ''; ['ai', 'my'].forEach(type => { const el = document.getElementById(`new-chat-${type}-selection-text`); el.textContent = type === 'ai' ? '從 AI 人設庫選擇' : '從我的素材庫選擇'; el.classList.add('placeholder'); }); switchTab('chat'); openChat(newChatId); }; document.getElementById('select-ai-persona-btn').onclick = () => openPersonaSelectionModal('ai'); // 【核心修复】为发起群聊页面的“我的面具”选择按钮绑定正确的点击事件
-document.getElementById('select-group-my-persona-btn').onclick = () => openPersonaSelectionModal('group_my'); 
-document.getElementById('select-new-ai-persona-btn').onclick = () => openPersonaSelectionModal('new_ai'); 
-document.getElementById('select-new-my-persona-btn').onclick = () => openPersonaSelectionModal('new_my'); 
-document.getElementById('select-ai-persona-btn').onclick = () => {
+safeSetOnClick('add-ai-persona-btn', () => openPersonaEditor('ai', -1); safeSetOnClick('add-my-persona-btn', () => openPersonaEditor('my', -1); safeSetOnClick('save-preset-btn', async () => { const name = document.getElementById('preset-name-input').value.trim(); if (!name) { alert('预设名称不能为空！'); return; } const content = document.getElementById('preset-content-input').value.trim(); const avatar = document.getElementById('preset-avatar-preview').src; const type = appState.currentPersonaType; const index = appState.editingPresetIndex; const newData = { name, content, avatar }; if (index > -1) { await updatePersonaAndCascadeChanges(index, type, newData); } else { appState.personas[type].push(newData); const key = type === 'ai' ? KEYS.PERSONA_AI : KEYS.PERSONA_MY; await dbStorage.set(key, appState.personas[type]); } showPersonaList(type); }; safeSetOnClick('create-chat-btn', async () => { const name = document.getElementById('new-chat-name-input').value.trim(); if (!name) return alert('請為對話取一個名稱！'); if (!appState.newChatTempPersonas.ai || !appState.newChatTempPersonas.my) return alert('請為雙方選擇角色設定！'); const newChatId = 'chat_' + Date.now(); appState.chats[newChatId] = { name, type: 'single', history: [], personas: { ...appState.newChatTempPersonas }, wallpaper: null, memoryRounds: 0, isOfflineMode: false, heartVoiceMode: 'simple', aiHeartVoice: '初次见面，有点紧张呢...', bubbleCSS: { online: '', offline: '' } }; await dbStorage.set(KEYS.CHATS, appState.chats); document.getElementById('new-chat-name-input').value = ''; ['ai', 'my'].forEach(type => { const el = document.getElementById(`new-chat-${type}-selection-text`); el.textContent = type === 'ai' ? '從 AI 人設庫選擇' : '從我的素材庫選擇'; el.classList.add('placeholder'); }); switchTab('chat'); openChat(newChatId); }; safeSetOnClick('select-ai-persona-btn', () => openPersonaSelectionModal('ai'); // 【核心修复】为发起群聊页面的“我的面具”选择按钮绑定正确的点击事件
+safeSetOnClick('select-group-my-persona-btn', () => openPersonaSelectionModal('group_my'); 
+safeSetOnClick('select-new-ai-persona-btn', () => openPersonaSelectionModal('new_ai'); 
+safeSetOnClick('select-new-my-persona-btn', () => openPersonaSelectionModal('new_my'); 
+safeSetOnClick('select-ai-persona-btn', () => {
     const chat = appState.chats[appState.activeChatId];
     if (chat && (chat.type === 'group' || chat.isGroup)) {
         // 群聊：打开多选模式
@@ -13906,7 +13900,7 @@ document.getElementById('select-ai-persona-btn').onclick = () => {
         openPersonaSelectionModal('chat_ai');
     }
 }; 
-document.getElementById('select-my-persona-btn').onclick = () => openPersonaSelectionModal('chat_my'); document.getElementById('select-prompt-btn').onclick = () => openPromptSelectionModal(); document.getElementById('search-chat-history-btn').onclick = () => openSearchChatModal(); document.getElementById('clear-home-wallpaper-btn').onclick = () => { document.getElementById('home-wallpaper-preview').src = ''; }; document.getElementById('save-home-settings-btn').onclick = async () => {
+safeSetOnClick('select-my-persona-btn', () => openPersonaSelectionModal('chat_my'); safeSetOnClick('select-prompt-btn', () => openPromptSelectionModal(); safeSetOnClick('search-chat-history-btn', () => openSearchChatModal(); safeSetOnClick('clear-home-wallpaper-btn', () => { document.getElementById('home-wallpaper-preview').src = ''; }; safeSetOnClick('save-home-settings-btn', async () => {
     const wallpaperSrc = document.getElementById('home-wallpaper-preview').src;
     let newWallpaper = null;
 
@@ -14091,7 +14085,7 @@ const switchApiMode = (mode) => {
 };
 
 // 绑定事件监听器
-document.getElementById('load-api-preset-btn').onclick = () => {
+safeSetOnClick('load-api-preset-btn', () => {
     const presetIndex = document.getElementById('api-preset-select').value;
     loadPreset(presetIndex);
 };
@@ -14106,7 +14100,7 @@ document.getElementById('api-mode-selector').addEventListener('click', (e) => {
     }
 });
 
- document.getElementById('save-api-btn').onclick = async () => { 
+ safeSetOnClick('save-api-btn', async () => { 
     try {
         const url = document.getElementById('api-url-input').value.trim();
         const key = document.getElementById('api-key-input').value.trim();
@@ -14142,7 +14136,7 @@ document.getElementById('api-mode-selector').addEventListener('click', (e) => {
         console.error('保存API设定失败:', error);
         alert('保存API设定失败，请重试！');
     }
-}; document.getElementById('fetch-models-btn').onclick = async () => { const url = document.getElementById('api-url-input').value.trim(); const key = document.getElementById('api-key-input').value.trim(); const btn = document.getElementById('fetch-models-btn'); const originalText = btn.textContent; if (!url || !key) { alert('請先輸入 API URL 和 API Key！'); return; } btn.disabled = true; btn.textContent = '獲取中...'; try { const apiType = detectApiType(url); let response, data; if (apiType === 'google-gemini') { response = await fetch(`${url.replace(/\/$/, '')}/models?key=${key}`, { headers: { 'Content-Type': 'application/json' } }); if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.error?.message || `HTTP 錯誤: ${response.status}`); } data = await response.json(); } else { response = await fetch(`${url.replace(/\/$/, '')}/models`, { headers: { 'Authorization': `Bearer ${key}` } }); if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.error?.message || `HTTP 錯誤: ${response.status}`); } data = await response.json(); } const modelSelect = document.getElementById('api-model-select'); modelSelect.innerHTML = '<option value="">--- 請選擇一個模型 ---</option>'; let models = []; if (apiType === 'google-gemini') { if (data.models && Array.isArray(data.models)) { models = data.models.filter(m => m.supportedGenerationMethods?.includes('generateContent')).map(m => ({ id: m.name.replace('models/', ''), displayName: m.displayName || m.name })); } } else { if (data.data && Array.isArray(data.data)) { models = data.data.map(m => ({ id: m.id, displayName: m.id })); } } const sortedModels = models.sort((a, b) => { const aId = a.id.toLowerCase(); const bId = b.id.toLowerCase(); if (aId.includes('gemini-2')) return -1; if (bId.includes('gemini-2')) return 1; if (aId.includes('gemini-1.5')) return -1; if (bId.includes('gemini-1.5')) return 1; if (aId.includes('gpt-4') && !bId.includes('gpt-4')) return -1; if (!aId.includes('gpt-4') && bId.includes('gpt-4')) return 1; if (aId.includes('gpt-3.5') && !bId.includes('gpt-3.5')) return -1; if (!aId.includes('gpt-3.5') && bId.includes('gpt-3.5')) return 1; return a.id.localeCompare(b.id); }); sortedModels.forEach(model => { const option = document.createElement('option'); option.value = model.id; option.textContent = model.displayName; modelSelect.appendChild(option); }); modelSelect.style.display = 'block'; alert(`模型列表已成功獲取！共找到 ${models.length} 個模型。`); } catch (error) { alert(`獲取模型失敗：${error.message}`); } finally { btn.disabled = false; btn.textContent = originalText; } }; document.getElementById('api-model-select').onchange = (e) => { if (e.target.value) { document.getElementById('api-model-input').value = e.target.value; } }; document.getElementById('send-post-btn').onclick = async () => { const text = document.getElementById('post-text-input').value.trim(); const imagePromptsInput = document.getElementById('post-image-text-input').value.trim(); const image_prompts = imagePromptsInput ? imagePromptsInput.split(/[,，]/).map(p => p.trim()).filter(p => p) : []; if (!text && image_prompts.length === 0) return alert('文字和配图想法至少要有一个！'); const myPersonaName = appState.personas.my[0]?.name || '我'; const newPost = { author: myPersonaName, text, image_prompts, location: document.getElementById('post-location-input').value.trim(), timestamp: Date.now(), likes: [], comments: [] }; appState.momentsData.posts.unshift(newPost); await saveAndRenderMoments(); document.getElementById('post-text-input').value = ''; document.getElementById('post-image-text-input').value = ''; document.getElementById('post-location-input').value = ''; await notifyAisOfNewMoment(newPost); showScreen('main-hub-screen'); }; document.getElementById('cancel-post-btn').onclick = () => showScreen('main-hub-screen'); document.getElementById('moments-cover-img').onclick = () => document.getElementById('moments-cover-upload').click(); document.getElementById('moments-user-avatar').onclick = () => document.getElementById('moments-avatar-upload').click(); document.getElementById('moments-feed').addEventListener('click', (e) => { const imageItem = e.target.closest('.post-image-item'); if (imageItem && imageItem.querySelector('.image-text-cover')) { const cover = imageItem.querySelector('.image-text-cover'); const details = imageItem.querySelector('.image-text-details'); if (cover && details) { const isCoverVisible = cover.style.display !== 'none'; cover.style.display = isCoverVisible ? 'none' : 'flex'; details.style.display = isCoverVisible ? 'block' : 'none'; } return; } const toggleBtn = e.target.closest('.interaction-toggle-btn'); if (toggleBtn) { e.stopPropagation(); const postIndex = toggleBtn.dataset.postIndex; const popup = document.getElementById(`popup-${postIndex}`); document.querySelectorAll('.interaction-popup.active').forEach(p => { if (p.id !== popup.id) p.classList.remove('active'); }); if (popup) popup.classList.toggle('active'); return; } const commentBtn = e.target.closest('.popup-action.comment-btn'); if (commentBtn) { e.stopPropagation(); const postIndex = commentBtn.dataset.postIndex; const postElement = commentBtn.closest('.moment-post'); if (postElement) { const interactionArea = postElement.querySelector('.moment-interaction-area'); const commentsSection = postElement.querySelector('.moment-comments-section'); if (interactionArea) { interactionArea.style.display = 'block'; } if (commentsSection) { commentsSection.style.display = 'block'; } const inputArea = postElement.querySelector(`#comment-input-area-${postIndex}`); const inputField = postElement.querySelector(`#comment-input-${postIndex}`); if (inputArea) { inputArea.classList.add('active'); } if (inputField) { inputField.focus(); } } const popup = commentBtn.closest('.interaction-popup'); if (popup) popup.classList.remove('active'); return; } const likeBtn = e.target.closest('.popup-action.like-btn'); if(likeBtn) { interactWithMoment(likeBtn.dataset.author, parseInt(likeBtn.dataset.postIndex), 'like'); const popup = likeBtn.closest('.interaction-popup'); if (popup) popup.classList.remove('active'); return; } const commentSendBtn = e.target.closest('.comment-send-btn'); if(commentSendBtn) { const postIndex = parseInt(commentSendBtn.dataset.postIndex); const input = document.getElementById(`comment-input-${postIndex}`); postMomentComment(postIndex, input.value); input.value = ''; const inputArea = commentSendBtn.closest('.comment-input-area'); if (inputArea) inputArea.classList.remove('active'); return; } }); setupFileUploadHelper('chat-wallpaper-upload', 'chat-wallpaper-preview'); setupFileUploadHelper('home-wallpaper-upload', 'home-wallpaper-preview'); setupFileUploadHelper('moments-cover-upload', 'moments-cover-img', (src) => { appState.momentsData.cover = src; saveAndRenderMoments(); }); setupFileUploadHelper('moments-avatar-upload', 'moments-user-avatar', (src) => { appState.momentsData.avatar = src; saveAndRenderMoments(); }); setupFileUploadHelper('preset-avatar-upload', 'preset-avatar-preview'); const openTransferModal = () => { document.getElementById('transfer-amount-input').value = ''; document.getElementById('transfer-remark-input').value = ''; document.getElementById('transfer-modal').classList.add('active'); }; const closeTransferModal = () => { document.getElementById('transfer-modal').classList.remove('active'); }; const sendTransferMessage = async () => { const amountInput = document.getElementById('transfer-amount-input'); const remarkInput = document.getElementById('transfer-remark-input'); const amount = parseFloat(amountInput.value); const remark = remarkInput.value.trim(); if (isNaN(amount) || amount <= 0) { alert('请输入有效的转账金额！'); return; } 
+}; safeSetOnClick('fetch-models-btn', async () => { const url = document.getElementById('api-url-input').value.trim(); const key = document.getElementById('api-key-input').value.trim(); const btn = document.getElementById('fetch-models-btn'); const originalText = btn.textContent; if (!url || !key) { alert('請先輸入 API URL 和 API Key！'); return; } btn.disabled = true; btn.textContent = '獲取中...'; try { const apiType = detectApiType(url); let response, data; if (apiType === 'google-gemini') { response = await fetch(`${url.replace(/\/$/, '')}/models?key=${key}`, { headers: { 'Content-Type': 'application/json' } }); if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.error?.message || `HTTP 錯誤: ${response.status}`); } data = await response.json(); } else { response = await fetch(`${url.replace(/\/$/, '')}/models`, { headers: { 'Authorization': `Bearer ${key}` } }); if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.error?.message || `HTTP 錯誤: ${response.status}`); } data = await response.json(); } const modelSelect = document.getElementById('api-model-select'); modelSelect.innerHTML = '<option value="">--- 請選擇一個模型 ---</option>'; let models = []; if (apiType === 'google-gemini') { if (data.models && Array.isArray(data.models)) { models = data.models.filter(m => m.supportedGenerationMethods?.includes('generateContent')).map(m => ({ id: m.name.replace('models/', ''), displayName: m.displayName || m.name })); } } else { if (data.data && Array.isArray(data.data)) { models = data.data.map(m => ({ id: m.id, displayName: m.id })); } } const sortedModels = models.sort((a, b) => { const aId = a.id.toLowerCase(); const bId = b.id.toLowerCase(); if (aId.includes('gemini-2')) return -1; if (bId.includes('gemini-2')) return 1; if (aId.includes('gemini-1.5')) return -1; if (bId.includes('gemini-1.5')) return 1; if (aId.includes('gpt-4') && !bId.includes('gpt-4')) return -1; if (!aId.includes('gpt-4') && bId.includes('gpt-4')) return 1; if (aId.includes('gpt-3.5') && !bId.includes('gpt-3.5')) return -1; if (!aId.includes('gpt-3.5') && bId.includes('gpt-3.5')) return 1; return a.id.localeCompare(b.id); }); sortedModels.forEach(model => { const option = document.createElement('option'); option.value = model.id; option.textContent = model.displayName; modelSelect.appendChild(option); }); modelSelect.style.display = 'block'; alert(`模型列表已成功獲取！共找到 ${models.length} 個模型。`); } catch (error) { alert(`獲取模型失敗：${error.message}`); } finally { btn.disabled = false; btn.textContent = originalText; } }; document.getElementById('api-model-select').onchange = (e) => { if (e.target.value) { document.getElementById('api-model-input').value = e.target.value; } }; safeSetOnClick('send-post-btn', async () => { const text = document.getElementById('post-text-input').value.trim(); const imagePromptsInput = document.getElementById('post-image-text-input').value.trim(); const image_prompts = imagePromptsInput ? imagePromptsInput.split(/[,，]/).map(p => p.trim()).filter(p => p) : []; if (!text && image_prompts.length === 0) return alert('文字和配图想法至少要有一个！'); const myPersonaName = appState.personas.my[0]?.name || '我'; const newPost = { author: myPersonaName, text, image_prompts, location: document.getElementById('post-location-input').value.trim(), timestamp: Date.now(), likes: [], comments: [] }; appState.momentsData.posts.unshift(newPost); await saveAndRenderMoments(); document.getElementById('post-text-input').value = ''; document.getElementById('post-image-text-input').value = ''; document.getElementById('post-location-input').value = ''; await notifyAisOfNewMoment(newPost); showScreen('main-hub-screen'); }; safeSetOnClick('cancel-post-btn', () => showScreen('main-hub-screen'); safeSetOnClick('moments-cover-img', () => document.getElementById('moments-cover-upload').click(); safeSetOnClick('moments-user-avatar', () => document.getElementById('moments-avatar-upload').click(); document.getElementById('moments-feed').addEventListener('click', (e) => { const imageItem = e.target.closest('.post-image-item'); if (imageItem && imageItem.querySelector('.image-text-cover')) { const cover = imageItem.querySelector('.image-text-cover'); const details = imageItem.querySelector('.image-text-details'); if (cover && details) { const isCoverVisible = cover.style.display !== 'none'; cover.style.display = isCoverVisible ? 'none' : 'flex'; details.style.display = isCoverVisible ? 'block' : 'none'; } return; } const toggleBtn = e.target.closest('.interaction-toggle-btn'); if (toggleBtn) { e.stopPropagation(); const postIndex = toggleBtn.dataset.postIndex; const popup = document.getElementById(`popup-${postIndex}`); document.querySelectorAll('.interaction-popup.active').forEach(p => { if (p.id !== popup.id) p.classList.remove('active'); }); if (popup) popup.classList.toggle('active'); return; } const commentBtn = e.target.closest('.popup-action.comment-btn'); if (commentBtn) { e.stopPropagation(); const postIndex = commentBtn.dataset.postIndex; const postElement = commentBtn.closest('.moment-post'); if (postElement) { const interactionArea = postElement.querySelector('.moment-interaction-area'); const commentsSection = postElement.querySelector('.moment-comments-section'); if (interactionArea) { interactionArea.style.display = 'block'; } if (commentsSection) { commentsSection.style.display = 'block'; } const inputArea = postElement.querySelector(`#comment-input-area-${postIndex}`); const inputField = postElement.querySelector(`#comment-input-${postIndex}`); if (inputArea) { inputArea.classList.add('active'); } if (inputField) { inputField.focus(); } } const popup = commentBtn.closest('.interaction-popup'); if (popup) popup.classList.remove('active'); return; } const likeBtn = e.target.closest('.popup-action.like-btn'); if(likeBtn) { interactWithMoment(likeBtn.dataset.author, parseInt(likeBtn.dataset.postIndex), 'like'); const popup = likeBtn.closest('.interaction-popup'); if (popup) popup.classList.remove('active'); return; } const commentSendBtn = e.target.closest('.comment-send-btn'); if(commentSendBtn) { const postIndex = parseInt(commentSendBtn.dataset.postIndex); const input = document.getElementById(`comment-input-${postIndex}`); postMomentComment(postIndex, input.value); input.value = ''; const inputArea = commentSendBtn.closest('.comment-input-area'); if (inputArea) inputArea.classList.remove('active'); return; } }); setupFileUploadHelper('chat-wallpaper-upload', 'chat-wallpaper-preview'); setupFileUploadHelper('home-wallpaper-upload', 'home-wallpaper-preview'); setupFileUploadHelper('moments-cover-upload', 'moments-cover-img', (src) => { appState.momentsData.cover = src; saveAndRenderMoments(); }); setupFileUploadHelper('moments-avatar-upload', 'moments-user-avatar', (src) => { appState.momentsData.avatar = src; saveAndRenderMoments(); }); setupFileUploadHelper('preset-avatar-upload', 'preset-avatar-preview'); const openTransferModal = () => { document.getElementById('transfer-amount-input').value = ''; document.getElementById('transfer-remark-input').value = ''; document.getElementById('transfer-modal').classList.add('active'); }; const closeTransferModal = () => { document.getElementById('transfer-modal').classList.remove('active'); }; const sendTransferMessage = async () => { const amountInput = document.getElementById('transfer-amount-input'); const remarkInput = document.getElementById('transfer-remark-input'); const amount = parseFloat(amountInput.value); const remark = remarkInput.value.trim(); if (isNaN(amount) || amount <= 0) { alert('请输入有效的转账金额！'); return; } 
     // 先刷新钱包数据，确保余额是最新的
     await refreshWalletFromDB();
     
@@ -14233,7 +14227,7 @@ document.getElementById('ethical-bypass-toggle').onclick = (e) => {
     promptTextarea.disabled = !e.currentTarget.classList.contains('active');
 };
 
-document.getElementById('save-chat-settings-btn').onclick = async () => {
+safeSetOnClick('save-chat-settings-btn', async () => {
     const chat = appState.chats[appState.activeChatId];
     if (!chat) return;
     
@@ -14350,7 +14344,7 @@ document.getElementById('save-chat-settings-btn').onclick = async () => {
     showScreen('chat-screen');
 };
 
-document.getElementById('start-chat-from-editor-btn').onclick = () => {
+safeSetOnClick('start-chat-from-editor-btn', () => {
     const type = appState.currentPersonaType;
     const index = appState.editingPresetIndex;
     
@@ -14372,7 +14366,7 @@ document.getElementById('start-chat-from-editor-btn').onclick = () => {
     }
 };
 
-document.getElementById('public-account-back-btn').onclick = () => showScreen('main-hub-screen');
+safeSetOnClick('public-account-back-btn', () => showScreen('main-hub-screen');
 
     // 彻底修改主页音乐按钮的点击行为
     document.getElementById('home-btn-music').onclick = openMusicPlayer;
@@ -14819,7 +14813,7 @@ const generateDiary = async () => {
 
 
 // 日记返回按钮
-document.getElementById('diary-back-btn').onclick = () => showScreen('home-screen');
+safeSetOnClick('diary-back-btn', () => showScreen('home-screen');
 
 // 生成日记按钮
 document.getElementById('diary-generate-btn').onclick = generateDiary;
@@ -15135,14 +15129,14 @@ const originalRenderDiaryList = renderDiaryList;
     
     
     // 绑定浮动控制按钮事件
-    document.getElementById('music-player-back-btn-float').onclick = () => {
+    safeSetOnClick('music-player-back-btn-float', () => {
         showScreen('home-screen');
     };
     document.getElementById('select-contact-for-music-btn-float').onclick = openMusicContactSelectionModal;
     
     // 绑定原有音乐搜索功能事件（保留兼容性）
     if (document.getElementById('close-search-panel-btn')) {
-        document.getElementById('close-search-panel-btn').onclick = () => {
+        safeSetOnClick('close-search-panel-btn', () => {
             document.getElementById('music-search-panel').style.display = 'none';
         };
     }
@@ -15444,7 +15438,7 @@ const startListenTogether = async (song, artist, url) => {
         // ▲▲▲ 修改结束 ▲▲▲
 
         playerBar.style.display = 'flex';
-        document.getElementById('stop-music-btn').onclick = () => endListenTogether(true);
+        safeSetOnClick('stop-music-btn', () => endListenTogether(true);
 
         // ▼▼▼ 核心修改部分 ▼▼▼
         // 只有在聊天上下文中，才执行发消息、存历史、触发AI回应等操作
@@ -17334,9 +17328,9 @@ const init = async () => {
     applyHomeTimeDisplay(appState.homeTimeDisplay);
     applyHomeTimeSize(appState.homeTimeSize);
        
-    document.getElementById('create-group-chat-back-btn').onclick = () => showScreen('main-hub-screen');
+    safeSetOnClick('create-group-chat-back-btn', () => showScreen('main-hub-screen');
 
-    document.getElementById('create-group-chat-btn').onclick = async () => {
+    safeSetOnClick('create-group-chat-btn', async () => {
         const groupName = document.getElementById('group-chat-name-input').value.trim();
         if (!groupName) return alert('请给群聊取一个名字！');
 
@@ -18379,10 +18373,10 @@ function resetAiMomentTimer(chatId) {
                              hoursSinceLastChat > 72 ? 1.15 : 1.0;
     
     // 5. 综合所有因素计算最终延迟
-    // 使用全局配置的间隔作为基准（用户可调）
-    const userSetInterval = aiMomentsSettings.interval || 60; // 默认60分钟
-    const baseMinMinutes = userSetInterval * 0.5; // 最小为设定值的50%
-    const baseMaxMinutes = userSetInterval * 1.5; // 最大为设定值的150%
+    // 基础范围：20分钟 到 80分钟（优化后更合理）
+    // 在300秒间隔下(2.24x倍率)，标准约为45-180分钟（0.75-3小时，平均约2小时）
+    const baseMinMinutes = 20;
+    const baseMaxMinutes = 80;
     
     // 应用所有调整因素
     const finalMultiplier = intervalMultiplier * activityFactor * globalActivityFactor * intimacyFactor * inactivityPenalty;
@@ -18414,12 +18408,6 @@ function resetAiMomentTimer(chatId) {
 
 // 初始化所有AI的定时器 (修正后)
 function initAiMomentTimers() {
-    // 检查全局开关
-    if (!aiMomentsSettings.enabled) {
-        console.log("[朋友圈系统] AI自动发圈功能未启用，跳过初始化");
-        return;
-    }
-    
     console.log("[朋友圈系统] 正在初始化所有AI的自主发帖定时器...");
     for (const chatId in appState.chats) {
         // 使用正确的 type 属性来判断是否为群聊
@@ -18495,9 +18483,6 @@ window.openScheduledMessageModal = function openScheduledMessageModal() {
     
     // 更新后台活动状态显示
     updateBackgroundActivityStatus();
-    
-    // 更新AI朋友圈状态显示
-    updateAiMomentsStatus();
     
     // 显示模态框
     modal.classList.add('visible');
@@ -18660,134 +18645,6 @@ function handleBackgroundIntervalChange() {
         
         configureBackgroundActivity(true, interval);
         updateBackgroundActivityStatus();
-    }
-}
-
-// === AI朋友圈配置函数 ===
-
-// 更新AI朋友圈状态显示
-function updateAiMomentsStatus() {
-    const toggle = document.getElementById('ai-moments-toggle');
-    const intervalInput = document.getElementById('ai-moments-interval-input');
-    const statusDiv = document.getElementById('ai-moments-status');
-    const statusText = document.getElementById('ai-moments-status-text');
-    
-    if (toggle && intervalInput && statusDiv && statusText) {
-        // 设置当前状态
-        toggle.checked = aiMomentsSettings.enabled;
-        intervalInput.value = aiMomentsSettings.interval;
-        
-        // 更新状态显示
-        if (aiMomentsSettings.enabled) {
-            statusText.textContent = `自动发圈已启用，平均每${aiMomentsSettings.interval}分钟发布`;
-            statusDiv.style.backgroundColor = '#e8f5e8';
-            statusDiv.style.color = '#2d5a2d';
-        } else {
-            statusText.textContent = '自动发圈未启用';
-            statusDiv.style.backgroundColor = '#f5f5f5';
-            statusDiv.style.color = '#666';
-        }
-        
-        // 添加事件监听器
-        if (!toggle.hasAttribute('data-listeners-added')) {
-            toggle.addEventListener('change', handleAiMomentsToggle);
-            toggle.setAttribute('data-listeners-added', 'true');
-        }
-        
-        if (!intervalInput.hasAttribute('data-listeners-added')) {
-            intervalInput.addEventListener('change', handleAiMomentsIntervalChange);
-            intervalInput.setAttribute('data-listeners-added', 'true');
-        }
-    }
-}
-
-// 处理AI朋友圈开关切换
-function handleAiMomentsToggle() {
-    const toggle = document.getElementById('ai-moments-toggle');
-    const intervalInput = document.getElementById('ai-moments-interval-input');
-    
-    if (toggle && intervalInput) {
-        const enabled = toggle.checked;
-        const interval = parseInt(intervalInput.value) || 60;
-        
-        configureAiMoments(enabled, interval);
-        updateAiMomentsStatus();
-        
-        if (enabled) {
-            alert(`AI自动发朋友圈已启用！\n\nAI会根据聊天内容智能生成朋友圈，平均每${interval}分钟发布一次。`);
-        } else {
-            alert('AI自动发朋友圈已停用。');
-        }
-    }
-}
-
-// 处理AI朋友圈间隔时间变化
-function handleAiMomentsIntervalChange() {
-    const toggle = document.getElementById('ai-moments-toggle');
-    const intervalInput = document.getElementById('ai-moments-interval-input');
-    
-    if (toggle && intervalInput && toggle.checked) {
-        const interval = Math.max(15, parseInt(intervalInput.value) || 60);
-        intervalInput.value = interval;
-        
-        configureAiMoments(true, interval);
-        updateAiMomentsStatus();
-    }
-}
-
-// 配置AI朋友圈系统
-function configureAiMoments(enabled, interval = 60) {
-    aiMomentsSettings.enabled = enabled;
-    aiMomentsSettings.interval = Math.max(15, interval);
-    
-    // 保存到localStorage
-    try {
-        const settingsToSave = {
-            enabled: aiMomentsSettings.enabled,
-            interval: aiMomentsSettings.interval
-        };
-        localStorage.setItem('aiMomentsSettings', JSON.stringify(settingsToSave));
-        console.log('✅ AI朋友圈设置已保存:', settingsToSave);
-    } catch (error) {
-        console.error('❌ 保存AI朋友圈设置失败:', error);
-    }
-    
-    // 重新初始化所有AI的朋友圈定时器
-    if (enabled) {
-        console.log('🚀 启动AI朋友圈系统');
-        initAiMomentTimers();
-    } else {
-        console.log('⏹️ 停止AI朋友圈系统');
-        stopAllAiMomentTimers();
-    }
-}
-
-// 停止所有AI朋友圈定时器
-function stopAllAiMomentTimers() {
-    for (const chatId in aiMomentTimers) {
-        if (aiMomentTimers[chatId]) {
-            clearTimeout(aiMomentTimers[chatId]);
-            delete aiMomentTimers[chatId];
-        }
-    }
-    console.log('🛑 所有AI朋友圈定时器已停止');
-}
-
-// 加载AI朋友圈设置
-function loadAiMomentsSettings() {
-    try {
-        const saved = localStorage.getItem('aiMomentsSettings');
-        if (saved) {
-            const settings = JSON.parse(saved);
-            aiMomentsSettings.enabled = settings.enabled || false;
-            aiMomentsSettings.interval = settings.interval || 60;
-            
-            console.log('✅ 已加载AI朋友圈设置:', aiMomentsSettings);
-        } else {
-            console.log('💡 未找到保存的AI朋友圈设置，使用默认值');
-        }
-    } catch (error) {
-        console.error('❌ 加载AI朋友圈设置失败:', error);
     }
 }
 
@@ -19830,10 +19687,9 @@ function loadBackgroundActivitySettings() {
 
 
 
-// 页面加载时初始化后台活动设置
+// 页面加载时初始化后台活动设置  
 function initializeAdditionalSettings() {
     loadBackgroundActivitySettings();
-    loadAiMomentsSettings();
     
     // 更新按钮状态
     setTimeout(() => {
@@ -33608,24 +33464,24 @@ async function showSummaryPreviewDialog(summary) {
         modal.style.display = 'flex';
 
         // 确认按钮
-        document.getElementById('confirm-summary-btn').onclick = () => {
+        safeSetOnClick('confirm-summary-btn', () => {
             modal.style.display = 'none';
             resolve(true);
         };
 
         // 重新生成按钮
-        document.getElementById('regenerate-summary-btn').onclick = () => {
+        safeSetOnClick('regenerate-summary-btn', () => {
             modal.style.display = 'none';
             handleManualSummary();
             resolve(false);
         };
 
         // 取消按钮
-    document.getElementById('cancel-summary-preview-btn').onclick = () => {
+    safeSetOnClick('cancel-summary-preview-btn', () => {
         modal.style.display = 'none';
         resolve(false);
     };
-    });
+    }))));
 }
 
 // ===== 精炼功能 =====
@@ -33730,17 +33586,17 @@ async function showRefineComparisonDialog(oldContent, newContent) {
         modal.style.display = 'flex';
 
         // 确认替换按钮
-        document.getElementById('confirm-refine-btn').onclick = () => {
+        safeSetOnClick('confirm-refine-btn', () => {
             modal.style.display = 'none';
             resolve(true);
         };
 
         // 取消按钮
-        document.getElementById('cancel-refine-btn').onclick = () => {
+        safeSetOnClick('cancel-refine-btn', () => {
             modal.style.display = 'none';
             resolve(false);
         };
-    });
+    })));
 }
 
 console.log('✅ 总结功能已加载');
@@ -33755,116 +33611,15 @@ document.getElementById('open-summary-settings-btn').onclick = switchToSettingsP
 document.getElementById('summary-settings-back-btn').onclick = switchToViewPage;
 document.getElementById('save-summary-settings-btn').onclick = saveSummarySettings;
 document.getElementById('reset-prompts-btn').onclick = resetSummaryPrompts;
-document.getElementById('cancel-edit-summary-btn').onclick = () => document.getElementById('edit-summary-modal').style.display = 'none';
+safeSetOnClick('cancel-edit-summary-btn', () => document.getElementById('edit-summary-modal').style.display = 'none';
 document.getElementById('save-edited-summary-btn').onclick = saveEditedSummary;
 
 // 开关切换
-document.getElementById('enable-auto-summary-toggle').onclick = function() {
+safeSetOnClick('enable-auto-summary-toggle', function() {
     this.classList.toggle('active');
 };
-document.getElementById('global-memory-toggle').onclick = function() {
+safeSetOnClick('global-memory-toggle', function() {
     this.classList.toggle('active');
 };
-
-// ==================== 五连击重置CSS功能 ====================
-(function() {
-    let clickCount = 0;
-    let lastClickTime = 0;
-    const CLICK_TIMEOUT = 500; // 500ms内的点击才算连续
-    const REQUIRED_CLICKS = 5;
-
-    document.addEventListener('click', async function(e) {
-        const now = Date.now();
-        
-        // 如果距离上次点击超过500ms,重置计数
-        if (now - lastClickTime > CLICK_TIMEOUT) {
-            clickCount = 0;
-        }
-        
-        clickCount++;
-        lastClickTime = now;
-        
-        // 达到5次点击
-        if (clickCount >= REQUIRED_CLICKS) {
-            clickCount = 0; // 重置计数,避免重复触发
-            
-            if (confirm('检测到连续5次点击。是否重置所有自定义CSS设置?\n\n这将清除:\n- 自定义CSS\n- 全局CSS\n- 自定义字体\n\n页面将自动刷新。')) {
-                try {
-                    // 清空所有CSS相关的数据库存储
-                    await dbStorage.set(KEYS.CUSTOM_CSS, '');
-                    await dbStorage.set(KEYS.CUSTOM_GLOBAL_CSS, '');
-                    await dbStorage.set(KEYS.CUSTOM_FONT_URL, '');
-                    await dbStorage.set(KEYS.CUSTOM_FONT_FAMILY, '');
-                    
-                    console.log('✅ CSS设置已重置');
-                    
-                    // 刷新页面
-                    location.reload();
-                } catch (error) {
-                    console.error('❌ 重置CSS失败:', error);
-                    alert('重置失败，请稍后重试');
-                }
-            }
-        }
-    });
-    
-    console.log('✅ 五连击重置CSS功能已启用');
-})();
 
 console.log('✅ 总结功能事件绑定完成');
-
-// ==================== 移除服务器推送功能 ====================
-(function() {
-    // 等待DOM加载完成后移除相关元素
-    const removeServerPushFeatures = () => {
-        // 移除定时消息模态框
-        const scheduledMessageModal = document.getElementById('scheduled-message-modal');
-        if (scheduledMessageModal) {
-            scheduledMessageModal.remove();
-            console.log('✅ 已移除定时消息模态框');
-        }
-        
-        // 移除服务器推送开关的整个设置项
-        const serverPushToggle = document.getElementById('server-push-toggle');
-        if (serverPushToggle) {
-            const toggleParent = serverPushToggle.closest('.settings-item');
-            if (toggleParent) {
-                toggleParent.remove();
-                console.log('✅ 已移除服务器推送开关');
-            }
-        }
-        
-        // 移除定时消息设置按钮和相关区域
-        const elementsToRemove = [
-            'open-server-push-schedule-btn',
-            'schedule-message-section',
-            'server-push-status-text'
-        ];
-        
-        elementsToRemove.forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                // 如果是按钮，移除其父容器
-                const parent = element.closest('.settings-item') || element.closest('.form-group');
-                if (parent) {
-                    parent.remove();
-                } else {
-                    element.remove();
-                }
-                console.log(`✅ 已移除元素: ${id}`);
-            }
-        });
-    };
-    
-    // 立即执行一次
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', removeServerPushFeatures);
-    } else {
-        removeServerPushFeatures();
-    }
-    
-    // 延迟执行确保所有元素都已加载
-    setTimeout(removeServerPushFeatures, 500);
-    
-    console.log('✅ 服务器推送功能移除脚本已加载');
-})();
