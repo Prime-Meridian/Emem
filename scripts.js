@@ -33669,51 +33669,58 @@ document.getElementById('global-memory-toggle').onclick = function() {
 
 console.log('✅ 总结功能事件绑定完成');
 
-// ==================== 隐藏服务器推送功能 ====================
+// ==================== 移除服务器推送功能 ====================
 (function() {
-    // 等待DOM加载完成后隐藏相关元素
-    const hideServerPushFeatures = () => {
-        // 隐藏定时消息模态框
+    // 等待DOM加载完成后移除相关元素
+    const removeServerPushFeatures = () => {
+        // 移除定时消息模态框
         const scheduledMessageModal = document.getElementById('scheduled-message-modal');
         if (scheduledMessageModal) {
-            scheduledMessageModal.style.display = 'none';
-            console.log('✅ 已隐藏定时消息模态框');
+            scheduledMessageModal.remove();
+            console.log('✅ 已移除定时消息模态框');
         }
         
-        // 隐藏服务器推送开关
+        // 移除服务器推送开关的整个设置项
         const serverPushToggle = document.getElementById('server-push-toggle');
         if (serverPushToggle) {
             const toggleParent = serverPushToggle.closest('.settings-item');
             if (toggleParent) {
-                toggleParent.style.display = 'none';
-                console.log('✅ 已隐藏服务器推送开关');
+                toggleParent.remove();
+                console.log('✅ 已移除服务器推送开关');
             }
         }
         
-        // 隐藏定时消息设置按钮
-        const scheduleBtns = [
+        // 移除定时消息设置按钮和相关区域
+        const elementsToRemove = [
             'open-server-push-schedule-btn',
-            'schedule-message-section'
+            'schedule-message-section',
+            'server-push-status-text'
         ];
         
-        scheduleBtns.forEach(id => {
+        elementsToRemove.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
-                element.style.display = 'none';
-                console.log(`✅ 已隐藏元素: ${id}`);
+                // 如果是按钮，移除其父容器
+                const parent = element.closest('.settings-item') || element.closest('.form-group');
+                if (parent) {
+                    parent.remove();
+                } else {
+                    element.remove();
+                }
+                console.log(`✅ 已移除元素: ${id}`);
             }
         });
     };
     
     // 立即执行一次
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', hideServerPushFeatures);
+        document.addEventListener('DOMContentLoaded', removeServerPushFeatures);
     } else {
-        hideServerPushFeatures();
+        removeServerPushFeatures();
     }
     
     // 延迟执行确保所有元素都已加载
-    setTimeout(hideServerPushFeatures, 1000);
+    setTimeout(removeServerPushFeatures, 500);
     
-    console.log('✅ 服务器推送功能隐藏脚本已加载');
+    console.log('✅ 服务器推送功能移除脚本已加载');
 })();
