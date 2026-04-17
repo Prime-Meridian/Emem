@@ -13095,58 +13095,51 @@ safeSetOnClick('save-sticker-name-btn', async () => {
         }
         // ▲▲▲ 修改结束 ▲▲▲
     
-        const stickerModal = document.getElementById('sticker-name-modal');
-        if (stickerModal) stickerModal.classList.remove('active');
+        document.getElementById('sticker-name-modal').classList.remove('active');
         appState.pendingSticker = null;
     }
-});
+};
 
-safeSetOnClick('cancel-sticker-name-btn', () => {
-    const stickerModal = document.getElementById('sticker-name-modal');
-    if (stickerModal) stickerModal.classList.remove('active');
+document.getElementById('cancel-sticker-name-btn').onclick = () => {
+    document.getElementById('sticker-name-modal').classList.remove('active');
     appState.pendingSticker = null; // 取消操作，清空暂存的图片
-});
+};
 
  // 为表情包切换按钮绑定事件
-safeSetOnClick('switch-to-my-stickers', () => switchStickerView('my'));
-safeSetOnClick('switch-to-ai-stickers', () => switchStickerView('ai'));
+document.getElementById('switch-to-my-stickers').onclick = () => switchStickerView('my');
+document.getElementById('switch-to-ai-stickers').onclick = () => switchStickerView('ai');
 
 // 为多选功能按钮绑定事件
-safeSetOnClick('multi-select-stickers-btn', () => {
+document.getElementById('multi-select-stickers-btn').onclick = () => {
     if (appState.stickerMultiSelectMode) {
         exitStickerMultiSelectMode();
     } else {
         enterStickerMultiSelectMode();
     }
-});
+};
 
-safeSetOnClick('select-all-stickers-btn', selectAllStickers);
-safeSetOnClick('deselect-all-stickers-btn', deselectAllStickers);
-safeSetOnClick('delete-selected-stickers-btn', deleteSelectedStickers);
-safeSetOnClick('cancel-multi-select-btn', exitStickerMultiSelectMode);
-    safeSetOnClick('save-edit-btn', saveMessageEdit);
-    safeSetOnClick('cancel-edit-btn', cancelMessageEdit);
-    safeSetOnClick('action-view-diary', writeAndShowAIDiary);
-    safeSetOnClick('close-diary-modal-btn', () => {
-        const diaryModal = document.getElementById('diary-modal');
-        if (diaryModal) diaryModal.style.display = 'none';
-    });
-    const diaryModalEl = document.getElementById('diary-modal');
-    if (diaryModalEl) {
-        diaryModalEl.onclick = (e) => {
-            if (e.target.id === 'diary-modal') {
-                diaryModalEl.style.display = 'none';
-            }
-        };
-    }
+document.getElementById('select-all-stickers-btn').onclick = selectAllStickers;
+document.getElementById('deselect-all-stickers-btn').onclick = deselectAllStickers;
+document.getElementById('delete-selected-stickers-btn').onclick = deleteSelectedStickers;
+document.getElementById('cancel-multi-select-btn').onclick = exitStickerMultiSelectMode;
+    document.getElementById('save-edit-btn').onclick = saveMessageEdit;
+    document.getElementById('cancel-edit-btn').onclick = cancelMessageEdit;
+    document.getElementById('action-view-diary').onclick = writeAndShowAIDiary;
+    document.getElementById('close-diary-modal-btn').onclick = () => {
+        document.getElementById('diary-modal').style.display = 'none';
+    };
+    document.getElementById('diary-modal').onclick = (e) => {
+        if (e.target.id === 'diary-modal') {
+            document.getElementById('diary-modal').style.display = 'none';
+        }
+    };
     
     // 旧的日记模态框事件处理已移除
   
 
-    safeSetOnClick('trigger-chat-wallpaper-upload', () => {
-        const uploadEl = document.getElementById('chat-wallpaper-upload');
-        if (uploadEl) uploadEl.click();
-    });
+    document.getElementById('trigger-chat-wallpaper-upload').onclick = () => {
+        document.getElementById('chat-wallpaper-upload').click();
+    };
     document.getElementById('chat-wallpaper-upload').addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -13209,24 +13202,15 @@ safeSetOnClick('cancel-multi-select-btn', exitStickerMultiSelectMode);
     });
 
 
-safeSetOnClick('settings-hub-widget-btn', openWidgetSettings);
+document.getElementById('settings-hub-widget-btn').onclick = openWidgetSettings;
 
 // “小组件设定”页 -> 返回按钮
-safeSetOnClick('widget-settings-back-btn', () => showScreen('settings-hub-screen'));
+document.getElementById('widget-settings-back-btn').onclick = () => showScreen('settings-hub-screen');
 
 // “小组件设定”页 -> 三个“更换”按钮，分别触发对应的隐藏上传框
-safeSetOnClick('change-widget-bg-btn', () => {
-    const uploadEl = document.getElementById('widget-bg-upload-input');
-    if (uploadEl) uploadEl.click();
-});
-safeSetOnClick('change-widget-footer-btn', () => {
-    const uploadEl = document.getElementById('widget-footer-upload-input');
-    if (uploadEl) uploadEl.click();
-});
-safeSetOnClick('change-widget-avatar-btn', () => {
-    const uploadEl = document.getElementById('widget-avatar-upload-input');
-    if (uploadEl) uploadEl.click();
-});
+document.getElementById('change-widget-bg-btn').onclick = () => document.getElementById('widget-bg-upload-input').click();
+document.getElementById('change-widget-footer-btn').onclick = () => document.getElementById('widget-footer-upload-input').click();
+document.getElementById('change-widget-avatar-btn').onclick = () => document.getElementById('widget-avatar-upload-input').click();
 
 // a. 处理背景图上传
 setupFileUploadHelper('widget-bg-upload-input', null, async (src) => {
@@ -13239,7 +13223,7 @@ setupFileUploadHelper('widget-bg-upload-input', null, async (src) => {
 // --- 新增：为小组件设定页的“清除”和“保存”按钮绑定功能 ---
 
     // 绑定“清除全部”按钮的点击事件
-    safeSetOnClick('clear-all-widget-btn', () => {
+    document.getElementById('clear-all-widget-btn').onclick = () => {
         // 使用自定义的确认弹窗，防止用户误触
         showCustomConfirm(
             '清除全部图片',
@@ -13260,15 +13244,15 @@ setupFileUploadHelper('widget-bg-upload-input', null, async (src) => {
                 applyWidgetImages();
             }
         );
-    });
+    };
 
 // 主动搭话功能已删除，相关事件处理已清理
 
-    safeSetOnClick('save-widget-settings-btn', () => {
+    document.getElementById('save-widget-settings-btn').onclick = () => {
         
         alert('小组件设定已保存！');
         showScreen('home-screen'); // 返回主屏幕
-    });
+    };
 
 // b. 处理页脚图上传
 setupFileUploadHelper('widget-footer-upload-input', null, async (src) => {
