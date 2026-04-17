@@ -33494,17 +33494,19 @@ async function refineSummaryContent() {
     const currentContent = chat.longTermMemory.map(m => m.content).join('\n\n');
     const currentWordCount = currentContent.length;
 
+    // 获取目标字数
+    const targetWordCount = chat.refineSettings?.targetWordCount || 2000;
+
     // 显示确认对话框
     const confirmed = await showCustomConfirmAsync(
         '确认精炼',
-        `当前总结共 ${currentWordCount} 字，精炼后将压缩为约 ${Math.floor(currentWordCount * 0.6)} 字。<br><br>此操作会调用副 API，确定要继续吗？`
+        `当前总结共 ${currentWordCount} 字，精炼后将压缩为约 ${targetWordCount} 字。<br><br>此操作会调用副 API，确定要继续吗？`
     );
 
     if (!confirmed) return;
 
     // 构建精炼提示词
     let prompt = getRefineSummaryPrompt();
-    const targetWordCount = chat.refineSettings?.targetWordCount || 2000;
 
     prompt = prompt
         .replace(/\$\{userNickname\}/g, chat.personas?.my?.name || '用户')
