@@ -33099,48 +33099,6 @@ function switchToViewPage() {
 
 // 更新记忆数量显示（已删除重复函数，统一使用 updateMemoryCount）
 
-// ===== 记忆卡片渲染 =====
-
-function renderSummaryCards(chatId) {
-    const chat = appState.chats[chatId];
-    const container = document.getElementById('summary-cards-container');
-    const emptyState = document.getElementById('summary-empty-state');
-
-    if (!chat.longTermMemory || chat.longTermMemory.length === 0) {
-        container.innerHTML = '';
-        emptyState.style.display = 'block';
-        return;
-    }
-
-    emptyState.style.display = 'none';
-
-    // 按时间倒序排列（最新的在上面）
-    const memories = [...chat.longTermMemory].reverse();
-
-    container.innerHTML = memories.map((memory, index) => {
-        const actualIndex = chat.longTermMemory.length - 1 - index;
-        const timeStr = new Date(memory.timestamp).toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-
-        return `
-            <div class="summary-card">
-                <div class="summary-card-header">
-                    <span class="summary-card-time">📅 ${timeStr}</span>
-                </div>
-                <div class="summary-card-content">${escapeHtml(memory.content)}</div>
-                <div class="summary-card-actions">
-                    <button class="summary-card-btn" onclick="editSummaryMemory(${actualIndex})">编辑</button>
-                    <button class="summary-card-btn delete" onclick="deleteSummaryMemory(${actualIndex})">删除</button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
 
 // ==================== 编辑和删除记忆功能 ====================
 
