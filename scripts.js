@@ -33645,10 +33645,13 @@ document.getElementById('global-memory-toggle').onclick = function() {
             clickCount = 0; // 重置计数,避免重复触发
             
             if (confirm('检测到连续5次点击。是否重置所有自定义CSS设置?\n\n这将清除:\n- 自定义CSS\n- 全局CSS\n- 自定义字体\n\n页面将自动刷新。')) {
-                // 清空所有CSS相关的localStorage
-                localStorage.removeItem(KEYS.CUSTOM_CSS);
-                localStorage.removeItem(KEYS.CUSTOM_GLOBAL_CSS);
-                localStorage.removeItem(KEYS.CUSTOM_FONT_URL);
+                // 清空所有CSS相关的localStorage（直接使用键名字符串）
+                localStorage.removeItem('custom_css_v2');
+                localStorage.removeItem('custom_global_css_v1');
+                localStorage.removeItem('custom_font_url_v2');
+                localStorage.removeItem('custom_font_family_v1');
+                
+                console.log('✅ CSS设置已重置');
                 
                 // 刷新页面
                 location.reload();
