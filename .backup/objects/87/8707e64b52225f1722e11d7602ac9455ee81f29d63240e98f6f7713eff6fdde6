@@ -3229,6 +3229,8 @@ img{image-rendering:optimizeSpeed;image-rendering:-webkit-optimize-contrast;imag
 #disclaimer-screen .settings-page-content { background-color: var(--body-bg); }
 .disclaimer-text-container { padding: 20px 15px; font-size: 16px; line-height: 1.8; color: var(--ai-bubble-text); }
 .disclaimer-text-container p { margin-bottom: 1.5em; }
+#donation-qr-container { text-align: center; padding: 40px 20px; }
+#donation-qr-container img { max-width: 80%; height: auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
 /* --- 弹窗与覆盖层 (Modals & Overlays) --- */
 .modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
