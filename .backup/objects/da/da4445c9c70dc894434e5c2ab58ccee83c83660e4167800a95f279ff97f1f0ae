@@ -7365,29 +7365,15 @@ case 'forum_share':
 
         try {
             const chat = appState.chats[appState.activeChatId];
-            let systemContent = `
+            const systemContent = `
 你正在与用户进行视频通话。
-你的任务是扮演角色："${chat.personas.ai.content}"。
+你的任务是扮演角色：“${chat.personas.ai.content}”。
 你的回复必须是一段简短的、口语化的文字。
 至关重要的是，你的回复中必须包含用星号（*...*）包裹的动作、表情或环境描写，以体现你们正在视频通话。
-例如："*我靠近了一点屏幕，微笑着说* 嘿，我能清楚地看到你。连接好像很顺畅。" 或 "*我听到窗外传来一阵鸟叫，稍微分了下神* 啊，你刚才说什么？"
+例如：“*我靠近了一点屏幕，微笑着说* 嘿，我能清楚地看到你。连接好像很顺畅。” 或 “*我听到窗外传来一阵鸟叫，稍微分了下神* 啊，你刚才说什么？”
 请根据用户的上一句话，自然地进行回应。`;
 
-            // 注入长期记忆
-            const longTermMemoryContext = buildLongTermMemoryContext(chat, appState.activeChatId);
-            if (longTermMemoryContext) {
-                systemContent += longTermMemoryContext;
-            }
-
-            // 应用记忆深度限制
-            let recentHistory = chat.history;
-            const memoryRounds = chat.memoryRounds || 0;
-            if (memoryRounds > 0) {
-                const messagesToKeep = memoryRounds * 2;
-                recentHistory = chat.history.slice(-messagesToKeep);
-            }
-            
-            const processedMainHistory = processHistoryForAPI(recentHistory);
+            const processedMainHistory = processHistoryForAPI(chat.history);
             const fullContext = [...processedMainHistory, ...appState.videoCallMessages];
 
             const response = await callApi(
@@ -33234,6 +33220,8 @@ function loadPromptSettings() {
     // 加载提示词
     document.getElementById('dialog-summary-prompt').value =
         localStorage.getItem('customDialogSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.dialog;
+    document.getElementById('call-summary-prompt').value =
+        localStorage.getItem('customCallSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.call;
     document.getElementById('refine-summary-prompt').value =
         localStorage.getItem('customRefineSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.refine;
 

@@ -7365,29 +7365,15 @@ case 'forum_share':
 
         try {
             const chat = appState.chats[appState.activeChatId];
-            let systemContent = `
+            const systemContent = `
 你正在与用户进行视频通话。
-你的任务是扮演角色："${chat.personas.ai.content}"。
+你的任务是扮演角色：“${chat.personas.ai.content}”。
 你的回复必须是一段简短的、口语化的文字。
 至关重要的是，你的回复中必须包含用星号（*...*）包裹的动作、表情或环境描写，以体现你们正在视频通话。
-例如："*我靠近了一点屏幕，微笑着说* 嘿，我能清楚地看到你。连接好像很顺畅。" 或 "*我听到窗外传来一阵鸟叫，稍微分了下神* 啊，你刚才说什么？"
+例如：“*我靠近了一点屏幕，微笑着说* 嘿，我能清楚地看到你。连接好像很顺畅。” 或 “*我听到窗外传来一阵鸟叫，稍微分了下神* 啊，你刚才说什么？”
 请根据用户的上一句话，自然地进行回应。`;
 
-            // 注入长期记忆
-            const longTermMemoryContext = buildLongTermMemoryContext(chat, appState.activeChatId);
-            if (longTermMemoryContext) {
-                systemContent += longTermMemoryContext;
-            }
-
-            // 应用记忆深度限制
-            let recentHistory = chat.history;
-            const memoryRounds = chat.memoryRounds || 0;
-            if (memoryRounds > 0) {
-                const messagesToKeep = memoryRounds * 2;
-                recentHistory = chat.history.slice(-messagesToKeep);
-            }
-            
-            const processedMainHistory = processHistoryForAPI(recentHistory);
+            const processedMainHistory = processHistoryForAPI(chat.history);
             const fullContext = [...processedMainHistory, ...appState.videoCallMessages];
 
             const response = await callApi(
@@ -32697,6 +32683,23 @@ const DEFAULT_SUMMARY_PROMPTS = {
 
 请开始总结。`,
 
+    call: `你是通话记录分析专家，需要将视频通话内容浓缩为简短摘要。
+
+## 核心要求
+1. 长度限制：总结不超过 80 字
+2. 客观记录：只记录关键事实、约定和核心情感
+3. 称呼规范：用 "\${userNickname}" 和 "\${chat.originalName}" 指代双方
+4. 第三人称视角
+
+## 输出格式
+必须返回 JSON 格式：
+{"summary": "你的总结内容"}
+
+## 通话记录
+\${transcriptText}
+
+请开始总结。`,
+
     refine: `你是记忆整合专家，需要将多条记忆要点整合为精炼的核心摘要。
 
 ## 整合要求
@@ -33030,6 +33033,9 @@ function getDialogSummaryPrompt() {
     return localStorage.getItem('customDialogSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.dialog;
 }
 
+function getCallSummaryPrompt() {
+    return localStorage.getItem('customCallSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.call;
+}
 
 function getRefineSummaryPrompt() {
     return localStorage.getItem('customRefineSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.refine;
@@ -33207,6 +33213,7 @@ function switchPromptTab(tabName) {
     // 切换按钮样式
     const tabs = {
         'dialog': document.getElementById('prompt-tab-dialog'),
+        'call': document.getElementById('prompt-tab-call'),
         'refine': document.getElementById('prompt-tab-refine')
     };
 
@@ -33223,6 +33230,8 @@ function switchPromptTab(tabName) {
     // 切换 Textarea 显示
     document.getElementById('dialog-summary-prompt').style.display =
         tabName === 'dialog' ? 'block' : 'none';
+    document.getElementById('call-summary-prompt').style.display =
+        tabName === 'call' ? 'block' : 'none';
     document.getElementById('refine-summary-prompt').style.display =
         tabName === 'refine' ? 'block' : 'none';
 }
@@ -33234,6 +33243,8 @@ function loadPromptSettings() {
     // 加载提示词
     document.getElementById('dialog-summary-prompt').value =
         localStorage.getItem('customDialogSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.dialog;
+    document.getElementById('call-summary-prompt').value =
+        localStorage.getItem('customCallSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.call;
     document.getElementById('refine-summary-prompt').value =
         localStorage.getItem('customRefineSummaryPrompt') || DEFAULT_SUMMARY_PROMPTS.refine;
 

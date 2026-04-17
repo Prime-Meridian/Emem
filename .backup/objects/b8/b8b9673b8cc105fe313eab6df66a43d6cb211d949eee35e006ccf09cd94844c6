@@ -1565,10 +1565,11 @@
                         </div>
 
                         <!-- 提示词编辑器 -->
-<div style="padding: 0 15px;">
-<textarea id="dialog-summary-prompt" class="form-control" rows="8" placeholder="输入对话总结提示词..." style="width: 100%; font-size: 13px; font-family: monospace;"></textarea>
-<textarea id="refine-summary-prompt" class="form-control" rows="8" placeholder="输入记忆精炼提示词..." style="display: none; width: 100%; font-size: 13px; font-family: monospace;"></textarea>
-</div>
+                        <div style="padding: 0 15px;">
+                            <textarea id="dialog-summary-prompt" class="form-control" rows="8" placeholder="输入对话总结提示词..." style="width: 100%; font-size: 13px; font-family: monospace;"></textarea>
+                            <textarea id="call-summary-prompt" class="form-control" rows="8" placeholder="输入通话总结提示词..." style="display: none; width: 100%; font-size: 13px; font-family: monospace;"></textarea>
+                            <textarea id="refine-summary-prompt" class="form-control" rows="8" placeholder="输入记忆精炼提示词..." style="display: none; width: 100%; font-size: 13px; font-family: monospace;"></textarea>
+                        </div>
                     </div>
                 </div>
 
