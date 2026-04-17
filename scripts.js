@@ -33622,4 +33622,41 @@ document.getElementById('global-memory-toggle').onclick = function() {
     this.classList.toggle('active');
 };
 
+// ==================== 五连击重置CSS功能 ====================
+(function() {
+    let clickCount = 0;
+    let lastClickTime = 0;
+    const CLICK_TIMEOUT = 500; // 500ms内的点击才算连续
+    const REQUIRED_CLICKS = 5;
+
+    document.addEventListener('click', function(e) {
+        const now = Date.now();
+        
+        // 如果距离上次点击超过500ms,重置计数
+        if (now - lastClickTime > CLICK_TIMEOUT) {
+            clickCount = 0;
+        }
+        
+        clickCount++;
+        lastClickTime = now;
+        
+        // 达到5次点击
+        if (clickCount >= REQUIRED_CLICKS) {
+            clickCount = 0; // 重置计数,避免重复触发
+            
+            if (confirm('检测到连续5次点击。是否重置所有自定义CSS设置?\n\n这将清除:\n- 自定义CSS\n- 全局CSS\n- 自定义字体\n\n页面将自动刷新。')) {
+                // 清空所有CSS相关的localStorage
+                localStorage.removeItem(KEYS.CUSTOM_CSS);
+                localStorage.removeItem(KEYS.CUSTOM_GLOBAL_CSS);
+                localStorage.removeItem(KEYS.CUSTOM_FONT_URL);
+                
+                // 刷新页面
+                location.reload();
+            }
+        }
+    });
+    
+    console.log('✅ 五连击重置CSS功能已启用');
+})();
+
 console.log('✅ 总结功能事件绑定完成');
