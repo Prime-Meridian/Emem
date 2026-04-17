@@ -4962,3 +4962,18 @@ html.user-platform-ios .diary-reading-container {
         margin: 10px 0;
     }
 }
+
+/* ==================== 隐藏服务器推送功能 ==================== */
+#scheduled-message-modal,
+#server-push-toggle,
+#open-server-push-schedule-btn,
+#schedule-message-section,
+#server-push-status-text,
+.settings-item:has(#server-push-toggle) {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
