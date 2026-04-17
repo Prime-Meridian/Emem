@@ -33668,3 +33668,52 @@ document.getElementById('global-memory-toggle').onclick = function() {
 })();
 
 console.log('✅ 总结功能事件绑定完成');
+
+// ==================== 隐藏服务器推送功能 ====================
+(function() {
+    // 等待DOM加载完成后隐藏相关元素
+    const hideServerPushFeatures = () => {
+        // 隐藏定时消息模态框
+        const scheduledMessageModal = document.getElementById('scheduled-message-modal');
+        if (scheduledMessageModal) {
+            scheduledMessageModal.style.display = 'none';
+            console.log('✅ 已隐藏定时消息模态框');
+        }
+        
+        // 隐藏服务器推送开关
+        const serverPushToggle = document.getElementById('server-push-toggle');
+        if (serverPushToggle) {
+            const toggleParent = serverPushToggle.closest('.settings-item');
+            if (toggleParent) {
+                toggleParent.style.display = 'none';
+                console.log('✅ 已隐藏服务器推送开关');
+            }
+        }
+        
+        // 隐藏定时消息设置按钮
+        const scheduleBtns = [
+            'open-server-push-schedule-btn',
+            'schedule-message-section'
+        ];
+        
+        scheduleBtns.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.style.display = 'none';
+                console.log(`✅ 已隐藏元素: ${id}`);
+            }
+        });
+    };
+    
+    // 立即执行一次
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', hideServerPushFeatures);
+    } else {
+        hideServerPushFeatures();
+    }
+    
+    // 延迟执行确保所有元素都已加载
+    setTimeout(hideServerPushFeatures, 1000);
+    
+    console.log('✅ 服务器推送功能隐藏脚本已加载');
+})();
