@@ -6668,6 +6668,10 @@ const openChatSettings = () => {
     // 更新推送权限状态显示
     updatePushNotificationStatus();
 
+    // 绑定朋友圈事件并加载状态
+    bindMomentsEvents();
+    loadMomentsUIState();
+
     showScreen('chat-settings-screen');
 };
 
@@ -18284,6 +18288,11 @@ async function generateAiMomentPost(chatId) {
         console.error(`为 ${chat.name} 生成朋友圈时出错:`, error);
         return null;
     }
+}
+
+// 将函数暴露到全局作用域,供其他模块使用
+if (typeof window !== 'undefined') {
+    window.generateAiMomentPost = generateAiMomentPost;
 }
 
 // ▼▼▼ 2. 新增：AI 朋友圈的定时器系统 ▼▼▼
@@ -33868,3 +33877,314 @@ console.log('✅ 总结功能事件绑定完成');
     
     console.log('✅ 服务器推送功能移除脚本已加载');
 })();
+
+// === AI自动发朋友圈系统 ===
+// 独立的朋友圈定时器,不影响原有的智能主动消息系统
+
+// 全局朋友圈活动状态
+let momentsActivitySettings = {
+    enabled: false,
+    interval: 180, // 默认180分钟(3小时)检查一次
+    timerId: null
+};
+
+// 启动朋友圈定时器
+function startMomentsActivity() {
+    if (momentsActivitySettings.timerId) return;
+    
+    console.log('📸 启动AI自动发朋友圈系统');
+    momentsActivitySettings.enabled = true;
+    momentsActivitySettings.timerId = setInterval(
+        runMomentsActivityTick,
+        momentsActivitySettings.interval * 60 * 1000 // 转换为毫秒
+    );
+    console.log(`⏲️ 已启动朋友圈心跳: timerId=${momentsActivitySettings.timerId}, interval=${momentsActivitySettings.interval}分钟`);
+    
+    // 延迟执行立即心跳
+    setTimeout(() => {
+        try {
+            runMomentsActivityTick();
+        } catch (error) {
+            console.error('朋友圈心跳立即执行时报错:', error);
+        }
+    }, 2000);
+}
+
+// 停止朋友圈定时器
+function stopMomentsActivity() {
+    if (momentsActivitySettings.timerId) {
+        clearInterval(momentsActivitySettings.timerId);
+        momentsActivitySettings.timerId = null;
+        console.log('⏹️ 停止AI自动发朋友圈系统');
+    }
+    momentsActivitySettings.enabled = false;
+}
+
+// 朋友圈心跳检查
+function runMomentsActivityTick() {
+    console.log('📸 朋友圈心跳检查...', {
+        enabled: momentsActivitySettings.enabled,
+        interval: momentsActivitySettings.interval,
+        timerId: momentsActivitySettings.timerId,
+        now: new Date().toLocaleTimeString()
+    });
+    
+    if (!momentsActivitySettings.enabled) {
+        stopMomentsActivity();
+        return;
+    }
+    
+    // 安全检查
+    if (typeof appState === 'undefined' || !appState || !appState.chats) {
+        console.warn('⚠️ appState 尚未初始化，跳过朋友圈心跳检查');
+        return;
+    }
+    
+    // 获取所有启用了朋友圈功能的对话
+    const allChats = Object.values(appState.chats).filter(chat =>
+        chat.name &&
+        chat.name !== '系统通知' &&
+        chat.personas &&
+        chat.personas.ai &&
+        chat.momentsActivity &&
+        chat.momentsActivity.enabled
+    );
+    
+    if (allChats.length === 0) {
+        console.log('💡 没有对话启用朋友圈功能，停止定时器');
+        stopMomentsActivity();
+        return;
+    }
+    
+    console.log(`📊 当前有 ${allChats.length} 个对话启用了朋友圈功能`);
+    
+    // 随机选择一个角色发朋友圈
+    const selectedChat = allChats[Math.floor(Math.random() * allChats.length)];
+    console.log(`🎯 角色 "${selectedChat.name}" 被选中发朋友圈`);
+    
+    triggerMomentsPost(selectedChat);
+}
+
+// 触发发朋友圈
+async function triggerMomentsPost(chat) {
+    try {
+        console.log(`[AI发朋友圈] 触发了 ${chat.name} 的朋友圈发送`);
+        
+        // 安全检查
+        if (!chat || !chat.name || !chat.personas || !chat.personas.ai) {
+            console.error(`❌ [AI发朋友圈] Chat对象不完整`);
+            return;
+        }
+        
+        // 使用现有的generateAiMomentPost函数生成朋友圈内容
+        const momentData = await (window.generateAiMomentPost || generateAiMomentPost)(chatId);
+        
+        if (momentData && momentData.text) {
+            console.log(`✅ [AI发朋友圈] ${chat.name} 发布了朋友圈:`, momentData.text);
+            
+            // 创建朋友圈帖子
+            const newPost = {
+                author: chat.name,
+                avatar: chat.personas.ai.avatar || '',
+                text: momentData.text,
+                image_prompts: momentData.image_prompts || [],
+                location: '',
+                timestamp: Date.now(),
+                likes: [],
+                comments: []
+            };
+            
+            // 保存到朋友圈数据
+            if (!appState.moments) {
+                appState.moments = [];
+            }
+            appState.moments.unshift(newPost);
+            
+            // 保存到数据库
+            await dbStorage.set(KEYS.MOMENTS, appState.moments);
+            
+            console.log(`📸 [AI发朋友圈] 朋友圈已保存到数据库`);
+        } else {
+            console.log(`⚠️ [AI发朋友圈] ${chat.name} 生成朋友圈失败`);
+        }
+        
+    } catch (error) {
+        console.error(`❌ [AI发朋友圈] 发送失败:`, error);
+    }
+}
+
+// 配置朋友圈定时器
+function configureMomentsActivity(enabled, interval) {
+    momentsActivitySettings.enabled = enabled;
+    momentsActivitySettings.interval = Math.max(30, interval); // 最少30分钟
+    
+    if (enabled) {
+        stopMomentsActivity();
+        startMomentsActivity();
+    } else {
+        stopMomentsActivity();
+    }
+    
+    // 保存到localStorage
+    localStorage.setItem('momentsActivitySettings', JSON.stringify({
+        enabled: momentsActivitySettings.enabled,
+        interval: momentsActivitySettings.interval
+    }));
+    
+    console.log('💾 朋友圈设置已保存:', momentsActivitySettings);
+}
+
+// 加载朋友圈设置
+function loadMomentsActivitySettings() {
+    try {
+        const saved = localStorage.getItem('momentsActivitySettings');
+        if (saved) {
+            const settings = JSON.parse(saved);
+            momentsActivitySettings.enabled = settings.enabled || false;
+            momentsActivitySettings.interval = Math.max(30, settings.interval || 180);
+            
+            if (momentsActivitySettings.enabled) {
+                startMomentsActivity();
+            }
+            
+            console.log('✅ 已加载朋友圈设置:', momentsActivitySettings);
+        }
+    } catch (error) {
+        console.error('加载朋友圈设置失败:', error);
+    }
+}
+
+// 保存单个对话的朋友圈设置
+async function saveChatMomentsSettings(chatId) {
+    const chat = appState.chats[chatId];
+    if (!chat) return;
+    
+    console.log('💾 保存朋友圈设置:', chat.momentsActivity);
+    
+    // 检查是否有任何对话启用了朋友圈
+    const hasAnyEnabled = Object.values(appState.chats).some(c => c.momentsActivity?.enabled);
+    
+    if (hasAnyEnabled) {
+        if (!momentsActivitySettings.enabled) {
+            console.log('🚀 检测到有对话启用了朋友圈，启动全局定时器');
+            momentsActivitySettings.enabled = true;
+            startMomentsActivity();
+        }
+    } else {
+        if (momentsActivitySettings.enabled) {
+            console.log('💤 所有对话都已关闭朋友圈，停止全局定时器');
+            stopMomentsActivity();
+        }
+    }
+    
+    await dbStorage.set(KEYS.CHATS, appState.chats);
+}
+
+console.log('✅ AI自动发朋友圈系统已加载');
+
+// === 朋友圈UI事件绑定 ===
+
+// 处理对话设定页面的朋友圈开关切换
+async function handleChatMomentsToggle() {
+    const chat = appState.chats[appState.activeChatId];
+    if (!chat) return;
+    
+    const toggle = document.getElementById('chat-moments-toggle');
+    const intervalInput = document.getElementById('chat-moments-interval-input');
+    
+    if (toggle && intervalInput) {
+        // 获取当前状态(通过classList判断,不是checked)
+        const enabled = toggle.classList.contains('active');
+        const newStatus = !enabled;
+        const interval = parseInt(intervalInput.value) || 180;
+        
+        // 初始化momentsActivity对象(如果不存在)
+        if (!chat.momentsActivity) {
+            chat.momentsActivity = { enabled: false, interval: 180 };
+        }
+        
+        // 更新chat对象中的状态
+        chat.momentsActivity.enabled = newStatus;
+        chat.momentsActivity.interval = interval;
+        
+        // 切换开关状态(使用classList)
+        toggle.classList.toggle('active', newStatus);
+        
+        console.log('💾 朋友圈开关切换:', { enabled: newStatus, interval });
+        
+        // 保存设置
+        await saveChatMomentsSettings(appState.activeChatId);
+        
+        if (newStatus) {
+            alert(`AI自动发朋友圈已启用！\n\n系统将每${interval}分钟检查一次，AI可能会自动发朋友圈。`);
+        } else {
+            alert('AI自动发朋友圈已停用。');
+        }
+    }
+}
+
+// 处理对话设定页面的朋友圈间隔时间变化
+async function handleChatMomentsIntervalChange() {
+    const chat = appState.chats[appState.activeChatId];
+    if (!chat) return;
+    
+    const toggle = document.getElementById('chat-moments-toggle');
+    const intervalInput = document.getElementById('chat-moments-interval-input');
+    
+    if (toggle && intervalInput && toggle.classList.contains('active')) {
+        const interval = Math.max(30, parseInt(intervalInput.value) || 180);
+        intervalInput.value = interval;
+        
+        if (!chat.momentsActivity) {
+            chat.momentsActivity = { enabled: false, interval: 180 };
+        }
+        
+        chat.momentsActivity.interval = interval;
+        
+        console.log('💾 朋友圈间隔更新:', interval);
+        await saveChatMomentsSettings(appState.activeChatId);
+    }
+}
+
+// 在页面加载时绑定朋友圈事件
+function bindMomentsEvents() {
+    const toggle = document.getElementById('chat-moments-toggle');
+    const intervalInput = document.getElementById('chat-moments-interval-input');
+    
+    if (toggle) {
+        // 使用onclick直接绑定,和智能主动消息保持一致
+        toggle.onclick = function(e) {
+            e.stopPropagation();
+            handleChatMomentsToggle();
+        };
+        console.log('✅ 朋友圈开关事件已绑定');
+    }
+    
+    if (intervalInput) {
+        intervalInput.addEventListener('change', handleChatMomentsIntervalChange);
+        console.log('✅ 朋友圈间隔事件已绑定');
+    }
+}
+
+// 加载朋友圈UI状态
+function loadMomentsUIState() {
+    const chat = appState.chats[appState.activeChatId];
+    if (!chat) return;
+    
+    const toggle = document.getElementById('chat-moments-toggle');
+    const intervalInput = document.getElementById('chat-moments-interval-input');
+    
+    if (toggle) {
+        const enabled = chat.momentsActivity?.enabled || false;
+        toggle.classList.toggle('active', enabled);
+    }
+    
+    if (intervalInput) {
+        const interval = chat.momentsActivity?.interval || 180;
+        intervalInput.value = interval;
+    }
+    
+    console.log('✅ 朋友圈UI状态已加载:', chat.momentsActivity);
+}
+
+console.log('✅ 朋友圈UI事件绑定代码已加载');
