@@ -9349,8 +9349,9 @@ ${shopItemsPrompt}
             try {
                 let cleanedContent = chatResponsePart.replace(/^`{3}(json)?\n?/, '').replace(/`{3}$/, '').trim();
                 
-                // 【修复】清理常见的JSON语法错误：逗号后面的多余点号
-                cleanedContent = cleanedContent.replace(/",\s*\./g, '",');
+                // 【修复】清理常见的JSON语法错误
+                cleanedContent = cleanedContent.replace(/",\s*\./g, '",'); // 逗号后面的多余点号
+                cleanedContent = cleanedContent.replace(/,\s*([}\]])/g, '$1'); // 末尾多余的逗号
                 
                 // 【修复】优先尝试解析为单个JSON数组
                 try {
@@ -9362,37 +9363,66 @@ ${shopItemsPrompt}
                             ? parsedData 
                             : (parsedData.response || parsedData.dialogue || parsedData.actions || [parsedData]);
                     }
+                    console.log('✅ 成功解析完整JSON数组，消息数量:', messagesToProcess.length);
                 } catch (singleParseError) {
-                    // 【修复】如果单个JSON解析失败，尝试按行解析多个JSON数组
-                    const lines = cleanedContent.split('\n').filter(line => line.trim() !== '');
-                    let allParsed = true;
-                    const parsedLines = [];
+                    console.warn('⚠️ 单次JSON解析失败，尝试修复格式...', singleParseError.message);
                     
-                    for (const line of lines) {
-                        try {
-                            const lineData = JSON.parse(line.trim());
-                            // 如果解析出来是数组，展开它；否则直接push
-                            if (Array.isArray(lineData)) {
-                                parsedLines.push(...lineData);
-                            } else {
-                                parsedLines.push(lineData);
-                            }
-                        } catch (lineParseError) {
-                            allParsed = false;
-                            break;
-                        }
+                    // 【新增】尝试修复不完整的JSON数组
+                    let repairedContent = cleanedContent;
+                    
+                    // 如果缺少开头的 [
+                    if (!repairedContent.trim().startsWith('[')) {
+                        repairedContent = '[' + repairedContent;
                     }
                     
-                    if (allParsed && parsedLines.length > 0) {
-                        // 成功解析所有行
-                        messagesToProcess = parsedLines;
-                        console.log('✅ 成功按行解析多个JSON数组');
-                    } else {
-                        // 如果按行解析也失败，抛出错误
-                        throw singleParseError;
+                    // 如果缺少结尾的 ]
+                    if (!repairedContent.trim().endsWith(']')) {
+                        repairedContent = repairedContent + ']';
+                    }
+                    
+                    // 尝试解析修复后的内容
+                    try {
+                        const repairedData = JSON.parse(repairedContent);
+                        messagesToProcess = Array.isArray(repairedData) ? repairedData : [repairedData];
+                        console.log('✅ 修复JSON格式成功，消息数量:', messagesToProcess.length);
+                    } catch (repairError) {
+                        console.warn('⚠️ JSON修复失败，尝试按行解析...');
+                        
+                        // 【修复】按行解析时，不要展开数组，保持结构完整
+                        const lines = cleanedContent.split('\n').filter(line => line.trim() !== '');
+                        let allParsed = true;
+                        const parsedLines = [];
+                        
+                        for (const line of lines) {
+                            try {
+                                const lineData = JSON.parse(line.trim());
+                                // 【关键修改】不展开数组，直接push整个对象
+                                parsedLines.push(lineData);
+                            } catch (lineParseError) {
+                                allParsed = false;
+                                break;
+                            }
+                        }
+                        
+                        if (allParsed && parsedLines.length > 0) {
+                            // 【新增】检查是否有嵌套数组，如果有则展开
+                            messagesToProcess = [];
+                            for (const item of parsedLines) {
+                                if (Array.isArray(item)) {
+                                    messagesToProcess.push(...item);
+                                } else {
+                                    messagesToProcess.push(item);
+                                }
+                            }
+                            console.log('✅ 成功按行解析，消息数量:', messagesToProcess.length);
+                        } else {
+                            // 如果按行解析也失败，抛出错误
+                            throw singleParseError;
+                        }
                     }
                 }
             } catch (e) {
+                console.error('❌ JSON解析完全失败:', e.message);
                 if (chat.isOfflineMode) {
                     // 【修复】线下模式时，chatResponsePart已经移除了心声标记，可以安全使用
                     messagesToProcess.push(chatResponsePart);
