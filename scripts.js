@@ -33484,10 +33484,10 @@ async function showSummaryPreviewDialog(summary) {
         };
 
         // 取消按钮
-        document.getElementById('cancel-summary-btn').onclick = () => {
-            modal.style.display = 'none';
-            resolve(false);
-        };
+    document.getElementById('cancel-summary-preview-btn').onclick = () => {
+        modal.style.display = 'none';
+        resolve(false);
+    };
     });
 }
 
