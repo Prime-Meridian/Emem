@@ -33057,12 +33057,11 @@ function buildLongTermMemoryContext(chat, chatId) {
                 return;
             }
 
-            // 只收集标记为全局的记忆
-            const globalItems = otherChat.longTermMemory.filter(m => m.isGlobal);
-            if (globalItems.length > 0) {
+            // 如果该聊天开启了全局记忆，收集它的所有记忆
+            if (otherChat.globalMemoryEnabled && otherChat.longTermMemory.length > 0) {
                 globalMemories.push({
                     chatName: otherChat.name,
-                    memories: globalItems
+                    memories: otherChat.longTermMemory
                 });
             }
         });
@@ -33121,8 +33120,8 @@ function renderSummaryCards(chatId) {
             minute: '2-digit'
         });
 
-        // 全局标记
-        const globalBadge = memory.isGlobal ? '<span style="background: #007AFF; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 8px;">全局</span>' : '';
+        // 全局标记 - 根据当前聊天的全局记忆开关状态显示
+        const globalBadge = chat.globalMemoryEnabled ? '<span style="background: #007AFF; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 8px;">全局</span>' : '';
 
         return `
             <div class="summary-card">
@@ -33211,11 +33210,10 @@ async function checkAndTriggerAutoSummary(chatId) {
             }
 
             chat.longTermMemory.push({
-                content: summary,
-                timestamp: Date.now(),
-                messageCount: newMessages.length,
-                isGlobal: chat.globalMemoryEnabled || false
-            });
+        content: summary,
+        timestamp: Date.now(),
+        messageCount: newMessages.length
+    });
 
             // 更新上次总结时间戳
             chat.lastMemorySummaryTimestamp = Date.now();
@@ -33480,12 +33478,20 @@ async function saveSummarySettings() {
         parseInt(document.getElementById('refine-target-input').value) || 2000;
 
     // 保存提示词到 localStorage
-    localStorage.setItem('customDialogSummaryPrompt',
-        document.getElementById('dialog-summary-prompt').value);
-    localStorage.setItem('customCallSummaryPrompt',
-        document.getElementById('call-summary-prompt').value);
-    localStorage.setItem('customRefineSummaryPrompt',
-        document.getElementById('refine-summary-prompt').value);
+    const dialogPromptEl = document.getElementById('dialog-summary-prompt');
+    if (dialogPromptEl) {
+        localStorage.setItem('customDialogSummaryPrompt', dialogPromptEl.value);
+    }
+    
+    const callPromptEl = document.getElementById('call-summary-prompt');
+    if (callPromptEl) {
+        localStorage.setItem('customCallSummaryPrompt', callPromptEl.value);
+    }
+    
+    const refinePromptEl = document.getElementById('refine-summary-prompt');
+    if (refinePromptEl) {
+        localStorage.setItem('customRefineSummaryPrompt', refinePromptEl.value);
+    }
 
     // 保存到数据库
     await dbStorage.set(KEYS.CHATS, appState.chats);
