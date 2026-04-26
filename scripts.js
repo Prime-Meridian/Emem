@@ -33497,6 +33497,10 @@ async function saveSummarySettings() {
     await dbStorage.set(KEYS.CHATS, appState.chats);
 
     showCustomAlert('成功', '设置已保存');
+    
+    // 重新渲染卡片以更新全局标记显示
+    renderSummaryCards(chatId);
+    
     switchToViewPage();
 }
 
